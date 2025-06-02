@@ -1,0 +1,133 @@
+/* color palette from <https://github.com/vuejs/theme> */
+:root {
+  --vt-c-white: #ffffff;
+  /* 纯白色 - 用于主要背景 */
+  --vt-c-white-soft: #f8f8f8;
+  /* 柔和的白色 - 用于次要背景 */
+  --vt-c-white-mute: #f2f2f2;
+  /* 柔和的灰白色 - 用于静默背景 */
+  --vt-c-soft-bg: #f5f7fa;
+  /* 新增：柔和的背景色 */
+
+  --vt-c-black: #181818;
+  /* 深黑色 - 用于暗色主题主要背景 */
+  --vt-c-black-soft: #222222;
+  /* 柔和的黑色 - 用于暗色主题次要背景 */
+  --vt-c-black-mute: #282828;
+  /* 柔和的深灰色 - 用于暗色主题静默背景 */
+
+  --vt-c-indigo: #2c3e50;
+  /* 靛蓝色 - 用于主要文本颜色 */
+
+  --vt-c-divider-light-1: rgba(60, 60, 60, 0.29);
+  /* 浅色分割线 - 主要 */
+  --vt-c-divider-light-2: rgba(60, 60, 60, 0.12);
+  /* 浅色分割线 - 次要 */
+  --vt-c-divider-dark-1: rgba(84, 84, 84, 0.65);
+  /* 深色分割线 - 主要 */
+  --vt-c-divider-dark-2: rgba(84, 84, 84, 0.48);
+  /* 深色分割线 - 次要 */
+
+  --vt-c-text-light-1: var(--vt-c-indigo);
+  /* 浅色主要文本颜色 */
+  --vt-c-text-light-2: rgba(60, 60, 60, 0.66);
+  /* 浅色次要文本颜色 */
+  --vt-c-text-dark-1: var(--vt-c-white);
+  /* 深色主要文本颜色 */
+  --vt-c-text-dark-2: rgba(235, 235, 235, 0.64);
+  /* 深色次要文本颜色 */
+}
+
+/* semantic color variables for this project */
+:root {
+  --color-background: var(--vt-c-soft-bg);
+  /* 页面主背景色 */
+  --color-background-soft: var(--vt-c-white-soft);
+  /* 次要背景色 */
+  --color-background-mute: var(--vt-c-white-mute);
+  /* 静默背景色 */
+
+  --color-border: var(--vt-c-divider-light-2);
+  /* 边框颜色 */
+  --color-border-hover: var(--vt-c-divider-light-1);
+  /* 边框悬停颜色 */
+
+  --color-heading: var(--vt-c-text-light-1);
+  /* 标题颜色 */
+  --color-text: var(--vt-c-text-light-1);
+  /* 文本颜色 */
+
+  --section-gap: 160px;
+  /* 页面段落间距 */
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --color-background: var(--vt-c-white);
+    /* 将暗色主题主背景改为白色 */
+    --color-background-soft: var(--vt-c-white-soft);
+    /* 将暗色主题次要背景改为柔和的白色 */
+    --color-background-mute: var(--vt-c-white-mute);
+    /* 将暗色主题静默背景改为柔和的灰白色 */
+
+    --color-border: rgba(60, 60, 60, 0.12);
+    /* 边框颜色改为浅灰色 */
+    --color-border-hover: rgba(60, 60, 60, 0.29);
+    /* 边框悬停颜色改为深一点的灰色 */
+
+    --color-heading: var(--vt-c-indigo);
+    /* 标题颜色改为靛蓝色 */
+    --color-text: var(--vt-c-text-light-2);
+    /* 文本颜色改为浅色文本 */
+  }
+}
+
+/* 重置所有元素的盒模型、外边距和字重为正常值 */
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+  /* 使用标准盒模型 */
+  margin: 0;
+  /* 重置外边距 */
+  font-weight: normal;
+  /* 设置字重为正常 */
+}
+
+/* 页面主体样式 */
+body {
+  min-height: 100vh;
+  /* 最小高度为视口高度 */
+  color: var(--color-text);
+  /* 使用定义的文本颜色变量 */
+  background: var(--color-background);
+  /* 使用定义的背景色变量 */
+  transition:
+    /* 添加颜色和背景色过渡动画 */
+    color 0.5s,
+    background-color 0.5s;
+  line-height: 1.6;
+  /* 设置行高 */
+  font-family:
+    /* 设置字体优先级队列 */
+    Inter,
+    -apple-system,
+    BlinkMacSystemFont,
+    'Segoe UI',
+    Roboto,
+    Oxygen,
+    Ubuntu,
+    Cantarell,
+    'Fira Sans',
+    'Droid Sans',
+    'Helvetica Neue',
+    sans-serif;
+  font-size: 15px;
+  /* 设置基础字体大小 */
+  text-rendering: optimizeLegibility;
+  /* 优化文字渲染 */
+  -webkit-font-smoothing: antialiased;
+  /* WebKit浏览器的字体平滑 */
+  -moz-osx-font-smoothing: grayscale;
+  /* Firefox的字体平滑 */
+}
