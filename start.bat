@@ -1,8 +1,8 @@
 @echo off
-echo 正在启动画心系统...
+echo 正在启动绘心系统...
 
 :: 启动后端服务
-start cmd /k "cd huixin-vue-back && python main.py"
+start cmd /k "cd huixin-python-back && python main.py"
 
 :: 等待后端服务启动
 timeout /t 3
