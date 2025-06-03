@@ -1,0 +1,11 @@
+flask==3.0.3
+flask-socketio==5.3.7
+flask-cors==5.0.1
+PyJWT==2.9.0
+requests==2.32.3
+reportlab==4.2.5
+openai==1.54.4
+torch==2.5.1
+torchvision==0.20.1
+transformers==4.46.2
+pandas==2.2.3

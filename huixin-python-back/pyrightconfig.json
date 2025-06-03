@@ -1,0 +1,11 @@
+{
+    "include": [
+        "main.py",
+        "*.py"
+    ],
+    "extraPaths": [
+        "C:/Users/87388/AppData/Local/Programs/Python/Python313/Lib/site-packages"
+    ],
+    "reportMissingImports": false,
+    "reportMissingModuleSource": false
+}
