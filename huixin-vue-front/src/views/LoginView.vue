@@ -215,7 +215,7 @@ onMounted(() => {
 
 .login-content {
   width: 100%;
-  max-width: 1440px;
+  max-width: var(--container-max-width, 1440px);
   margin: 0 auto;
   min-height: 100vh;
   display: grid;
@@ -405,6 +405,105 @@ onMounted(() => {
 
   .login-box {
     max-width: 100%;
+  }
+}
+
+/* 2K分辨率优化 */
+@media (min-width: 2560px) {
+  .login-left {
+    padding: 6rem;
+  }
+  
+  .login-right {
+    padding: 6rem 4rem;
+  }
+  
+  .login-title {
+    font-size: 2.5rem;
+  }
+  
+  .login-subtitle {
+    font-size: 1.2rem;
+  }
+  
+  .brand-logo h1 {
+    font-size: 3rem;
+  }
+  
+  .brand-subtitle {
+    font-size: 1.3rem;
+  }
+  
+  .form-input {
+    padding: 1rem;
+    font-size: 1.1rem;
+  }
+  
+  .login-button {
+    padding: 1rem;
+    font-size: 1.2rem;
+  }
+}
+
+/* 4K分辨率优化 */
+@media (min-width: 3840px) {
+  .login-left {
+    padding: 8rem;
+  }
+  
+  .login-right {
+    padding: 8rem 6rem;
+  }
+  
+  .login-box {
+    max-width: 600px;
+  }
+  
+  .login-title {
+    font-size: 3rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .login-subtitle {
+    font-size: 1.4rem;
+    margin-bottom: 3rem;
+  }
+  
+  .brand-logo h1 {
+    font-size: 4rem;
+  }
+  
+  .brand-subtitle {
+    font-size: 1.6rem;
+  }
+  
+  .form-input {
+    padding: 1.25rem;
+    font-size: 1.3rem;
+    border-radius: 12px;
+  }
+  
+  .login-button {
+    padding: 1.25rem;
+    font-size: 1.4rem;
+    border-radius: 12px;
+  }
+  
+  .form-group {
+    margin-bottom: 2rem;
+  }
+  
+  .form-group label {
+    font-size: 1.2rem;
+    margin-bottom: 0.75rem;
+  }
+  
+  .form-options {
+    margin: 2rem 0;
+  }
+  
+  .remember-me, .forgot-link {
+    font-size: 1.1rem;
   }
 }
 

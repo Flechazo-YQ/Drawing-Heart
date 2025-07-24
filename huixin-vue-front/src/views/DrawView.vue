@@ -52,9 +52,6 @@
           <button class="action-btn save" @click="saveDrawing" v-if="!isImageUploaded && !currentFileName">
             保存图片
           </button>
-          <button class="action-btn iterate" v-if="!isImageUploaded && currentFileName" @click="checkIteration">
-            继续迭代
-          </button>
           <button class="action-btn submit" @click="analyzeDrawing" v-if="(isImageUploaded || currentFileName)"
             :disabled="isLoading">
             {{ isLoading ? '分析中...' : '前往分析' }}
@@ -124,8 +121,17 @@ const initCanvas = () => {
 
   // 设置画布大小为容器大小
   const container = canvas.parentElement
-  canvas.width = container.clientWidth
-  canvas.height = container.clientHeight
+  const containerWidth = container.clientWidth
+  const containerHeight = container.clientHeight
+  
+  // 保存当前画布内容（如果有的话）
+  let imageData = null
+  if (canvas.width > 0 && canvas.height > 0) {
+    imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
+  }
+  
+  canvas.width = containerWidth
+  canvas.height = containerHeight
 
   // 设置默认样式
   ctx.lineCap = 'round'
@@ -136,6 +142,24 @@ const initCanvas = () => {
   // 填充白色背景
   ctx.fillStyle = '#ffffff'
   ctx.fillRect(0, 0, canvas.width, canvas.height)
+  
+  // 如果有保存的画布内容，恢复它
+  if (imageData && !isImageUploaded.value) {
+    const tempCanvas = document.createElement('canvas')
+    const tempCtx = tempCanvas.getContext('2d')
+    tempCanvas.width = imageData.width
+    tempCanvas.height = imageData.height
+    tempCtx.putImageData(imageData, 0, 0)
+    
+    // 计算缩放比例保持宽高比
+    const scale = Math.min(canvas.width / tempCanvas.width, canvas.height / tempCanvas.height)
+    const newWidth = tempCanvas.width * scale
+    const newHeight = tempCanvas.height * scale
+    const x = (canvas.width - newWidth) / 2
+    const y = (canvas.height - newHeight) / 2
+    
+    ctx.drawImage(tempCanvas, x, y, newWidth, newHeight)
+  }
 }
 
 // 开始绘画
@@ -261,10 +285,20 @@ const handleFileUpload = (event) => {
 
 // 监听画布大小变化
 const handleResize = () => {
-  if (canvasRef.value) {
-    const imageData = ctx.getImageData(0, 0, canvasRef.value.width, canvasRef.value.height)
-    initCanvas()
-    ctx.putImageData(imageData, 0, 0)
+  if (canvasRef.value && canvasRef.value.width > 0) {
+    // 延迟执行以确保容器大小已更新
+    setTimeout(() => {
+      const container = canvasRef.value.parentElement
+      const newWidth = container.clientWidth
+      const newHeight = container.clientHeight
+      
+      // 只有当尺寸真正改变时才重新初始化（容差为5px）
+      if (Math.abs(canvasRef.value.width - newWidth) > 5 || 
+          Math.abs(canvasRef.value.height - newHeight) > 5) {
+        console.log(`Canvas resizing from ${canvasRef.value.width}x${canvasRef.value.height} to ${newWidth}x${newHeight}`)
+        initCanvas()
+      }
+    }, 150) // 增加延迟确保布局稳定
   }
 }
 
@@ -278,37 +312,6 @@ onMounted(() => {
 onUnmounted(() => {
   window.removeEventListener('resize', handleResize)
 })
-
-const checkIteration = async () => {
-  const token = localStorage.getItem('token')
-  if (!token) {
-    ElMessage.warning('请先登录')
-    router.push('/login')
-    return
-  }
-
-  try {
-    const response = await fetch(`${config.baseURL}/api/check-iteration`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': token
-      },
-      body: JSON.stringify({
-        fileName: currentFileName.value
-      })
-    })
-
-    const data = await response.json()
-    if (data.canIterate) {
-      await saveDrawing(true)
-    } else {
-      ElMessage.warning(data.message)
-    }
-  } catch (error) {
-    ElMessage.error('检查迭代状态时出错')
-  }
-}
 
 const saveDrawing = async (isUploaded = false) => {
   const token = localStorage.getItem('token')
@@ -396,18 +399,36 @@ const analyzeDrawing = async () => {
     })
 
     const data = await response.json()
+    console.log('Analysis response:', { status: response.status, data })
+    
     if (response.ok) {
       if (data.analysis) {
         analysisResult.value = data.analysis
         sections.value = parseAnalysisResult(data.analysis)
         currentPage.value = 1
+        ElMessage.success('分析完成!')
       } else if (data.message) {
-        analysisResult.value = data.message
+        // 检查是否是成功消息
+        if (data.message === '分析完成' || data.message.includes('成功')) {
+          analysisResult.value = data.message
+          ElMessage.success(data.message)
+        } else {
+          // 错误消息
+          analysisResult.value = data.message
+          ElMessage.error(data.message)
+        }
+      } else {
+        // 没有分析结果也没有消息
+        ElMessage.error('分析结果为空，请重试')
       }
-      currentFileName.value = data.file_name
-      ElMessage.success('分析完成!')
+      if (data.file_name) {
+        currentFileName.value = data.file_name
+      }
     } else {
-      ElMessage.error(data.message || '分析失败')
+      console.error('Analysis failed:', data)
+      const errorMessage = data.message || data.error || `分析失败 (HTTP ${response.status})`
+      ElMessage.error(errorMessage)
+      analysisResult.value = errorMessage
     }
   } catch (error) {
     console.error('Analysis error:', error)
@@ -431,9 +452,19 @@ const prevPage = () => {
 </script>
 
 <style scoped>
+/* 确保页面充分利用视口高度 */
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+}
+
 .draw-container {
   min-height: 100vh;
+  height: 100vh;
   background-color: var(--color-background);
+  display: flex;
+  flex-direction: column;
 }
 
 .modern-nav {
@@ -491,12 +522,16 @@ const prevPage = () => {
 }
 
 .draw-content {
+  flex: 1;
   max-width: 1920px;
   margin: 0 auto;
   padding: 84px 2rem 2rem;
   display: grid;
-  grid-template-columns: 2fr 1fr;
+  grid-template-columns: 3fr 2fr; /* 调整比例：绘图区域3份，分析面板2份 */
   gap: 2rem;
+  align-items: center; /* 垂直居中对齐 */
+  justify-content: center; /* 水平居中对齐 */
+  min-height: calc(100vh - 64px); /* 减去导航栏高度 */
 }
 
 .drawing-area {
@@ -504,11 +539,19 @@ const prevPage = () => {
   border-radius: 12px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
   padding: 2rem;
+  max-width: 800px; /* 限制绘图区域的最大宽度 */
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  align-items: center; /* 水平居中 */
+  position: relative; /* 确保正确的定位上下文 */
+  overflow: visible; /* 确保按钮不会被裁剪 */
 }
 
 .canvas-container {
   position: relative;
   width: 100%;
+  max-width: 700px; /* 默认最大宽度 */
   aspect-ratio: 4/3;
   background: #ffffff;
   border: 1px solid #e5e7eb;
@@ -517,6 +560,7 @@ const prevPage = () => {
   display: flex;
   justify-content: center;
   align-items: center;
+  margin: 0 auto; /* 居中显示 */
 }
 
 #drawingCanvas {
@@ -546,6 +590,7 @@ const prevPage = () => {
   padding: 0.75rem;
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  z-index: 5; /* 确保工具栏在画布上方，但在按钮下方 */
 }
 
 .tool-group {
@@ -604,9 +649,13 @@ const prevPage = () => {
 
 .action-buttons {
   display: flex;
-  justify-content: flex-end;
+  justify-content: center; /* 改为居中对齐 */
   gap: 1rem;
   margin-top: 1.5rem;
+  flex-wrap: wrap; /* 允许按钮在必要时换行 */
+  width: 100%; /* 确保占满容器宽度 */
+  position: relative; /* 确保正确的层级 */
+  z-index: 10; /* 确保按钮在最上层 */
 }
 
 .action-btn {
@@ -616,6 +665,9 @@ const prevPage = () => {
   font-size: 0.875rem;
   cursor: pointer;
   transition: all 0.2s;
+  white-space: nowrap; /* 防止文字换行 */
+  flex-shrink: 0; /* 防止按钮被压缩 */
+  position: relative; /* 确保正确的定位 */
 }
 
 .action-btn.clear {
@@ -645,15 +697,6 @@ const prevPage = () => {
   background: #2563eb;
 }
 
-.action-btn.iterate {
-  background: #9333ea;
-  color: white;
-}
-
-.action-btn.iterate:hover {
-  background: #7e22ce;
-}
-
 .action-btn.upload {
   background: #8b5cf6;
   color: white;
@@ -667,8 +710,11 @@ const prevPage = () => {
   background: #ffffff;
   border-radius: 12px;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-  padding: 2rem;
-  height: 100%;
+  padding: 2.5rem; /* 增加内边距 */
+  height: fit-content; /* 改为适应内容高度 */
+  max-height: calc(100vh - 120px); /* 限制最大高度，留出空间 */
+  overflow-y: auto; /* 允许垂直滚动 */
+  align-self: center; /* 与画板居中对齐 */
 }
 
 .panel-title {
@@ -681,6 +727,7 @@ const prevPage = () => {
 .analysis-content {
   min-height: 300px;
   position: relative;
+  line-height: 1.6; /* 改善行间距 */
 }
 
 .analysis-content.loading {
@@ -712,12 +759,20 @@ const prevPage = () => {
 
 .analysis-text {
   white-space: pre-line;
-  line-height: 1.6;
+  line-height: 1.7; /* 增加行间距 */
   color: #333;
-  padding: 1rem;
+  padding: 1.5rem; /* 增加内边距 */
   background: #f8f9fa;
   border-radius: 8px;
   margin-top: 1rem;
+  font-size: 0.95rem; /* 稍微调整字体大小 */
+}
+
+.analysis-text h3 {
+  color: #1a1a1a;
+  margin: 1.5rem 0 1rem 0;
+  font-size: 1.1rem;
+  font-weight: 600;
 }
 
 .pagination {
@@ -755,28 +810,185 @@ const prevPage = () => {
   }
 }
 
+/* 超大屏幕优化（4K等） */
+@media (min-width: 1920px) {
+  .draw-content {
+    grid-template-columns: 800px 600px; /* 更大的固定尺寸 */
+    gap: 4rem; /* 更大的间距 */
+    justify-content: center;
+    align-items: center;
+  }
+  
+  .drawing-area {
+    max-width: 800px;
+    padding: 3rem;
+  }
+  
+  .analysis-panel {
+    padding: 3rem;
+    font-size: 1.1rem; /* 稍大的字体 */
+  }
+}
+
+/* 大屏幕优化 */
+@media (min-width: 1400px) {
+  .draw-content {
+    grid-template-columns: 700px 500px; /* 绘图区域700px，分析面板500px */
+    justify-content: center;
+    align-items: center; /* 确保垂直居中 */
+    gap: 3rem; /* 增加间距 */
+  }
+}
+
+@media (min-width: 1200px) and (max-width: 1399px) {
+  .drawing-area {
+    max-width: 700px; /* 中大屏幕的限制 */
+  }
+}
+
+/* 针对1200px以下分辨率的处理，解决按钮消失问题 */
 @media (max-width: 1200px) {
   .draw-content {
     grid-template-columns: 1fr;
+    align-items: center;
+    justify-items: center;
+    padding: 84px 1.5rem 2rem;
+    gap: 2rem;
+  }
+
+  .drawing-area {
+    max-width: 700px;
+    width: 100%;
+  }
+  
+  .canvas-container {
+    max-width: 700px;
+  }
+  
+  .action-buttons {
+    display: flex;
+    justify-content: center;
+    gap: 0.8rem;
+    margin-top: 1.5rem;
+    flex-wrap: wrap; /* 允许按钮换行 */
+    width: 100%;
+    padding: 0 1rem; /* 添加左右内边距 */
+  }
+  
+  .action-btn {
+    padding: 0.7rem 1rem;
+    font-size: 0.85rem;
+    min-width: 90px; /* 确保按钮有最小宽度 */
+    white-space: nowrap; /* 防止文字换行 */
+    flex: 0 0 auto; /* 防止按钮被压缩 */
   }
 
   .analysis-panel {
     margin-top: 2rem;
+    width: 100%;
+    max-width: 700px;
+    align-self: center;
+  }
+}
+
+/* 针对1120px以下分辨率的特殊处理 */
+@media (max-width: 1120px) {
+  .draw-content {
+    padding: 84px 1rem 2rem; /* 减少侧边距 */
+    gap: 1.5rem;
+  }
+
+  .drawing-area {
+    max-width: 600px;
+    width: 100%;
+    padding: 1.5rem; /* 减少内边距 */
+  }
+  
+  .canvas-container {
+    max-width: 600px;
+  }
+  
+  .action-buttons {
+    gap: 0.6rem;
+    margin-top: 1rem;
+    flex-direction: row; /* 确保是水平排列 */
+    flex-wrap: wrap; /* 允许换行 */
+    justify-content: center;
+    align-items: center;
+    padding: 0.5rem; /* 添加内边距 */
+  }
+  
+  .action-btn {
+    padding: 0.6rem 0.8rem;
+    font-size: 0.8rem;
+    min-width: 80px;
+    max-width: 120px; /* 限制最大宽度防止过宽 */
+    text-align: center;
+  }
+
+  .analysis-panel {
+    max-width: 600px;
+    padding: 1.5rem; /* 减少内边距 */
+  }
+}
+
+@media (max-width: 768px) {
+  .draw-content {
+    padding: 84px 1rem 1rem; /* 减少侧边距 */
+    gap: 1.5rem;
+    align-items: center; /* 保持居中对齐 */
+  }
+  
+  .canvas-container {
+    max-width: 600px; /* 在小屏幕上进一步限制宽度 */
+  }
+  
+  .drawing-area {
+    max-width: 100%;
+    padding: 1.5rem;
+  }
+  
+  .analysis-panel {
+    padding: 1.5rem;
+    align-self: center; /* 确保与画板对齐 */
   }
 }
 
 @media (max-width: 640px) {
+  .draw-content {
+    padding: 84px 0.5rem 1rem; /* 进一步减少侧边距 */
+    min-height: calc(100vh - 64px);
+    align-items: center; /* 保持居中对齐 */
+  }
+  
   .drawing-tools {
     flex-direction: column;
     align-items: center;
+    bottom: 0.5rem; /* 调整工具栏位置 */
   }
 
   .action-buttons {
     flex-direction: column;
+    align-items: center; /* 确保垂直布局时也居中 */
+    gap: 0.75rem;
   }
 
   .action-btn {
     width: 100%;
+    max-width: 300px; /* 限制最大宽度，保持美观 */
+  }
+  
+  .canvas-container {
+    max-width: 100%; /* 在最小屏幕上使用全宽 */
+  }
+  
+  .drawing-area {
+    padding: 1rem;
+  }
+  
+  .analysis-panel {
+    padding: 1rem;
+    align-self: center; /* 确保与画板对齐 */
   }
 }
 </style>

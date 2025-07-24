@@ -328,6 +328,9 @@ watch(isAdminMode, (newValue) => {
 
 // 显示欢迎消息和获取用户信息
 onMounted(async () => {
+  // 添加页面类名以便CSS样式正确应用
+  document.body.classList.add('chat-page')
+  
   await getUserInfo()
   
   // 获取用户登录状态
@@ -386,6 +389,9 @@ const checkIfJustLoggedIn = () => {
 
 // 组件销毁时的清理
 onUnmounted(() => {
+  // 移除页面类名
+  document.body.classList.remove('chat-page')
+  
   // 移除事件监听器
   window.removeEventListener('beforeunload', saveChatState)
   
@@ -636,12 +642,12 @@ const sendMessage = async () => {
 .chat-container {
   height: 100vh;
   width: 100%;
-  max-width: 1000px;
+  max-width: 1200px; /* 设置最大宽度 */
   min-width: 600px;
-  margin: 0 auto;
+  margin: 0 auto; /* 居中对齐 */
   display: flex;
   flex-direction: column;
-  padding: 20px;
+  padding: calc(var(--spacing-unit, 1rem) * 1.25);
   box-sizing: border-box;
 }
 
@@ -765,10 +771,12 @@ const sendMessage = async () => {
 
 .message.assistant, .message.admin {
   flex-direction: row;
+  align-self: flex-start;
 }
 
 .message.user {
   flex-direction: row-reverse;
+  align-self: flex-end;
 }
 
 .message-content {
@@ -776,9 +784,12 @@ const sendMessage = async () => {
   padding: 16px 20px;
   border-radius: 18px;
   font-size: 15px;
-  line-height: 1.5;
+  line-height: 1.6;
   white-space: pre-wrap;
-  word-break: break-word;
+  word-wrap: break-word;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+  hyphens: none;
   margin: 0;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
   position: relative;
@@ -1007,13 +1018,6 @@ const sendMessage = async () => {
 }
 
 /* 响应式设计 */
-@media (max-width: 1024px) {
-  .chat-container {
-    max-width: 90vw;
-    min-width: 500px;
-  }
-}
-
 @media (max-width: 768px) {
   .chat-container {
     min-width: 100%;
@@ -1058,6 +1062,226 @@ const sendMessage = async () => {
   
   .char-count {
     font-size: 11px;
+  }
+}
+
+/* 中等屏幕优化 (平板和小桌面) */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .chat-container {
+    max-width: 95vw;
+    padding: 20px;
+  }
+  
+  .chat-messages {
+    padding: 20px;
+    height: calc(100vh - 200px);
+  }
+  
+  .message-content {
+    max-width: 85%; /* 参考手机端的85% */
+    font-size: 15px;
+    padding: 14px 18px;
+  }
+  
+  .message {
+    max-width: 90%; /* 增加到90% */
+  }
+  
+  .avatar {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .input-wrapper textarea {
+    font-size: 15px;
+    padding: 14px 18px;
+  }
+  
+  .send-button {
+    width: 42px;
+    height: 42px;
+  }
+  
+  .chat-title {
+    font-size: 17px;
+  }
+  
+  .sidebar-toggle-btn,
+  .back-button {
+    padding: 10px 14px;
+    font-size: 14px;
+  }
+}
+
+/* 常规桌面屏幕优化 */
+@media (min-width: 1025px) and (max-width: 1199px) {
+  .chat-container {
+    max-width: 1000px;
+    padding: 24px;
+  }
+  
+  .chat-messages {
+    padding: 22px;
+    height: calc(100vh - 210px);
+  }
+  
+  .message-content {
+    max-width: 85%; /* 参考手机端的85% */
+    font-size: 15px;
+    padding: 15px 19px;
+  }
+  
+  .message {
+    max-width: 90%; /* 增加到90% */
+  }
+  
+  .avatar {
+    width: 41px;
+    height: 41px;
+  }
+  
+  .input-wrapper textarea {
+    font-size: 15px;
+    padding: 15px 19px;
+  }
+  
+  .send-button {
+    width: 43px;
+    height: 43px;
+  }
+  
+  .chat-title {
+    font-size: 17px;
+  }
+}
+
+/* 宽屏幕优化 */
+@media (min-width: 1200px) {
+  .chat-container {
+    max-width: 1200px; /* 聊天容器最大宽度 */
+  }
+  
+  .message-content {
+    max-width: 85%; /* 参考1199px以下的成功设置 */
+    line-height: 1.6;
+    word-wrap: break-word;
+    word-break: keep-all;
+    overflow-wrap: break-word;
+    hyphens: none;
+  }
+  
+  .message {
+    max-width: 90%; /* 参考1199px以下的成功设置 */
+  }
+}
+
+/* 2K分辨率优化 */
+@media (min-width: 2560px) {
+  .chat-container {
+    max-width: 1400px; /* 2K屏幕下稍微增加聊天容器宽度 */
+    padding: 30px;
+  }
+  
+  .message-content {
+    font-size: 1.1rem;
+    padding: 16px 20px;
+    max-width: 85%; /* 保持与较小屏幕一致的85% */
+    line-height: 1.7;
+    word-wrap: break-word;
+    word-break: keep-all;
+    overflow-wrap: break-word;
+    hyphens: none;
+  }
+  
+  .message {
+    max-width: 90%; /* 保持与较小屏幕一致的90% */
+  }
+  
+  .chat-header {
+    font-size: 1.2rem;
+    padding: 20px 0;
+  }
+  
+  .input-wrapper textarea {
+    font-size: 1.1rem;
+    padding: 16px 20px;
+  }
+  
+  .send-button {
+    width: 50px;
+    height: 50px;
+  }
+  
+  .avatar {
+    width: 50px;
+    height: 50px;
+  }
+}
+
+/* 4K分辨率优化 */
+@media (min-width: 3840px) {
+  .chat-container {
+    max-width: 1600px; /* 4K屏幕下的最大聊天容器宽度 */
+    padding: 40px;
+  }
+  
+  .message-content {
+    font-size: 1.3rem;
+    padding: 20px 24px;
+    max-width: 85%; /* 保持与较小屏幕一致的85% */
+    line-height: 1.8;
+    word-wrap: break-word;
+    word-break: keep-all;
+    overflow-wrap: break-word;
+    hyphens: none;
+  }
+  
+  .message {
+    max-width: 90%; /* 保持与较小屏幕一致的90% */
+  }
+  
+  .chat-header {
+    font-size: 1.4rem;
+    padding: 24px 0;
+  }
+  
+  .input-wrapper textarea {
+    font-size: 1.3rem;
+    padding: 20px 24px;
+    min-height: 80px;
+  }
+  
+  .send-button {
+    width: 60px;
+    height: 60px;
+  }
+  
+  .send-icon {
+    width: 28px;
+    height: 28px;
+  }
+  
+  .avatar {
+    width: 60px;
+    height: 60px;
+  }
+  
+  .empty-chat h3 {
+    font-size: 2rem;
+  }
+  
+  .empty-chat p {
+    font-size: 1.3rem;
+  }
+  
+  .chat-title {
+    font-size: 1.6rem;
+  }
+  
+  .sidebar-toggle-btn,
+  .back-button {
+    padding: 12px 20px;
+    font-size: 1.2rem;
   }
 }
 

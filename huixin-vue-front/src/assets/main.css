@@ -7,6 +7,26 @@
   font-weight: normal;
 }
 
+/* 为全宽度页面移除容器限制 */
+.full-width {
+  max-width: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+}
+
+/* 专门为聊天和管理页面优化 */
+.chat-page, .admin-page {
+  max-width: none;
+  margin: 0;
+  padding: 0;
+}
+
+/* 绘画页面保持原有的布局方式 */
+.draw-page #app {
+  /* 确保绘画页面使用正常的容器布局 */
+  display: grid;
+}
+
 a,
 .green {
   text-decoration: none;
@@ -21,6 +41,7 @@ a,
   }
 }
 
+/* 响应式布局优化 - 支持到4K分辨率 */
 @media (min-width: 1440px) {
   body {
     display: flex;
@@ -30,5 +51,81 @@ a,
   #app {
     display: grid;
     padding: 0 2rem;
+    max-width: 1680px;
+  }
+  
+  /* 为聊天和管理页面移除宽度限制 */
+  .chat-page #app,
+  .admin-page #app {
+    max-width: none;
+    padding: 0;
+  }
+  
+  /* 绘画页面保持容器布局 */
+  .draw-page #app {
+    max-width: 1680px;
+    padding: 0 2rem;
+  }
+}
+
+/* 2K分辨率优化 (2560x1440) */
+@media (min-width: 2560px) {
+  #app {
+    max-width: 2200px;
+    padding: 0 3rem;
+  }
+  
+  /* 为聊天和管理页面移除宽度限制 */
+  .chat-page #app,
+  .admin-page #app {
+    max-width: none;
+    padding: 0;
+  }
+  
+  /* 绘画页面2K优化 */
+  .draw-page #app {
+    max-width: 2200px;
+    padding: 0 3rem;
+  }
+  
+  body {
+    font-size: 16px;
+  }
+}
+
+/* 4K分辨率优化 (3840x2160) */
+@media (min-width: 3840px) {
+  #app {
+    max-width: 3200px;
+    padding: 0 4rem;
+  }
+  
+  /* 为聊天和管理页面移除宽度限制 */
+  .chat-page #app,
+  .admin-page #app {
+    max-width: none;
+    padding: 0;
+  }
+  
+  /* 绘画页面4K优化 */
+  .draw-page #app {
+    max-width: 3200px;
+    padding: 0 4rem;
+  }
+  
+  body {
+    font-size: 18px;
+  }
+  
+  /* 为4K屏幕优化字体和间距 */
+  h1 { font-size: 4rem; }
+  h2 { font-size: 3rem; }
+  h3 { font-size: 2.5rem; }
+  p { font-size: 1.25rem; line-height: 1.8; }
+  
+  /* 优化按钮大小 */
+  button {
+    padding: 1.25rem 2.5rem;
+    font-size: 1.2rem;
   }
 }
