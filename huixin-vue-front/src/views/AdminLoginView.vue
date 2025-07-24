@@ -93,20 +93,27 @@ const handleLogin = async () => {
 
 <style scoped>
 .admin-login-container {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
   display: flex;
   justify-content: center;
   align-items: center;
-  min-height: 100vh;
-  background-color: #f3f4f6;
+  background: #f8fafc;
+  padding: 20px;
+  box-sizing: border-box;
 }
 
 .admin-login-box {
   width: 100%;
-  max-width: 400px;
-  padding: 2rem;
+  max-width: 600px;
+  min-width: 500px;
+  padding: 3rem 2.5rem;
   background-color: white;
-  border-radius: 8px;
-  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+  border-radius: 16px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
 }
 
 h1 {
@@ -133,41 +140,47 @@ label {
 
 .form-input {
   width: 100%;
-  padding: 0.75rem 1rem;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
+  padding: 1rem 1.25rem;
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
   font-size: 1rem;
-  transition: all 0.2s;
-  background: #ffffff;
+  transition: all 0.3s ease;
+  background: #fafafa;
+  box-sizing: border-box;
 }
 
 .form-input:focus {
   outline: none;
-  border-color: #42b983;
-  box-shadow: 0 0 0 3px rgba(66, 185, 131, 0.1);
+  border-color: #10b981;
+  background: white;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
 }
 
 .login-button {
   width: 100%;
-  padding: 0.875rem;
-  background: #42b983;
+  padding: 1rem;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
   color: white;
   border: none;
-  border-radius: 8px;
+  border-radius: 12px;
   font-size: 1rem;
-  font-weight: 500;
+  font-weight: 600;
   cursor: pointer;
-  transition: all 0.2s;
-  margin-top: 1rem;
+  transition: all 0.3s ease;
+  margin-top: 1.5rem;
+  box-shadow: 0 4px 12px rgba(16, 185, 129, 0.3);
 }
 
-.login-button:hover {
-  background: #3aa876;
+.login-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 6px 16px rgba(16, 185, 129, 0.4);
 }
 
 .login-button:disabled {
-  background-color: #9ca3af;
+  background: #9ca3af;
   cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
 }
 
 .back-link {
@@ -183,5 +196,40 @@ label {
 
 .back-link a:hover {
   text-decoration: underline;
+}
+
+/* 响应式设计 */
+@media (max-width: 768px) {
+  .admin-login-container {
+    padding: 16px;
+  }
+  
+  .admin-login-box {
+    padding: 2rem 1.5rem;
+    min-width: 400px;
+    max-width: 90vw;
+  }
+  
+  .form-input {
+    padding: 0.875rem 1rem;
+    font-size: 16px; /* 防止iOS缩放 */
+  }
+  
+  h1 {
+    font-size: 1.5rem;
+    margin-bottom: 1.5rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .admin-login-container {
+    padding: 12px;
+  }
+  
+  .admin-login-box {
+    padding: 1.5rem 1rem;
+    min-width: 350px;
+    max-width: 95vw;
+  }
 }
 </style>

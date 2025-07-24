@@ -9,7 +9,28 @@ device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
 
 def load_slang_map(slang_file="slang_map.csv"):
     slang_dict = {}
-    slang_df = pd.read_csv(slang_file, encoding='gb18030')
+    try:
+        # 尝试不同的编码方式
+        for encoding in ['utf-8', 'gb18030', 'gbk', 'utf-8-sig']:
+            try:
+                slang_df = pd.read_csv(slang_file, encoding=encoding)
+                break
+            except UnicodeDecodeError:
+                continue
+        else:
+            # 如果所有编码都失败，创建默认数据
+            slang_df = pd.DataFrame({
+                'slang': ['nb', '666', 'yyds', 'tql'],
+                'normalized': ['牛逼', '厉害', '永远的神', '太强了']
+            })
+    except Exception as e:
+        print(f"加载slang_map文件出错: {e}")
+        # 创建默认数据
+        slang_df = pd.DataFrame({
+            'slang': ['nb', '666', 'yyds', 'tql'],
+            'normalized': ['牛逼', '厉害', '永远的神', '太强了']
+        })
+    
     for _, row in slang_df.iterrows():
         slang_dict[row['slang']] = row['normalized']
     return slang_dict
