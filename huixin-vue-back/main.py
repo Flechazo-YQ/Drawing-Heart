@@ -39,7 +39,7 @@ from mongodb_config import user_manager, chat_manager, message_manager, drawing_
 # 注册字体 - 注释掉避免文件不存在错误
 # pdfmetrics.registerFont(TTFont('SimHei', 'SimHei.ttf'))  # 确保路径正确，或使用系统字体路径
 app = Flask(__name__)
-CORS(app)  # 启用CORS
+CORS(app, resources={r"/*": {"origins": "*"}}, supports_credentials=True)  # 启用CORS
 socketio = SocketIO(app, cors_allowed_origins="*", async_mode='threading', logger=True, engineio_logger=True)  # 初始化SocketIO
 UPLOAD_FOLDER = 'uploads'
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
@@ -54,7 +54,7 @@ transform = transforms.Compose([
 has_SECRET_KEY = 'jjj111@'
 ALGORITHM = 'HS256'
 ACCESS_TOKEN_EXPIRE_MINUTES = 60
-ip = 'http://n42294i452.wicp.vip'
+ip = 'http://101.132.253.65:5173/'
 text_result = ''
 
 # 配置日志

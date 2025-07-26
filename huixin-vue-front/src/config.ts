@@ -4,25 +4,24 @@
 const isDevelopment = import.meta.env.DEV;
 
 // 域名配置
-const devDomain = 'localhost:5000';  // 开发环境域名
-// 检测是否为移动设备
-const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-// 根据设备类型设置不同的域名策略
-const prodDomain = (isMobile && window.location.hostname === '101.132.253.65')
-    ? '101.132.253.65:5000'  // 移动设备直接访问API服务器
-    : '';  // 其他情况使用相对URL
+// 在开发和生产环境中，我们都希望API请求发往当前域名，
+// 所以API相关的域名配置应该为空字符串，以形成相对路径。
+const apiDomain = '';
 
 // 协议配置
-const protocol = isDevelopment || (isMobile && prodDomain) ? 'http://' : '';
-const wsProtocol = isDevelopment ? 'ws://' : (window.location.protocol === 'https:' ? 'wss://' : 'ws://');
+const protocol = ''; // API请求使用相对路径，协议由浏览器自动处理
+const wsProtocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
+
+// 检测是否为移动设备
+const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
 // 导出配置对象
 export default {
-    // API基础URL - 不要在开发环境下添加末尾斜杠，因为后端路由不带前导斜杠
-    baseURL: `${protocol}${isDevelopment ? devDomain : prodDomain}`,
+    // API基础URL - 始终为空字符串，使所有API请求都成为相对路径请求。
+    baseURL: apiDomain,
 
-    // WebSocket URL
-    socketUrl: `${wsProtocol}${isDevelopment ? devDomain : window.location.host}`,
+    // WebSocket URL - 始终连接到当前页面的主机。
+    socketUrl: `${wsProtocol}${window.location.host}`,
 
     // 其他配置项 - 确保API路径与后端路由匹配
     uploadPath: '/save',          // 修改为正确的上传路径
