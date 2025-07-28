@@ -40,7 +40,14 @@ from mongodb_config import user_manager, chat_manager, message_manager, drawing_
 # 注册字体 - 注释掉避免文件不存在错误
 # pdfmetrics.registerFont(TTFont('SimHei', 'SimHei.ttf'))  # 确保路径正确，或使用系统字体路径
 app = Flask(__name__)
-CORS(app, resources={r"/*": {"origins": "*"}})  # 允许所有源的CORS请求
+CORS(app, resources={
+    r"/*": {
+        "origins": "*",
+        "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        "allow_headers": ["Content-Type", "Authorization", "X-Requested-With"],
+        "supports_credentials": True
+    }
+})  # 配置更详细的CORS设置以支持移动端
 socketio = SocketIO(app, cors_allowed_origins="*", async_mode='threading', logger=True, engineio_logger=True)  # 初始化SocketIO
 UPLOAD_FOLDER = 'uploads'
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
@@ -110,6 +117,17 @@ def verify_token(token):
 
 def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
+
+
+# 添加全局OPTIONS处理，支持预检请求
+@app.before_request
+def handle_preflight():
+    if request.method == "OPTIONS":
+        response = Response()
+        response.headers.add("Access-Control-Allow-Origin", "*")
+        response.headers.add('Access-Control-Allow-Headers', "*")
+        response.headers.add('Access-Control-Allow-Methods', "*")
+        return response
 
 
 @app.route('/')

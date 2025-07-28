@@ -5,7 +5,21 @@ const isDevelopment = import.meta.env.DEV;
 
 // 域名配置
 // 开发环境下，前端和后端可能运行在不同端口
-const apiDomain = isDevelopment ? 'http://localhost:5000' : '';
+// 移动端访问时需要使用局域网IP
+const getApiDomain = () => {
+  if (!isDevelopment) return '';
+
+  // 如果是通过IP访问的（移动端），则使用相同的主机但不同端口
+  const currentHost = window.location.hostname;
+  if (currentHost === 'localhost' || currentHost === '127.0.0.1') {
+    return 'http://localhost:5000';
+  } else {
+    // 移动端通过IP访问时，使用相同的IP但端口改为5000
+    return `http://${currentHost}:5000`;
+  }
+};
+
+const apiDomain = getApiDomain();
 
 // 协议配置
 const protocol = ''; // API请求使用相对路径，协议由浏览器自动处理

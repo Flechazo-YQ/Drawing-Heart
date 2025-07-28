@@ -22,7 +22,8 @@ export default defineConfig({
     devSourcemap: true
   },
   server: {
-    host: true,
+    host: '0.0.0.0', // 允许从任何IP访问
+    port: 5173,
     allowedHosts: [
       "4v22948452.eicp.vip",
       "1075oj69wr205.vicp.fun",
@@ -30,6 +31,7 @@ export default defineConfig({
       'localhost',
       '127.0.0.1',
       '101.132.253.65',  // 添加服务器IP
+      '192.168.2.10',    // 添加您的局域网IP
       '*.cpolar.top',
       '*.r15.cpolar.top',
       '218e05ad.r15.cpolar.top'
