@@ -7,8 +7,10 @@
           <span>绘心同学</span>
         </router-link>
         <div class="nav-actions">
-          <router-link to="/chat" class="nav-link">前往对话</router-link>
+          <router-link to="/draw" class="nav-link active">绘画空间</router-link>
+          <router-link to="/chat" class="nav-link">心理对话</router-link>
           <router-link to="/user" class="nav-link">个人中心</router-link>
+          <button class="nav-button logout-btn" @click="handleLogout">退出</button>
         </div>
       </div>
     </nav>
@@ -99,6 +101,14 @@ const currentFileName = ref('')
 const analysisResult = ref('')
 const currentPage = ref(1)
 const sections = ref([])
+
+// 退出登录处理
+const handleLogout = () => {
+  localStorage.removeItem('token')
+  localStorage.removeItem('userInfo')
+  localStorage.removeItem('isLoggedIn')
+  router.push('/login')
+}
 
 // 绘画相关的状态
 const isDrawing = ref(false)
@@ -547,11 +557,41 @@ html, body {
   color: #4a4a4a;
   text-decoration: none;
   font-size: 1rem;
-  transition: color 0.2s;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  transition: all 0.2s;
 }
 
 .nav-link:hover {
   color: #42b983;
+  background-color: rgba(66, 185, 131, 0.1);
+}
+
+.nav-link.active {
+  color: #42b983;
+  background-color: rgba(66, 185, 131, 0.1);
+  font-weight: 600;
+}
+
+.nav-button {
+  background: none;
+  border: 1px solid #ddd;
+  color: #4a4a4a;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.logout-btn {
+  border-color: #ff6b6b;
+  color: #ff6b6b;
+}
+
+.logout-btn:hover {
+  background-color: #ff6b6b;
+  color: white;
 }
 
 .draw-content {

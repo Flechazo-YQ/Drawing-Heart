@@ -7,8 +7,10 @@
           <span>绘心同学</span>
         </router-link>
         <div class="nav-actions">
-          <router-link to="/chat" class="nav-link">前往对话</router-link>
-          <button class="nav-button" @click="handleLogout">退出登录</button>
+          <router-link to="/draw" class="nav-link">绘画空间</router-link>
+          <router-link to="/chat" class="nav-link">心理对话</router-link>
+          <router-link to="/user" class="nav-link active">个人中心</router-link>
+          <button class="nav-button logout-btn" @click="handleLogout">退出</button>
         </div>
       </div>
     </nav>
@@ -152,33 +154,44 @@ const handleLogout = () => {
 }
 
 .nav-link {
-  padding: 0.5rem 1.25rem;
-  border: none;
-  border-radius: 6px;
   color: #4a4a4a;
   text-decoration: none;
-  font-size: 0.875rem;
-  transition: color 0.2s;
+  font-size: 1rem;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  transition: all 0.2s;
 }
 
 .nav-link:hover {
-  background-color: rgb(66, 185, 131, 0.4);
   color: #42b983;
+  background-color: rgba(66, 185, 131, 0.1);
+}
+
+.nav-link.active {
+  color: #42b983;
+  background-color: rgba(66, 185, 131, 0.1);
+  font-weight: 600;
 }
 
 .nav-button {
-  padding: 0.5rem 1.25rem;
-  border: none;
-  border-radius: 6px;
-  background: #f3f4f6;
+  background: none;
+  border: 1px solid #ddd;
   color: #4a4a4a;
-  font-size: 0.875rem;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-size: 1rem;
   cursor: pointer;
   transition: all 0.2s;
 }
 
-.nav-button:hover {
-  background: #ff000089;
+.logout-btn {
+  border-color: #ff6b6b;
+  color: #ff6b6b;
+}
+
+.logout-btn:hover {
+  background-color: #ff6b6b;
+  color: white;
 }
 
 .user-content {

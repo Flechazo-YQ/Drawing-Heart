@@ -7,7 +7,8 @@
           <span>绘心同学</span>
         </router-link>
         <div class="nav-actions">
-          <router-link to="/chat" class="nav-link">开始对话</router-link>
+          <router-link to="/draw" class="nav-link">绘画空间</router-link>
+          <router-link to="/chat" class="nav-link">心理对话</router-link>
           <router-link to="/user" class="nav-link">个人中心</router-link>
         </div>
       </div>
@@ -17,6 +18,26 @@
       <div class="about-section">
         <h1>关于绘心同学</h1>
         <p>欢迎来到绘心同学，这是一个专注于心理健康的智能对话平台。</p>
+
+        <div class="features-overview">
+          <div class="feature-item">
+            <h3>🎨 绘画分析</h3>
+            <p>通过AI分析您的绘画作品，了解内心的情感状态</p>
+            <router-link to="/draw" class="feature-link">开始绘画 →</router-link>
+          </div>
+
+          <div class="feature-item">
+            <h3>💬 心理对话</h3>
+            <p>与AI进行深度心理对话，获得专业的情感支持</p>
+            <router-link to="/chat" class="feature-link">开始对话 →</router-link>
+          </div>
+
+          <div class="feature-item">
+            <h3>👤 个人中心</h3>
+            <p>管理您的个人信息和历史记录</p>
+            <router-link to="/user" class="feature-link">进入中心 →</router-link>
+          </div>
+        </div>
       </div>
     </main>
   </div>
@@ -106,5 +127,52 @@
 .about-section p {
   color: #4a4a4a;
   line-height: 1.6;
+  margin-bottom: 2rem;
+}
+
+.features-overview {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 1.5rem;
+  margin-top: 2rem;
+}
+
+.feature-item {
+  background: #f8f9fa;
+  padding: 2rem;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  transition: all 0.3s ease;
+}
+
+.feature-item:hover {
+  transform: translateY(-3px);
+  box-shadow: 0 8px 25px rgba(0, 0, 0, 0.1);
+}
+
+.feature-item h3 {
+  margin: 0 0 1rem;
+  font-size: 1.25rem;
+  color: #1a1a1a;
+  font-weight: 600;
+}
+
+.feature-item p {
+  color: #6b7280;
+  line-height: 1.6;
+  margin: 0 0 1.5rem;
+}
+
+.feature-link {
+  color: #42b983;
+  text-decoration: none;
+  font-weight: 500;
+  display: inline-flex;
+  align-items: center;
+  transition: color 0.2s;
+}
+
+.feature-link:hover {
+  color: #3aa876;
 }
 </style>

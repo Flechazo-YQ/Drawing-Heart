@@ -8,8 +8,10 @@
           <span class="logo-subtitle">AI心理绘画治疗平台</span>
         </router-link>
         <div class="navbar-links">
-          <router-link to="/" class="nav-link">主页</router-link>
-          <router-link to="/privacy" class="nav-link">隐私政策</router-link>
+          <router-link to="/" class="nav-link">首页</router-link>
+          <router-link to="/about" class="nav-link">关于</router-link>
+          <router-link to="/login" class="nav-link login-btn">登录</router-link>
+          <router-link to="/register" class="nav-link register-btn">注册</router-link>
         </div>
       </div>
     </nav>
@@ -51,7 +53,13 @@
 
     <footer class="modern-footer">
       <div class="footer-content">
-        <p>&copy; 2025 心理平台. 保留所有权利.</p>
+        <div class="footer-links">
+          <router-link to="/about" class="footer-link">关于我们</router-link>
+          <router-link to="/privacy" class="footer-link">隐私政策</router-link>
+          <router-link to="/terms" class="footer-link">服务条款</router-link>
+          <router-link to="/admin-login" class="footer-link admin-entry">管理入口</router-link>
+        </div>
+        <p>&copy; 2025 绘心同学. 保留所有权利.</p>
       </div>
     </footer>
   </div>
@@ -134,12 +142,37 @@
   text-decoration: none;
   font-size: 1.1rem;
   font-weight: 500;
-  transition: color 0.3s ease; /* 颜色过渡动画 */
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  transition: all 0.3s ease; /* 颜色过渡动画 */
 }
 
 /* 导航链接悬停效果 */
 .nav-link:hover {
   color: #42b983; /* 绿色 */
+  background-color: rgba(66, 185, 131, 0.1);
+}
+
+/* 登录按钮特殊样式 */
+.login-btn {
+  color: #42b983;
+  border: 1px solid #42b983;
+}
+
+.login-btn:hover {
+  background-color: #42b983;
+  color: white;
+}
+
+/* 注册按钮特殊样式 */
+.register-btn {
+  background-color: #42b983;
+  color: white;
+}
+
+.register-btn:hover {
+  background-color: #3aa876;
+  transform: translateY(-1px);
 }
 
 /* 主要内容区域 */
@@ -298,7 +331,7 @@
 .modern-footer {
   background-color: #1a1a1a;
   color: #ffffff;
-  padding: 2rem 4rem;
+  padding: 3rem 4rem 2rem;
 }
 
 /* 页脚内容 */
@@ -306,8 +339,36 @@
   max-width: 1440px;
   margin: 0 auto;
   text-align: center;
-  font-size: 1rem;
+}
+
+.footer-links {
+  display: flex;
+  justify-content: center;
+  gap: 2rem;
+  margin-bottom: 1.5rem;
+  flex-wrap: wrap;
+}
+
+.footer-link {
+  color: #ccc;
+  text-decoration: none;
+  font-size: 0.9rem;
+  transition: color 0.3s ease;
+}
+
+.footer-link:hover {
+  color: #42b983;
+}
+
+.admin-entry {
+  font-size: 0.8rem;
+  opacity: 0.7;
+}
+
+.footer-content p {
+  font-size: 0.9rem;
   opacity: 0.8;
+  margin: 0;
 }
 
 /* 响应式布局 - 大屏幕 */
@@ -324,23 +385,23 @@
   .hero-text h1 {
     font-size: 4rem;
   }
-  
+
   .hero-description {
     font-size: 1.4rem;
   }
-  
+
   .section-title {
     font-size: 3rem;
   }
-  
+
   .feature-card h3 {
     font-size: 1.8rem;
   }
-  
+
   .feature-card p {
     font-size: 1.25rem;
   }
-  
+
   .cta-button {
     padding: 1.25rem 3rem;
     font-size: 1.25rem;
@@ -353,43 +414,43 @@
     font-size: 5rem;
     line-height: 1.1;
   }
-  
+
   .hero-description {
     font-size: 1.6rem;
     margin-bottom: 3rem;
   }
-  
+
   .section-title {
     font-size: 3.5rem;
     margin-bottom: 5rem;
   }
-  
+
   .feature-card {
     padding: 3rem;
   }
-  
+
   .feature-card h3 {
     font-size: 2rem;
     margin-bottom: 1.5rem;
   }
-  
+
   .feature-card p {
     font-size: 1.4rem;
   }
-  
+
   .cta-button {
     padding: 1.5rem 3.5rem;
     font-size: 1.4rem;
   }
-  
+
   .nav-link {
     font-size: 1.3rem;
   }
-  
+
   .logo-text {
     font-size: 2rem;
   }
-  
+
   .logo-subtitle {
     font-size: 1.1rem;
   }
