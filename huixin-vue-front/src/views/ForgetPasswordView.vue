@@ -21,21 +21,31 @@
           <form class="forget-form" @submit.prevent="handleSubmit">
             <div class="form-group">
               <label>电子邮箱</label>
-              <input 
+              <input
                 v-model="email"
-                type="email" 
-                class="form-input" 
+                type="email"
+                class="form-input"
                 placeholder="请输入您的注册邮箱"
                 required
               />
             </div>
 
             <div class="form-group">
+              <label>邮箱验证码</label>
+              <div class="verification-code-group">
+                <input v-model="code" type="text" class="form-input" placeholder="请输入6位验证码" required />
+                <button @click.prevent="sendCode" :disabled="isSendingCode || countdown > 0" class="send-code-button">
+                  {{ countdown > 0 ? `${countdown}s` : '发送验证码' }}
+                </button>
+              </div>
+            </div>
+
+            <div class="form-group">
               <label>新密码</label>
-              <input 
+              <input
                 v-model="password"
-                type="password" 
-                class="form-input" 
+                type="password"
+                class="form-input"
                 placeholder="请输入新密码"
                 required
               />
@@ -43,10 +53,10 @@
 
             <div class="form-group">
               <label>确认新密码</label>
-              <input 
+              <input
                 v-model="confirmPassword"
-                type="password" 
-                class="form-input" 
+                type="password"
+                class="form-input"
                 placeholder="请再次输入新密码"
                 required
               />
@@ -72,12 +82,39 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import config from '@/config' // 导入配置文件
+import apiClient from '@/api' // 导入API客户端
 
 const router = useRouter()
 const email = ref('')
 const password = ref('')
 const confirmPassword = ref('')
+const code = ref('')
 const isLoading = ref(false)
+const isSendingCode = ref(false)
+const countdown = ref(0)
+
+const sendCode = async () => {
+  if (!email.value) {
+    ElMessage.error('请输入电子邮箱地址')
+    return
+  }
+  isSendingCode.value = true
+  try {
+    await apiClient.post(config.sendResetCodePath, { email: email.value })
+    ElMessage.success('验证码已发送，请注意查收')
+    countdown.value = 60
+    const timer = setInterval(() => {
+      countdown.value--
+      if (countdown.value <= 0) {
+        clearInterval(timer)
+      }
+    }, 1000)
+  } catch (error) {
+    // 错误已由 apiClient 拦截器处理
+  } finally {
+    isSendingCode.value = false
+  }
+}
 
 const handleSubmit = async () => {
   if (password.value !== confirmPassword.value) {
@@ -87,26 +124,20 @@ const handleSubmit = async () => {
 
   try {
     isLoading.value = true
-    const response = await fetch(`${config.baseURL}/api/reset-password-direct`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        email: email.value,
-        password: password.value
-      })
+    const data = await apiClient.post(config.resetPasswordDirectPath, {
+      email: email.value,
+      password: password.value,
+      code: code.value
     })
 
-    const data = await response.json()
     if (data.code === 0) {
       ElMessage.success('密码重置成功，请使用新密码登录')
       router.push('/login')
     } else {
-      ElMessage.error(data.message || '重置失败，请检查邮箱是否正确')
+      // 错误已由 apiClient 拦截器处理
     }
   } catch (error) {
-    ElMessage.error('网络错误，请稍后重试')
+    console.error('重置密码组件捕获到错误:', error)
   } finally {
     isLoading.value = false
   }
@@ -303,6 +334,29 @@ const handleSubmit = async () => {
 
 .login-link:hover {
   color: #3aa876;
+}
+
+.verification-code-group {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.send-code-button {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #42b983;
+  background-color: #fff;
+  color: #42b983;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.send-code-button:disabled {
+  cursor: not-allowed;
+  background-color: #f0f2f5;
+  border-color: #e5e7eb;
+  color: #a0aec0;
 }
 
 @media (max-width: 1024px) {

@@ -17,10 +17,7 @@
     "format": "prettier --write src/"
   },
   "dependencies": {
-<<<<<<< HEAD
-=======
     "axios": "^1.11.0",
->>>>>>> f1e48d63d60f270dd31516515b710b1fd18fd98f
     "element-plus": "^2.10.4",
     "pinia": "^3.0.1",
     "socket.io-client": "^4.8.1",

@@ -24,10 +24,16 @@ export default {
     socketUrl: `${wsProtocol}${window.location.host}`,
 
     // 其他配置项 - 确保API路径与后端路由匹配
-    uploadPath: '/save',          // 修改为正确的上传路径
-    loginPath: '/login',          // 与后端路由匹配
-    registerPath: '/register',     // 与后端路由匹配
-    chatPath: '/api/stream-chat',  // 保持不变
+    uploadPath: '/save',          // 使用与后端匹配的路径
+    loginPath: '/login',          // 使用与后端匹配的路径
+    registerPath: '/register',     // 使用与后端匹配的路径
+    sendCodePath: '/api/send-code', // 发送注册验证码
+    sendResetCodePath: '/api/send-reset-code', // 发送重置密码验证码
+    resetPasswordDirectPath: '/api/reset-password-direct', // 直接重置密码
+    chatPath: '/stream-chat',     // 修改为与后端匹配的路径，去掉/api
+    clearChatContextPath: '/clear-chat-context', // 修改为与后端匹配的路径，去掉/api
+    userInfoPath: '/user/info',   // 修改为与后端匹配的路径，去掉/api
+    chatsPath: '/api/chats',      // 这个路径在后端已经有/api前缀，保持不变
 
     // 超时设置 - 移动设备使用更长的超时时间
     requestTimeout: isMobile ? 60000 : 30000,

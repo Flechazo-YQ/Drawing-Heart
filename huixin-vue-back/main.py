@@ -24,6 +24,7 @@ from openai import OpenAI
 from 封装 import EmotionClassifier
 from mongodb_config import init_mongodb
 from bson import ObjectId
+from Handler.EmailCodeHandler import EmailCodeHandler # 导入邮件处理模块
 
 # 初始化MongoDB（确保在应用启动时就完成初始化）
 try:
@@ -56,6 +57,9 @@ ALGORITHM = 'HS256'
 ACCESS_TOKEN_EXPIRE_MINUTES = 60
 ip = 'http://n42294i452.wicp.vip'
 text_result = ''
+
+# 用于存储验证码和其过期时间
+verification_codes = {}
 
 # 配置日志
 logging.basicConfig(
@@ -137,117 +141,104 @@ def analyse():
 def login():
     if request.method == 'POST':
         data = request.get_json()
-        username_or_email = data.get('username')  # 前端传来的可能是用户名或邮箱
+        username = data.get('username')
         password = data.get('password')
-        
-        try:
-            # 先尝试按邮箱查找
-            user = user_manager.get_user_by_email(username_or_email)
-            
-            # 如果按邮箱没找到，尝试按用户名查找
-            if not user:
-                # 由于MongoDB中没有直接按用户名查找的方法，需要扩展
-                from mongodb_config import mongodb
-                user = mongodb.users.find_one({
-                    "$or": [
-                        {"username": username_or_email},
-                        {"email": username_or_email}
-                    ],
-                    "is_active": True
-                })
-            
-            if user and user['password'] == sha256_hash(password):
-                token = generate_token([str(user['_id']), user['username']])
-                return jsonify({
-                    'code': 0,
-                    'message': '登录成功',
-                    'data': {
-                        'token': token,
-                        'user': {
-                            'id': str(user['_id']),
-                            'username': user['username'],
-                            'email': user['email'],
-                            'avatar': user.get('avatar', ''),
-                            'chance': user.get('chance', 10)
-                        }
-                    }
-                }), 200
-            else:
-                return jsonify({
-                    'code': 1,
-                    'message': '用户名/邮箱或密码错误'
-                }), 401
-        except Exception as e:
-            logging.error(f"登录错误: {str(e)}")
-            return jsonify({
-                'code': 1,
-                'message': '登录失败，请稍后重试'
-            }), 500
+        user = user_manager.find_user_by_username(username)
+        if user and user_manager.verify_password(username, password):
+            token = generate_token(str(user['_id']))
+            return jsonify({'code': 0, 'message': '登录成功', 'token': token})
+        else:
+            return jsonify({'code': 1, 'message': '用户名或密码错误'})
     return render_template('login.html')
 
 
+@app.route('/api/send-code', methods=['POST'])
+def send_verification_code():
+    """发送注册验证码"""
+    data = request.get_json()
+    email = data.get('email')
+    if not email:
+        return jsonify({'code': 1, 'message': '邮箱不能为空'}), 400
 
+    # 检查邮箱是否已被注册
+    if user_manager.find_user_by_email(email):
+        return jsonify({'code': 1, 'message': '该邮箱已被注册'}), 400
+
+    code = EmailCodeHandler.sendEmailCode(email)
+    if code:
+        # 存储验证码和过期时间（例如，10分钟后）
+        verification_codes[email] = {
+            'code': code,
+            'exp': datetime.datetime.utcnow() + datetime.timedelta(minutes=10)
+        }
+        logging.info(f"向 {email} 发送验证码: {code}")
+        return jsonify({'code': 0, 'message': '验证码已发送，请注意查收'})
+    else:
+        logging.error(f"向 {email} 发送验证码失败")
+        return jsonify({'code': 1, 'message': '验证码发送失败，请稍后重试'}), 500
 
 
 @app.route('/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
-        try:
-            data = request.get_json()
-            username = data.get('username')
-            password = data.get('password')
-            email = data.get('email')
-            gender = data.get('gender')
+        data = request.get_json()
+        username = data.get('username')
+        password = data.get('password')
+        email = data.get('email')
+        gender = data.get('gender')
+        code = data.get('code')
 
-            if not all([username, password, email, gender]):
-                return jsonify({
-                    'code': 1,
-                    'message': '请填写所有必需的字段'
-                }), 400
+        if not all([username, password, email, gender, code]):
+            return jsonify({'code': 1, 'message': '所有字段均为必填项'})
 
-            # 检查邮箱是否已存在
-            existing_user = user_manager.get_user_by_email(email)
-            if existing_user:
-                return jsonify({
-                    'code': 1,
-                    'message': '邮箱已被注册'
-                }), 400
-            
-            # 检查用户名是否已存在
-            from mongodb_config import mongodb
-            existing_username = mongodb.users.find_one({"username": username, "is_active": True})
-            if existing_username:
-                return jsonify({
-                    'code': 1,
-                    'message': '用户名已存在'
-                }), 400
+        # 验证验证码
+        stored_code_info = verification_codes.get(email)
+        if not stored_code_info or stored_code_info['code'] != code:
+            return jsonify({'code': 1, 'message': '验证码错误'})
+        
+        if datetime.datetime.utcnow() > stored_code_info['exp']:
+            if email in verification_codes:
+                del verification_codes[email]
+            return jsonify({'code': 1, 'message': '验证码已过期，请重新发送'})
 
-            # 创建新用户
-            user_id = user_manager.create_user(
-                username=username,
-                email=email,
-                password=sha256_hash(password),
-                gender=gender,
-                chance=5,
-                is_team='false'
-            )
+        if user_manager.find_user_by_username(username):
+            return jsonify({'code': 1, 'message': '用户名已存在'})
+        if user_manager.find_user_by_email(email):
+            return jsonify({'code': 1, 'message': '邮箱已被注册'})
+        
+        user_manager.create_user(username, password, email, gender)
+        
+        # 注册成功后删除验证码
+        if email in verification_codes:
+            del verification_codes[email]
             
-            return jsonify({
-                'code': 0,
-                'message': '注册成功'
-            }), 200
-                
-        except Exception as e:
-            logging.error(f"注册错误: {str(e)}")
-            return jsonify({
-                'code': 1,
-                'message': '注册失败，请稍后重试'
-            }), 500
-            
+        return jsonify({'code': 0, 'message': '注册成功'})
     return render_template('register.html')
 
 
+@app.route('/api/send-reset-code', methods=['POST'])
+def send_reset_code():
+    """发送重置密码验证码"""
+    data = request.get_json()
+    email = data.get('email')
+    if not email:
+        return jsonify({'code': 1, 'message': '邮箱不能为空'}), 400
 
+    # 检查邮箱是否存在
+    if not user_manager.find_user_by_email(email):
+        return jsonify({'code': 1, 'message': '该邮箱未注册'}), 400
+
+    code = EmailCodeHandler.sendEmailCode(email)
+    if code:
+        verification_codes[email] = {
+            'code': code,
+            'exp': datetime.datetime.utcnow() + datetime.timedelta(minutes=10)
+        }
+        logging.info(f"向 {email} 发送重置密码验证码: {code}")
+        return jsonify({'code': 0, 'message': '验证码已发送，请注意查收'})
+    else:
+        logging.error(f"向 {email} 发送重置密码验证码失败")
+        return jsonify({'code': 1, 'message': '验证码发送失败，请稍后重试'}), 500
 
 
 @app.route('/forgot', methods=['GET', 'POST'])
@@ -1348,7 +1339,7 @@ def analyze_image(file_path, file_name, user_id=None):
                         ### 用户心理画像
                         综合分析结果，给出用户当前的心理状态评估和建议。
                         
-                        若图片不是房树人相关绘画，请温和地引导用户重新绘画房树人作品。
+                        若图片不是房树人相关绘画，请温和地引导用户重新绘制房树人作品。
                         '''}
                     ]
                 }],
@@ -1417,129 +1408,76 @@ def analyze_image(file_path, file_name, user_id=None):
 
 @app.route('/api/reset-password', methods=['POST'])
 def reset_password():
+    data = request.get_json()
+    token = data.get('token')
+    new_password = data.get('password')
+    
+    user_id = verify_token(token)
+    if not user_id:
+        return jsonify({'code': 1, 'message': '无效或过期的链接'})
+    
     try:
-        data = request.get_json()
-        email = data.get('email')
-        
-        if not email:
-            return jsonify({
-                'code': 1,
-                'message': '请提供邮箱地址'
-            }), 400
-            
-        user = user_manager.get_user_by_email(email)
-        if not user:
-            return jsonify({
-                'code': 1,
-                'message': '该邮箱未注册'
-            }), 404
-                
-        # 生成重置密码的token
-        reset_token = generate_token([str(user['_id']), user['username']])
-        
-        # TODO: 发送重置密码邮件
-        # 这里应该实现发送邮件的功能
-        # 为了演示，我们直接返回成功
-        
-        return jsonify({
-            'code': 0,
-            'message': '重置密码链接已发送到您的邮箱'
-        }), 200
-            
+        user_manager.update_password_by_id(user_id, new_password)
+        return jsonify({'code': 0, 'message': '密码重置成功'})
     except Exception as e:
-        logging.error(f"重置密码错误: {str(e)}")
-        return jsonify({
-            'code': 1,
-            'message': '重置密码失败，请稍后重试'
-        }), 500
+        return jsonify({'code': 1, 'message': f'密码重置失败: {str(e)}'})
 
 @app.route('/api/update-password', methods=['POST'])
 def update_password():
+    token = request.headers.get('Authorization')
+    if not token:
+        return jsonify({'code': 1, 'message': '未提供授权码'}), 401
+    
+    user_id = verify_token(token)
+    if not user_id:
+        return jsonify({'code': 1, 'message': '无效或过期的授权码'}), 401
+    
+    data = request.get_json()
+    old_password = data.get('old_password')
+    new_password = data.get('new_password')
+    
     try:
-        data = request.get_json()
-        token = data.get('token')
-        new_password = data.get('password')
+        user = user_manager.find_user_by_id(user_id)
+        if not user_manager.verify_password(user['username'], old_password):
+            return jsonify({'code': 1, 'message': '旧密码不正确'})
         
-        if not all([token, new_password]):
-            return jsonify({
-                'code': 1,
-                'message': '请提供所有必需的字段'
-            }), 400
-            
-        # 验证token
-        user_id = verify_token(token)
-        if not user_id:
-            return jsonify({
-                'code': 1,
-                'message': '无效或过期的重置链接'
-            }), 401
-            
-        # 更新密码
-        success = user_manager.update_user(user_id[0], {
-            'password': sha256_hash(new_password)
-        })
-        
-        if success:
-            return jsonify({
-                'code': 0,
-                'message': '密码更新成功'
-            }), 200
-        else:
-            return jsonify({
-                'code': 1,
-                'message': '用户不存在或更新失败'
-            }), 404
-            
+        user_manager.update_password_by_id(user_id, new_password)
+        return jsonify({'code': 0, 'message': '密码更新成功'})
     except Exception as e:
-        logging.error(f"更新密码错误: {str(e)}")
-        return jsonify({
-            'code': 1,
-            'message': '更新密码失败，请稍后重试'
-        }), 500
+        return jsonify({'code': 1, 'message': f'密码更新失败: {str(e)}'})
 
 @app.route('/api/reset-password-direct', methods=['POST'])
 def reset_password_direct():
+    data = request.get_json()
+    email = data.get('email')
+    password = data.get('password')
+    code = data.get('code')
+
+    if not all([email, password, code]):
+        return jsonify({'code': 1, 'message': '所有字段均为必填项'})
+
+    # 验证验证码
+    stored_code_info = verification_codes.get(email)
+    if not stored_code_info or stored_code_info['code'] != code:
+        return jsonify({'code': 1, 'message': '验证码错误'})
+
+    if datetime.datetime.utcnow() > stored_code_info['exp']:
+        if email in verification_codes:
+            del verification_codes[email]
+        return jsonify({'code': 1, 'message': '验证码已过期，请重新发送'})
+
+    user = user_manager.find_user_by_email(email)
+    if not user:
+        return jsonify({'code': 1, 'message': '该邮箱未注册'})
+    
     try:
-        data = request.get_json()
-        email = data.get('email')
-        new_password = data.get('password')
-        
-        if not all([email, new_password]):
-            return jsonify({
-                'code': 1,
-                'message': '请提供邮箱和新密码'
-            }), 400
-            
-        # 检查邮箱是否存在
-        user = user_manager.get_user_by_email(email)
-        if not user:
-            return jsonify({
-                'code': 1,
-                'message': '该邮箱未注册'
-            }), 404
-            
-        # 更新密码
-        success = user_manager.update_user(str(user['_id']), {
-            'password': sha256_hash(new_password)
-        })
-        
-        if success:
-            return jsonify({
-                'code': 0,
-                'message': '密码重置成功'
-            }), 200
-        else:
-            return jsonify({
-                'code': 1,
-                'message': '密码重置失败'
-            }), 500
-            
+        user_manager.update_password_by_id(str(user['_id']), password)
+        # 成功后删除验证码
+        if email in verification_codes:
+            del verification_codes[email]
+        return jsonify({'code': 0, 'message': '密码重置成功'})
     except Exception as e:
-        logging.error(f"重置密码错误: {str(e)}")
-        return jsonify({
-            'code': 1,
-            'message': '重置密码失败，请稍后重试'
-        }), 500
+        return jsonify({'code': 1, 'message': f'密码重置失败: {str(e)}'})
 
 @app.route('/api/admin/login', methods=['POST'])
 def admin_login():

@@ -44,6 +44,16 @@
             </div>
 
             <div class="form-group">
+              <label>邮箱验证码</label>
+              <div class="verification-code-group">
+                <input v-model="formData.code" type="text" class="form-input" placeholder="请输入4位验证码" required />
+                <button @click.prevent="sendCode" :disabled="isSendingCode || countdown > 0" class="send-code-button">
+                  {{ countdown > 0 ? `${countdown}s` : '发送验证码' }}
+                </button>
+              </div>
+            </div>
+
+            <div class="form-group">
               <label>性别</label>
               <div class="gender-selector">
                 <label class="gender-option">
@@ -103,6 +113,8 @@ import apiClient from '@/api'
 
 const router = useRouter()
 const isLoading = ref(false)
+const isSendingCode = ref(false)
+const countdown = ref(0)
 
 const formData = reactive({
   username: '',
@@ -110,8 +122,32 @@ const formData = reactive({
   password: '',
   confirmPassword: '',
   agreeToTerms: false,
-  gender: ''
+  gender: '',
+  code: ''
 })
+
+const sendCode = async () => {
+  if (!formData.email) {
+    ElMessage.error('请输入电子邮箱地址')
+    return
+  }
+  isSendingCode.value = true
+  try {
+    await apiClient.post(config.sendCodePath, { email: formData.email })
+    ElMessage.success('验证码已发送，请注意查收')
+    countdown.value = 60
+    const timer = setInterval(() => {
+      countdown.value--
+      if (countdown.value <= 0) {
+        clearInterval(timer)
+      }
+    }, 1000)
+  } catch (error) {
+    // 错误已由 apiClient 拦截器处理
+  } finally {
+    isSendingCode.value = false
+  }
+}
 
 const handleRegister = async () => {
   // 表单验证 (保持不变)
@@ -132,7 +168,8 @@ const handleRegister = async () => {
       username: formData.username,
       password: formData.password,
       email: formData.email,
-      gender: formData.gender
+      gender: formData.gender,
+      code: formData.code
     })
 
     console.log('服务器响应：', data)
@@ -314,6 +351,29 @@ const handleRegister = async () => {
 
 .form-group {
   margin-bottom: 0.6rem;
+}
+
+.verification-code-group {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.send-code-button {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #42b983;
+  background-color: #fff;
+  color: #42b983;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.send-code-button:disabled {
+  cursor: not-allowed;
+  background-color: #f0f2f5;
+  border-color: #e5e7eb;
+  color: #a0aec0;
 }
 
 .form-group label {
