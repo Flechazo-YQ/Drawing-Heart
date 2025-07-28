@@ -97,7 +97,9 @@
 import { ref, reactive } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import config from '@/config' // 导入配置文件
+import config from '@/config'
+// 导入我们新创建的 API 客户端
+import apiClient from '@/api'
 
 const router = useRouter()
 const isLoading = ref(false)
@@ -112,12 +114,11 @@ const formData = reactive({
 })
 
 const handleRegister = async () => {
-  // 表单验证
+  // 表单验证 (保持不变)
   if (formData.password !== formData.confirmPassword) {
     ElMessage.error('两次输入的密码不一致')
     return
   }
-
   if (!formData.agreeToTerms) {
     ElMessage.error('请阅读并同意服务条款和隐私政策')
     return
@@ -125,46 +126,30 @@ const handleRegister = async () => {
 
   try {
     isLoading.value = true
-    const apiUrl = `${config.baseURL}${config.registerPath}`
-    console.log('正在发送注册请求到:', apiUrl)
-    console.log('请求数据:', {
+
+    // 使用新的 apiClient 发送请求
+    const data = await apiClient.post(config.registerPath, {
       username: formData.username,
+      password: formData.password,
       email: formData.email,
       gender: formData.gender
     })
 
-    const response = await fetch(apiUrl, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Accept': 'application/json'
-      },
-      body: JSON.stringify({
-        username: formData.username,
-        password: formData.password,
-        email: formData.email,
-        gender: formData.gender
-      })
-    })
-
-    if (!response.ok) {
-      const errorData = await response.json()
-      console.error('服务器返回错误:', errorData)
-      throw new Error(errorData.message || '注册失败')
-    }
-
-    const data = await response.json()
     console.log('服务器响应：', data)
 
     if (data.code === 0) {
       ElMessage.success('注册成功!')
       router.push('/login')
     } else {
-      ElMessage.error(data.message || '注册失败，请检查输入信息')
+      // 错误处理现在由 apiClient 的拦截器统一处理，
+      // 但如果需要，这里仍然可以根据 code 进行特定的业务逻辑处理
+      // ElMessage.error(data.message || '注册失败，请检查输入信息')
     }
   } catch (error) {
-    console.error('注册过程中发生错误：', error)
-    ElMessage.error(error.message || '注册失败，请检查网络连接')
+    // 由于 apiClient 中有统一的错误处理和提示，
+    // 这里的 catch 块主要用于防止未捕获的 Promise 错误，
+    // 或者进行一些组件级别的特定失败处理（比如重置表单状态）。
+    console.error('注册组件捕获到错误：', error)
   } finally {
     isLoading.value = false
   }
