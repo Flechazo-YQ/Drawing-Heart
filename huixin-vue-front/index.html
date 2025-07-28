@@ -1,0 +1,78 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+  <meta charset="UTF-8">
+  <link rel="icon" href="/favicon.ico">
+  <meta name="viewport"
+    content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover">
+  <meta name="format-detection" content="telephone=no">
+  <meta name="apple-mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black">
+  <title>绘心同学——基于Emohaa共情的对话系统</title>
+  <style>
+    /* 添加移动端基础样式 */
+    * {
+      -webkit-tap-highlight-color: transparent;
+      -webkit-touch-callout: none;
+      box-sizing: border-box;
+    }
+
+    html,
+    body {
+      height: 100%;
+      margin: 0;
+      padding: 0;
+      overflow-x: hidden;
+    }
+
+    #app {
+      height: 100%;
+    }
+
+    @media (max-width: 768px) {
+
+      input,
+      select,
+      textarea,
+      button {
+        font-size: 16px;
+        /* 防止iOS自动缩放 */
+      }
+    }
+  </style>
+</head>
+
+<body>
+  <div id="app"></div>
+  <script type="module" src="/src/main.ts"></script>
+  <!-- 添加移动端兼容性脚本 -->
+  <script>
+    // 防止页面意外刷新
+    window.addEventListener('beforeunload', (event) => {
+      // 不阻止正常导航
+      if (window.isNavigating) return;
+      // 如果用户已登录，提示确认
+      if (localStorage.getItem('isLoggedIn') === 'true') {
+        event.preventDefault();
+        event.returnValue = '';
+      }
+    });
+
+    // 处理网络状态变化
+    window.addEventListener('online', () => {
+      console.log('网络已连接');
+      // 如果之前因网络问题失败，可以尝试重新加载资源
+      if (window.networkFailedResources) {
+        window.location.reload();
+      }
+    });
+
+    window.addEventListener('offline', () => {
+      console.log('网络已断开');
+      window.networkFailedResources = true;
+    });
+  </script>
+</body>
+
+</html>

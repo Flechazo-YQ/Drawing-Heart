@@ -1,0 +1,135 @@
+/* 解决对话窗口和管理员界面宽度收缩问题 */
+
+/* 移除全局容器的宽度限制对聊天和管理页面的影响 */
+.chat-page,
+.admin-page {
+  overflow-x: hidden; /* 防止横向滚动条 */
+}
+
+.chat-page #app,
+.admin-page #app {
+  max-width: none !important;
+  margin: 0 !important;
+  padding: 0 !important;
+  width: 100% !important;
+}
+
+/* 绘画页面的特殊处理 - 保持原有布局但修复偏移 */
+.draw-page body {
+  display: flex !important;
+  place-items: center !important;
+}
+
+.draw-page #app {
+  display: grid !important;
+  max-width: var(--container-max-width, 1920px) !important;
+  margin: 0 auto !important;
+  padding: 0 2rem !important;
+}
+
+/* 确保绘画容器正确定位 */
+.draw-page .draw-container {
+  position: relative;
+  width: 100%;
+}
+
+.draw-page .draw-content {
+  position: relative;
+  width: 100%;
+  max-width: 100%;
+}
+
+.draw-page .canvas-container {
+  position: relative;
+  margin: 0 auto;
+}
+
+/* 确保聊天容器充分利用可用空间 */
+.chat-page .chat-container {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+  padding: 20px;
+}
+
+/* 确保管理员容器充分利用可用空间 */
+.admin-page .admin-container {
+  width: 100%;
+  max-width: none;
+  margin: 0;
+}
+
+/* 消息内容的最大宽度根据屏幕宽度调整 */
+@media (min-width: 1200px) {
+  .chat-container .message-content {
+    max-width: 70%;
+  }
+  
+  .admin-container .message-content {
+    max-width: 70%;
+  }
+}
+
+@media (min-width: 1600px) {
+  .chat-container .message-content {
+    max-width: 65%;
+  }
+  
+  .admin-container .message-content {
+    max-width: 65%;
+  }
+}
+
+@media (min-width: 2000px) {
+  .chat-container .message-content {
+    max-width: 60%;
+  }
+  
+  .admin-container .message-content {
+    max-width: 60%;
+  }
+}
+
+/* 防止body在这些页面上居中显示 */
+.chat-page body,
+.admin-page body {
+  display: block !important;
+  place-items: unset !important;
+}
+
+/* 确保容器能够正确响应窗口大小变化 */
+.chat-page .chat-container,
+.admin-page .admin-container {
+  min-height: 100vh;
+  box-sizing: border-box;
+}
+
+/* 修复可能的flex布局问题 */
+.chat-page .chat-messages,
+.admin-page .chat-history {
+  flex: 1;
+  overflow-y: auto;
+  width: 100%;
+}
+
+/* 确保输入区域不会被压缩 */
+.chat-page .chat-input,
+.admin-page .chat-input {
+  flex-shrink: 0;
+  width: 100%;
+}
+
+/* 特殊情况：当窗口宽度正好是1000px左右时的处理 */
+@media (min-width: 950px) and (max-width: 1050px) {
+  .chat-page #app,
+  .admin-page #app {
+    max-width: none !important;
+    padding: 0 !important;
+  }
+  
+  .chat-container,
+  .admin-container {
+    width: 100% !important;
+    max-width: none !important;
+  }
+}
