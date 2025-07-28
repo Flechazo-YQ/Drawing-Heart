@@ -2,15 +2,16 @@
   <div class="draw-container">
     <nav class="modern-nav">
       <div class="nav-content">
-        <router-link to="/" class="nav-logo">
+        <div class="nav-logo">
           <img src="@/assets/images/logo.png" alt="绘心同学" class="logo-img" />
           <span>绘心同学</span>
-        </router-link>
+        </div>
         <div class="nav-actions">
+          <router-link to="/" class="nav-link">首页</router-link>
           <router-link to="/draw" class="nav-link active">绘画空间</router-link>
           <router-link to="/chat" class="nav-link">心理对话</router-link>
-          <router-link to="/user" class="nav-link">个人中心</router-link>
-          <button class="nav-button logout-btn" @click="handleLogout">退出</button>
+          <router-link to="/user" class="nav-link">个人空间</router-link>
+          <button class="nav-button logout-btn" @click="handleLogout">退出登录</button>
         </div>
       </div>
     </nav>
@@ -535,10 +536,10 @@ html, body {
   color: #1a1a1a;
   font-size: 1.5rem;
   font-weight: 600;
-  text-decoration: none;
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  cursor: default; /* 默认光标，不显示可点击状态 */
 }
 
 .logo-img {

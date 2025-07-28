@@ -2,14 +2,27 @@
   <div class="about-container">
     <nav class="modern-nav">
       <div class="nav-content">
-        <router-link to="/" class="nav-logo">
+        <div class="nav-logo">
           <img src="@/assets/images/logo.png" alt="绘心同学" class="logo-img" />
           <span>绘心同学</span>
-        </router-link>
-        <div class="nav-actions">
+        </div>
+
+        <!-- 未登录状态的导航 -->
+        <div v-if="!isLoggedIn" class="nav-actions">
+          <router-link to="/" class="nav-link">首页</router-link>
+          <router-link to="/about" class="nav-link active">关于</router-link>
+          <router-link to="/login" class="nav-link">登录</router-link>
+          <router-link to="/register" class="nav-link">注册</router-link>
+        </div>
+
+        <!-- 已登录状态的导航 -->
+        <div v-else class="nav-actions">
+          <router-link to="/" class="nav-link">首页</router-link>
           <router-link to="/draw" class="nav-link">绘画空间</router-link>
           <router-link to="/chat" class="nav-link">心理对话</router-link>
-          <router-link to="/user" class="nav-link">个人中心</router-link>
+          <router-link to="/about" class="nav-link active">关于我们</router-link>
+          <router-link to="/user" class="nav-link">个人空间</router-link>
+          <button class="nav-link logout-btn" @click="handleLogout">退出登录</button>
         </div>
       </div>
     </nav>
@@ -43,6 +56,48 @@
   </div>
 </template>
 
+<script setup>
+import { ref, onMounted } from 'vue'
+import { useRouter } from 'vue-router'
+
+const router = useRouter()
+const isLoggedIn = ref(false)
+
+// 检查登录状态
+const checkLoginStatus = () => {
+  const token = localStorage.getItem('token')
+  const loginFlag = localStorage.getItem('isLoggedIn')
+  isLoggedIn.value = !!(token && loginFlag === 'true')
+}
+
+// 退出登录
+const handleLogout = () => {
+  localStorage.removeItem('token')
+  localStorage.removeItem('userInfo')
+  localStorage.removeItem('isLoggedIn')
+  localStorage.removeItem('rememberLogin')
+  localStorage.removeItem('savedUsername')
+
+  // 清除其他可能的用户数据
+  const keys = Object.keys(localStorage)
+  keys.forEach(key => {
+    if (key.startsWith('chatMessages_') ||
+        key.startsWith('isAdminMode_') ||
+        key.startsWith('lastChatTimestamp_')) {
+      localStorage.removeItem(key)
+    }
+  })
+
+  isLoggedIn.value = false
+  router.push('/')
+}
+
+// 页面加载时检查登录状态
+onMounted(() => {
+  checkLoginStatus()
+})
+</script>
+
 <style scoped>
 .about-container {
   min-height: 100vh;
@@ -74,10 +129,10 @@
   color: #1a1a1a;
   font-size: 1.5rem;
   font-weight: 600;
-  text-decoration: none;
   display: flex;
   align-items: center;
   gap: 0.5rem;
+  cursor: default; /* 默认光标，不显示可点击状态 */
 }
 
 .logo-img {
@@ -101,6 +156,33 @@
 
 .nav-link:hover {
   color: #42b983;
+  background-color: rgba(66, 185, 131, 0.1);
+}
+
+.nav-link.active {
+  color: #42b983;
+  background-color: rgba(66, 185, 131, 0.15);
+  font-weight: 600;
+}
+
+/* 按钮样式 */
+.nav-link {
+  border: none;
+  background: none;
+  cursor: pointer;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  transition: all 0.2s;
+}
+
+.logout-btn {
+  color: #ff6b6b;
+  border: 1px solid #ff6b6b;
+}
+
+.logout-btn:hover {
+  background-color: #ff6b6b;
+  color: white;
 }
 
 .about-content {

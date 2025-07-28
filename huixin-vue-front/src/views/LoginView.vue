@@ -1,12 +1,27 @@
 <template>
   <div class="login-container">
+    <!-- 统一导航栏 -->
+    <nav class="modern-nav">
+      <div class="nav-content">
+        <div class="nav-logo">
+          <img src="@/assets/images/logo.png" alt="绘心同学" class="logo-img" />
+          <span>绘心同学</span>
+        </div>
+        <div class="nav-actions">
+          <router-link to="/" class="nav-link">首页</router-link>
+          <router-link to="/login" class="nav-link active">登录</router-link>
+          <router-link to="/register" class="nav-link">注册</router-link>
+        </div>
+      </div>
+    </nav>
+
     <div class="login-content">
       <div class="login-left">
         <div class="brand-content">
-          <router-link to="/" class="brand-logo">
+          <div class="brand-logo">
             <h1>绘心同学</h1>
             <p class="brand-subtitle">AI心理绘画治疗平台</p>
-          </router-link>
+          </div>
           <div class="hero-image">
             <img src="@/assets/images/3.png" alt="心理诊断" />
           </div>
@@ -159,7 +174,7 @@ const handleLogin = async () => {
         // 设置最新登录时间戳，用于在聊天页面检测是否刚登录
         localStorage.setItem('lastLoginTimestamp', new Date().getTime().toString());
 
-        router.push('/draw') // 登录成功后跳转到绘画页面
+        router.push('/') // 登录成功后跳转到首页
       } else {
         ElMessage.error(data.message || '登录失败')
       }
@@ -224,12 +239,77 @@ onMounted(() => {
 </script>
 
 <style scoped>
+/* 统一导航栏样式 */
+.modern-nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 64px;
+  background: #ffffff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  z-index: 100;
+}
+
+.nav-content {
+  max-width: 1920px;
+  margin: 0 auto;
+  padding: 0 2rem;
+  height: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.nav-logo {
+  color: #1a1a1a;
+  font-size: 1.5rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: default;
+}
+
+.logo-img {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+}
+
+.nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.nav-link {
+  color: #4a4a4a;
+  text-decoration: none;
+  font-size: 1rem;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  transition: all 0.2s;
+}
+
+.nav-link:hover {
+  color: #42b983;
+  background-color: rgba(66, 185, 131, 0.1);
+}
+
+.nav-link.active {
+  color: #42b983;
+  background-color: rgba(66, 185, 131, 0.1);
+  font-weight: 600;
+}
+
 .login-container {
   min-height: 100vh;
   background-color: #f9fafb;
   display: flex;
   align-items: center;
   justify-content: center;
+  padding-top: 64px; /* 为导航栏留出空间 */
 }
 
 .login-content {
@@ -255,12 +335,12 @@ onMounted(() => {
 }
 
 .brand-logo {
-  text-decoration: none;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 0.5rem;
   margin-bottom: 2rem;
+  cursor: default; /* 默认光标，不显示可点击状态 */
 }
 
 .brand-logo h1 {
