@@ -6,7 +6,7 @@ from email.utils import formataddr
 class EmailCodeHandler:
     sendBy = '1241010058@zust.edu.cn'  # 官方邮箱地址
     password = 'BbSBhhaLuxaCjQ8e'  # 官方邮箱授权码
-    mailHost = 'smtp.exmail.com'  # 官方邮箱SMTP服务器地址
+    mailHost = 'smtp.exmail.qq.com'  # 官方邮箱SMTP服务器地址
     mailPort = 465  # 官方邮箱SMTP_SSL服务器端口
 
     # 四位数字验证码生成

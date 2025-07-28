@@ -152,7 +152,7 @@ def login():
     return render_template('login.html')
 
 
-@app.route('/api/send-code', methods=['POST'])
+@app.route('/send-code', methods=['POST'])
 def send_verification_code():
     """发送注册验证码"""
     data = request.get_json()
@@ -161,7 +161,7 @@ def send_verification_code():
         return jsonify({'code': 1, 'message': '邮箱不能为空'}), 400
 
     # 检查邮箱是否已被注册
-    if user_manager.find_user_by_email(email):
+    if user_manager.get_user_by_email(email):
         return jsonify({'code': 1, 'message': '该邮箱已被注册'}), 400
 
     code = EmailCodeHandler.sendEmailCode(email)
@@ -203,7 +203,7 @@ def register():
 
         if user_manager.find_user_by_username(username):
             return jsonify({'code': 1, 'message': '用户名已存在'})
-        if user_manager.find_user_by_email(email):
+        if user_manager.get_user_by_email(email):
             return jsonify({'code': 1, 'message': '邮箱已被注册'})
         
         user_manager.create_user(username, password, email, gender)
@@ -225,7 +225,7 @@ def send_reset_code():
         return jsonify({'code': 1, 'message': '邮箱不能为空'}), 400
 
     # 检查邮箱是否存在
-    if not user_manager.find_user_by_email(email):
+    if not user_manager.get_user_by_email(email):
         return jsonify({'code': 1, 'message': '该邮箱未注册'}), 400
 
     code = EmailCodeHandler.sendEmailCode(email)
@@ -1466,7 +1466,7 @@ def reset_password_direct():
             del verification_codes[email]
         return jsonify({'code': 1, 'message': '验证码已过期，请重新发送'})
 
-    user = user_manager.find_user_by_email(email)
+    user = user_manager.get_user_by_email(email)
     if not user:
         return jsonify({'code': 1, 'message': '该邮箱未注册'})
     
