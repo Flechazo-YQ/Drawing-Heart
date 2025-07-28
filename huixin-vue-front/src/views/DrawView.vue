@@ -123,13 +123,13 @@ const initCanvas = () => {
   const container = canvas.parentElement
   const containerWidth = container.clientWidth
   const containerHeight = container.clientHeight
-  
+
   // 保存当前画布内容（如果有的话）
   let imageData = null
   if (canvas.width > 0 && canvas.height > 0) {
     imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
   }
-  
+
   canvas.width = containerWidth
   canvas.height = containerHeight
 
@@ -142,7 +142,9 @@ const initCanvas = () => {
   // 填充白色背景
   ctx.fillStyle = '#ffffff'
   ctx.fillRect(0, 0, canvas.width, canvas.height)
-  
+
+  // 初始化时不设置hasDrawing为true，让用户选择绘画或上传
+
   // 如果有保存的画布内容，恢复它
   if (imageData && !isImageUploaded.value) {
     const tempCanvas = document.createElement('canvas')
@@ -150,14 +152,14 @@ const initCanvas = () => {
     tempCanvas.width = imageData.width
     tempCanvas.height = imageData.height
     tempCtx.putImageData(imageData, 0, 0)
-    
+
     // 计算缩放比例保持宽高比
     const scale = Math.min(canvas.width / tempCanvas.width, canvas.height / tempCanvas.height)
     const newWidth = tempCanvas.width * scale
     const newHeight = tempCanvas.height * scale
     const x = (canvas.width - newWidth) / 2
     const y = (canvas.height - newHeight) / 2
-    
+
     ctx.drawImage(tempCanvas, x, y, newWidth, newHeight)
   }
 }
@@ -187,6 +189,11 @@ const draw = (e) => {
 
   lastX = x
   lastY = y
+
+  // 用户开始绘画时标记有内容
+  if (!hasDrawing.value) {
+    hasDrawing.value = true
+  }
 }
 
 // 结束绘画
@@ -228,9 +235,7 @@ const clearCanvas = () => {
   // 重置状态
   isImageUploaded.value = false
   hasDrawing.value = false
-  if (!currentFileName.value) {
-    currentFileName.value = ''
-  }
+  currentFileName.value = ''
 }
 
 // 触发文件上传
@@ -291,9 +296,9 @@ const handleResize = () => {
       const container = canvasRef.value.parentElement
       const newWidth = container.clientWidth
       const newHeight = container.clientHeight
-      
+
       // 只有当尺寸真正改变时才重新初始化（容差为5px）
-      if (Math.abs(canvasRef.value.width - newWidth) > 5 || 
+      if (Math.abs(canvasRef.value.width - newWidth) > 5 ||
           Math.abs(canvasRef.value.height - newHeight) > 5) {
         console.log(`Canvas resizing from ${canvasRef.value.width}x${canvasRef.value.height} to ${newWidth}x${newHeight}`)
         initCanvas()
@@ -323,14 +328,29 @@ const saveDrawing = async (isUploaded = false) => {
 
   try {
     isLoading.value = true
+
+    // 检查画布是否为空
+    if (!canvasRef.value) {
+      ElMessage.error('画布未初始化')
+      return
+    }
+
     let imageData = canvasRef.value.toDataURL('image/png')
+    console.log('Image data length:', imageData.length)
+    console.log('Image data preview:', imageData.substring(0, 100))
 
     // 确保图片数据格式正确
     if (!imageData.startsWith('data:image/')) {
       imageData = 'data:image/png;base64,' + imageData
     }
 
-    const response = await fetch(`${config.baseURL}/save`, {
+    console.log('Sending request to:', `${config.baseURL}/api/save`)
+    console.log('Request payload size:', JSON.stringify({
+      image: imageData.substring(0, 100) + '...',
+      isUploaded: isUploaded
+    }))
+
+    const response = await fetch(`${config.baseURL}/api/save`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -342,7 +362,12 @@ const saveDrawing = async (isUploaded = false) => {
       })
     })
 
+    console.log('Response status:', response.status)
+    console.log('Response ok:', response.ok)
+
     const data = await response.json()
+    console.log('Response data:', data)
+
     if (response.ok) {
       currentFileName.value = data.file_name
       if (!isUploaded) {
@@ -350,6 +375,7 @@ const saveDrawing = async (isUploaded = false) => {
       }
       ElMessage.success('保存成功!')
     } else {
+      console.error('Save failed with status:', response.status, data)
       ElMessage.error(data.message || '保存失败')
     }
   } catch (error) {
@@ -385,7 +411,14 @@ const analyzeDrawing = async () => {
     isLoading.value = true
     const imageData = canvasRef.value.toDataURL('image/png')
 
-    const response = await fetch(`${config.baseURL}/save`, {
+    console.log('Sending analysis request to:', `${config.baseURL}/api/save`)
+    console.log('Analysis payload:', {
+      imageDataLength: imageData.length,
+      analyze: true,
+      isUploaded: isImageUploaded.value
+    })
+
+    const response = await fetch(`${config.baseURL}/api/save`, {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
@@ -400,7 +433,7 @@ const analyzeDrawing = async () => {
 
     const data = await response.json()
     console.log('Analysis response:', { status: response.status, data })
-    
+
     if (response.ok) {
       if (data.analysis) {
         analysisResult.value = data.analysis
@@ -818,12 +851,12 @@ html, body {
     justify-content: center;
     align-items: center;
   }
-  
+
   .drawing-area {
     max-width: 800px;
     padding: 3rem;
   }
-  
+
   .analysis-panel {
     padding: 3rem;
     font-size: 1.1rem; /* 稍大的字体 */
@@ -860,11 +893,11 @@ html, body {
     max-width: 700px;
     width: 100%;
   }
-  
+
   .canvas-container {
     max-width: 700px;
   }
-  
+
   .action-buttons {
     display: flex;
     justify-content: center;
@@ -874,7 +907,7 @@ html, body {
     width: 100%;
     padding: 0 1rem; /* 添加左右内边距 */
   }
-  
+
   .action-btn {
     padding: 0.7rem 1rem;
     font-size: 0.85rem;
@@ -903,11 +936,11 @@ html, body {
     width: 100%;
     padding: 1.5rem; /* 减少内边距 */
   }
-  
+
   .canvas-container {
     max-width: 600px;
   }
-  
+
   .action-buttons {
     gap: 0.6rem;
     margin-top: 1rem;
@@ -917,7 +950,7 @@ html, body {
     align-items: center;
     padding: 0.5rem; /* 添加内边距 */
   }
-  
+
   .action-btn {
     padding: 0.6rem 0.8rem;
     font-size: 0.8rem;
@@ -938,16 +971,16 @@ html, body {
     gap: 1.5rem;
     align-items: center; /* 保持居中对齐 */
   }
-  
+
   .canvas-container {
     max-width: 600px; /* 在小屏幕上进一步限制宽度 */
   }
-  
+
   .drawing-area {
     max-width: 100%;
     padding: 1.5rem;
   }
-  
+
   .analysis-panel {
     padding: 1.5rem;
     align-self: center; /* 确保与画板对齐 */
@@ -960,7 +993,7 @@ html, body {
     min-height: calc(100vh - 64px);
     align-items: center; /* 保持居中对齐 */
   }
-  
+
   .drawing-tools {
     flex-direction: column;
     align-items: center;
@@ -977,15 +1010,15 @@ html, body {
     width: 100%;
     max-width: 300px; /* 限制最大宽度，保持美观 */
   }
-  
+
   .canvas-container {
     max-width: 100%; /* 在最小屏幕上使用全宽 */
   }
-  
+
   .drawing-area {
     padding: 1rem;
   }
-  
+
   .analysis-panel {
     padding: 1rem;
     align-self: center; /* 确保与画板对齐 */

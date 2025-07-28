@@ -21,10 +21,10 @@
           <form class="login-form" @submit.prevent="handleLogin">
             <div class="form-group">
               <label>用户名 / 邮箱</label>
-              <input 
+              <input
                 v-model="formData.usernameOrEmail"
-                type="text" 
-                class="form-input" 
+                type="text"
+                class="form-input"
                 placeholder="请输入用户名或邮箱"
                 required
               />
@@ -32,10 +32,10 @@
 
             <div class="form-group">
               <label>密码</label>
-              <input 
+              <input
                 v-model="formData.password"
-                type="password" 
-                class="form-input" 
+                type="password"
+                class="form-input"
                 placeholder="请输入密码"
                 required
               />
@@ -83,11 +83,11 @@ const formData = reactive({
 const handleLogin = async () => {
   try {
     isLoading.value = true
-    
+
     // 添加请求超时控制
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), config.requestTimeout || 30000);
-    
+
     try {
       const response = await fetch(`${config.baseURL}${config.loginPath}`, {
         method: 'POST',
@@ -101,9 +101,9 @@ const handleLogin = async () => {
         }),
         signal: controller.signal
       })
-      
+
       clearTimeout(timeout);
-      
+
       // 检查是否能获取到JSON响应
       let data;
       try {
@@ -111,35 +111,54 @@ const handleLogin = async () => {
       } catch (e) {
         throw new Error('服务器返回了无效的数据格式')
       }
-      
+
       if (data.code === 0) {
-        // 登录成功，保存token和用户信息
-        localStorage.setItem('token', data.data.token)
-        localStorage.setItem('userInfo', JSON.stringify({
-          id: data.data.user.id,
-          username: data.data.user.username,
-          email: data.data.user.email,
-          avatar: data.data.user.avatar
-        }))
-        // 添加登录状态标志
-        localStorage.setItem('isLoggedIn', 'true')
-        
-        // 如果选择了"记住我"，保存用户名
-        if (formData.remember) {
-          localStorage.setItem('rememberLogin', 'true')
-          localStorage.setItem('savedUsername', formData.usernameOrEmail)
-        } else {
-          localStorage.removeItem('rememberLogin')
-          localStorage.removeItem('savedUsername')
+        // 登录成功，保存token
+        localStorage.setItem('token', data.token)
+
+        // 获取用户信息
+        try {
+          const userInfoResponse = await fetch(`${config.baseURL}${config.userInfoPath}`, {
+            headers: {
+              'Authorization': data.token
+            }
+          });
+
+          const userInfo = await userInfoResponse.json();
+
+          if (userInfo.code === 0) {
+            localStorage.setItem('userInfo', JSON.stringify({
+              id: userInfo.data.id,
+              username: userInfo.data.username,
+              email: userInfo.data.email,
+              avatar: userInfo.data.avatar || ''
+            }));
+
+            // 添加登录状态标志
+            localStorage.setItem('isLoggedIn', 'true')
+
+            // 如果选择了"记住我"，保存用户名
+            if (formData.remember) {
+              localStorage.setItem('rememberLogin', 'true')
+              localStorage.setItem('savedUsername', formData.usernameOrEmail)
+            } else {
+              localStorage.removeItem('rememberLogin')
+              localStorage.removeItem('savedUsername')
+            }
+
+            // 清除用户的聊天记录和状态
+            await clearChatHistory(userInfo.data.id);
+          } else {
+            throw new Error('获取用户信息失败');
+          }
+        } catch (userInfoError) {
+          console.error('获取用户信息错误:', userInfoError);
+          ElMessage.error('登录成功但获取用户信息失败，请刷新页面重试');
         }
-        
-        // 清除用户的聊天记录和状态
-        const userData = data.data.user;
-        await clearChatHistory(userData.id);
-        
+
         // 设置最新登录时间戳，用于在聊天页面检测是否刚登录
         localStorage.setItem('lastLoginTimestamp', new Date().getTime().toString());
-        
+
         router.push('/draw') // 登录成功后跳转到绘画页面
       } else {
         ElMessage.error(data.message || '登录失败')
@@ -163,16 +182,16 @@ const handleLogin = async () => {
 // 清除聊天历史记录和状态的函数
 const clearChatHistory = async (userId) => {
   if (!userId) return;
-  
+
   // 清除与聊天相关的所有localStorage条目
   localStorage.removeItem(`chatMessages_${userId}`);
   localStorage.removeItem(`isAdminMode_${userId}`);
   localStorage.removeItem(`lastChatTimestamp_${userId}`);
-  
+
   // 清除可能存在的其他聊天相关状态
   localStorage.removeItem('text_result');
   localStorage.removeItem('current_context');
-  
+
   // 调用后端API清除服务器端的聊天上下文
   try {
     const token = localStorage.getItem('token');
@@ -413,32 +432,32 @@ onMounted(() => {
   .login-left {
     padding: 6rem;
   }
-  
+
   .login-right {
     padding: 6rem 4rem;
   }
-  
+
   .login-title {
     font-size: 2.5rem;
   }
-  
+
   .login-subtitle {
     font-size: 1.2rem;
   }
-  
+
   .brand-logo h1 {
     font-size: 3rem;
   }
-  
+
   .brand-subtitle {
     font-size: 1.3rem;
   }
-  
+
   .form-input {
     padding: 1rem;
     font-size: 1.1rem;
   }
-  
+
   .login-button {
     padding: 1rem;
     font-size: 1.2rem;
@@ -450,58 +469,58 @@ onMounted(() => {
   .login-left {
     padding: 8rem;
   }
-  
+
   .login-right {
     padding: 8rem 6rem;
   }
-  
+
   .login-box {
     max-width: 600px;
   }
-  
+
   .login-title {
     font-size: 3rem;
     margin-bottom: 1.5rem;
   }
-  
+
   .login-subtitle {
     font-size: 1.4rem;
     margin-bottom: 3rem;
   }
-  
+
   .brand-logo h1 {
     font-size: 4rem;
   }
-  
+
   .brand-subtitle {
     font-size: 1.6rem;
   }
-  
+
   .form-input {
     padding: 1.25rem;
     font-size: 1.3rem;
     border-radius: 12px;
   }
-  
+
   .login-button {
     padding: 1.25rem;
     font-size: 1.4rem;
     border-radius: 12px;
   }
-  
+
   .form-group {
     margin-bottom: 2rem;
   }
-  
+
   .form-group label {
     font-size: 1.2rem;
     margin-bottom: 0.75rem;
   }
-  
+
   .form-options {
     margin: 2rem 0;
   }
-  
+
   .remember-me, .forgot-link {
     font-size: 1.1rem;
   }
@@ -511,7 +530,7 @@ onMounted(() => {
   .login-container {
     padding: 1rem;
   }
-  
+
   .login-right {
     padding: 1rem;
   }
@@ -519,16 +538,16 @@ onMounted(() => {
   .login-box {
     padding: 1rem;
   }
-  
+
   .login-title {
     font-size: 1.5rem;
   }
-  
+
   .login-subtitle {
     font-size: 0.85rem;
     margin-bottom: 1rem;
   }
-  
+
   .form-group {
     margin-bottom: 0.75rem;
   }
@@ -540,7 +559,7 @@ onMounted(() => {
     padding: 0.75rem;
     font-size: 1rem;
   }
-  
+
   .form-input {
     padding: 0.6rem 0.75rem;
     font-size: 1rem;

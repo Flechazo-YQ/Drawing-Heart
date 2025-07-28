@@ -33,7 +33,7 @@
             <div class="form-group">
               <label>邮箱验证码</label>
               <div class="verification-code-group">
-                <input v-model="code" type="text" class="form-input" placeholder="请输入6位验证码" required />
+                <input v-model="code" type="text" class="form-input" placeholder="请输入4位验证码" required />
                 <button @click.prevent="sendCode" :disabled="isSendingCode || countdown > 0" class="send-code-button">
                   {{ countdown > 0 ? `${countdown}s` : '发送验证码' }}
                 </button>
@@ -100,8 +100,8 @@ const sendCode = async () => {
   }
   isSendingCode.value = true
   try {
-    await apiClient.post(config.sendResetCodePath, { email: email.value })
-    ElMessage.success('验证码已发送，请注意查收')
+    const response = await apiClient.post(config.sendResetCodePath, { email: email.value })
+    ElMessage.success('验证码已发送，请注意查收邮箱')
     countdown.value = 60
     const timer = setInterval(() => {
       countdown.value--
@@ -110,7 +110,7 @@ const sendCode = async () => {
       }
     }, 1000)
   } catch (error) {
-    // 错误已由 apiClient 拦截器处理
+    ElMessage.error(`请求失败，请稍后重试`)
   } finally {
     isSendingCode.value = false
   }
@@ -132,12 +132,15 @@ const handleSubmit = async () => {
 
     if (data.code === 0) {
       ElMessage.success('密码重置成功，请使用新密码登录')
-      router.push('/login')
+      // 延迟跳转，让用户有时间看到成功消息
+      setTimeout(() => {
+        router.push('/login')
+      }, 1500)
     } else {
       // 错误已由 apiClient 拦截器处理
     }
   } catch (error) {
-    console.error('重置密码组件捕获到错误:', error)
+    ElMessage.error('密码重置失败，请稍后再试')
   } finally {
     isLoading.value = false
   }

@@ -15,8 +15,6 @@ apiClient.interceptors.response.use(
   (response) => response.data,
   // 如果请求失败，进行统一的错误处理
   (error) => {
-    console.error('API 请求错误:', error.response || error);
-
     let message = '请求失败，请稍后再试';
     if (error.response && error.response.data && error.response.data.message) {
       // 如果服务器返回了具体的错误信息，就用那个信息

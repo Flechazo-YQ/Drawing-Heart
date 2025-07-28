@@ -37,20 +37,7 @@ export default defineConfig({
     proxy: {
       '/api': {
         target: 'http://127.0.0.1:5000',
-        changeOrigin: true,
-        rewrite: (path) => path.replace(/^\/api/, '')
-      },
-      '/register': {
-        target: 'http://127.0.0.1:5000',
-        changeOrigin: true,
-      },
-      '/login': {
-        target: 'http://127.0.0.1:5000',
-        changeOrigin: true,
-      },
-      '/save': {
-        target: 'http://127.0.0.1:5000',
-        changeOrigin: true,
+        changeOrigin: true
       },
       '/socket.io': {
         target: 'ws://127.0.0.1:5000',
