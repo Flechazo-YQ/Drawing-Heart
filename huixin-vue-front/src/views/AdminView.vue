@@ -45,6 +45,13 @@
         <div v-else class="chat-container">
           <div class="chat-header">
             <h3>正在与用户 {{ currentUser ? currentUser.username : '' }} 对话</h3>
+            <button @click="clearChatHistory" class="clear-history-btn" title="清除对话显示">
+              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M3 6h18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6m3 0V4c0-1 1-2 2-2h4c0-1 1-2 2-2v2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+              清除显示
+            </button>
           </div>
           
           <div class="chat-history" ref="chatHistory">
@@ -57,21 +64,42 @@
               <div class="message-content">
                 <div class="message-sender">{{ getSenderLabel(msg.role) }}</div>
                 <div class="message-text">{{ msg.content }}</div>
-                <div class="message-time">{{ msg.time }}</div>
+                <div class="message-time">{{ formatTime(msg.time) }}</div>
               </div>
             </div>
           </div>
 
           <div class="chat-input">
-            <textarea 
-              v-model="messageInput" 
-              placeholder="输入回复内容..." 
-              @keyup.enter.ctrl="sendMessage"
-              class="input-area"
-            ></textarea>
-            <button @click="sendMessage" :disabled="!messageInput.trim()" class="send-btn">
-              发送
-            </button>
+            <div class="input-wrapper">
+              <textarea 
+                v-model="messageInput" 
+                ref="adminTextarea"
+                placeholder="回复用户消息，Enter发送，Shift+Enter换行..." 
+                @keydown="handleKeyDown"
+                @input="handleInput"
+                class="input-area"
+                :maxlength="500"
+                rows="1"
+              ></textarea>
+              <div class="input-footer">
+                <span class="char-count" :class="{ 'warning': messageInput.length > 400 }">
+                  {{ messageInput.length }}/500
+                </span>
+                <div class="input-actions">
+                  <button 
+                    @click="sendMessage" 
+                    :disabled="!messageInput.trim()" 
+                    class="send-button"
+                    title="发送消息 (Enter)"
+                  >
+                    <svg class="send-icon" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                      <path d="M22 2L11 13" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                      <path d="M22 2L15 22L11 13L2 9L22 2Z" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                    </svg>
+                  </button>
+                </div>
+              </div>
+            </div>
           </div>
         </div>
       </div>
@@ -217,6 +245,35 @@ const selectUser = (userId) => {
   }
 }
 
+// 新增的输入处理方法
+const adminTextarea = ref(null)
+
+// 处理键盘事件
+const handleKeyDown = (e) => {
+  if (e.key === 'Enter' && !e.shiftKey) {
+    e.preventDefault()
+    sendMessage()
+  }
+}
+
+// 处理输入变化，自动调整高度
+const handleInput = () => {
+  if (adminTextarea.value) {
+    // 重置高度
+    adminTextarea.value.style.height = 'auto'
+    // 设置新高度，最大3行
+    const scrollHeight = adminTextarea.value.scrollHeight
+    const maxHeight = 72 // 3行的大概高度
+    adminTextarea.value.style.height = Math.min(scrollHeight, maxHeight) + 'px'
+  }
+}
+
+const clearChatHistory = () => {
+  // 只清除前端显示，不删除服务器数据
+  currentChat.value = []
+  ElMessage.success('已清除当前对话显示')
+}
+
 const sendMessage = () => {
   if (!messageInput.value.trim() || !currentUserId.value) return
   
@@ -234,6 +291,11 @@ const sendMessage = () => {
     // 不在这里添加到本地聊天记录，而是由socket.on('new_message')事件处理
     // 清空输入框
     messageInput.value = ''
+    
+    // 重置输入框高度
+    if (adminTextarea.value) {
+      adminTextarea.value.style.height = 'auto'
+    }
   } else {
     ElMessage.error('服务器连接已断开，请刷新页面')
   }
@@ -246,12 +308,31 @@ const scrollToBottom = async () => {
   }
 }
 
-const formatTime = (date) => {
-  return new Intl.DateTimeFormat('zh-CN', {
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit'
-  }).format(date)
+const formatTime = (dateInput) => {
+  if (!dateInput) return ''
+  
+  try {
+    let date
+    if (dateInput instanceof Date) {
+      date = dateInput
+    } else {
+      date = new Date(dateInput)
+    }
+    
+    // 检查是否为有效日期
+    if (isNaN(date.getTime())) return String(dateInput)
+    
+    return new Intl.DateTimeFormat('zh-CN', {
+      year: 'numeric',
+      month: '2-digit',
+      day: '2-digit',
+      hour: '2-digit',
+      minute: '2-digit',
+      second: '2-digit'
+    }).format(date)
+  } catch (error) {
+    return String(dateInput)
+  }
 }
 
 const getSenderLabel = (role) => {
@@ -464,6 +545,9 @@ onMounted(() => {
 .chat-header {
   padding: 1rem;
   border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
 .chat-header h3 {
@@ -473,17 +557,46 @@ onMounted(() => {
   margin: 0;
 }
 
+.clear-history-btn {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 8px 16px;
+  background: #f3f4f6;
+  color: #6b7280;
+  border: 1px solid #d1d5db;
+  border-radius: 8px;
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.2s ease;
+}
+
+.clear-history-btn:hover {
+  background: #e5e7eb;
+  color: #374151;
+  transform: translateY(-1px);
+}
+
+.clear-history-btn svg {
+  width: 16px;
+  height: 16px;
+}
+
 .chat-history {
   flex: 1;
-  padding: 1rem;
+  padding: 24px;
   overflow-y: auto;
   display: flex;
   flex-direction: column;
+  background: #ffffff;
+  scroll-behavior: smooth;
 }
 
 .chat-message {
-  margin-bottom: 1rem;
-  max-width: 80%;
+  margin-bottom: 20px;
+  max-width: 75%;
+  opacity: 0;
+  animation: fadeIn 0.4s ease-out forwards;
 }
 
 .user-message {
@@ -499,99 +612,198 @@ onMounted(() => {
 }
 
 .message-content {
-  padding: 0.75rem 1rem;
-  border-radius: 12px;
+  padding: 16px 20px;
+  border-radius: 18px;
   position: relative;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
+  font-size: 14px;
+  line-height: 1.5;
 }
 
 .user-message .message-content {
-  background-color: #ecfdf5;
-  border: 1px solid #d1fae5;
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  color: white;
+  border-bottom-right-radius: 6px;
 }
 
 .admin-message .message-content {
-  background-color: #eff6ff;
-  border: 1px solid #dbeafe;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
+  color: white;
+  border-bottom-left-radius: 6px;
 }
 
 .ai-message .message-content {
-  background-color: #f3f4f6;
+  background: white;
+  color: #374151;
   border: 1px solid #e5e7eb;
+  border-bottom-left-radius: 6px;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
 .message-sender {
-  font-size: 0.75rem;
+  font-size: 11px;
   font-weight: 600;
-  margin-bottom: 0.25rem;
+  margin-bottom: 8px;
+  opacity: 0.9;
 }
 
 .user-message .message-sender {
-  color: #065f46;
+  color: rgba(255, 255, 255, 0.8);
 }
 
 .admin-message .message-sender {
-  color: #1e40af;
+  color: rgba(255, 255, 255, 0.8);
 }
 
 .ai-message .message-sender {
-  color: #4b5563;
+  color: #6b7280;
 }
 
 .message-text {
   white-space: pre-wrap;
   word-break: break-word;
+  margin-bottom: 8px;
 }
 
 .message-time {
-  font-size: 0.7rem;
-  color: #9ca3af;
-  margin-top: 0.25rem;
+  font-size: 10px;
+  margin-top: 4px;
   text-align: right;
+  opacity: 0.7;
+}
+
+.user-message .message-time {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.admin-message .message-time {
+  color: rgba(255, 255, 255, 0.7);
+}
+
+.ai-message .message-time {
+  color: #9ca3af;
 }
 
 .chat-input {
-  padding: 1rem;
+  background: white;
+  padding: 16px;
   border-top: 1px solid #e5e7eb;
-  display: flex;
-  gap: 0.5rem;
+  border-radius: 0 0 16px 16px;
 }
 
-.input-area {
-  flex: 1;
-  padding: 0.75rem;
-  border: 1px solid #e5e7eb;
-  border-radius: 8px;
-  resize: none;
-  min-height: 60px;
-  font-family: inherit;
+.input-wrapper {
+  width: 100%;
 }
 
-.input-area:focus {
+.input-wrapper .input-area {
+  width: 100%;
+  padding: 16px 20px;
+  border: 2px solid #e5e7eb;
+  border-radius: 12px;
+  font-size: 14px;
+  line-height: 1.5;
   outline: none;
-  border-color: #42b983;
-  box-shadow: 0 0 0 3px rgba(66, 185, 131, 0.1);
+  transition: all 0.3s ease;
+  resize: none;
+  font-family: inherit;
+  background: #fafafa;
+  min-height: 24px;
+  max-height: 72px;
+  overflow-y: auto;
 }
 
-.send-btn {
-  align-self: flex-end;
-  padding: 0.5rem 1rem;
-  background-color: #42b983;
+.input-wrapper .input-area:focus {
+  border-color: #10b981;
+  background: white;
+  box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+}
+
+.input-wrapper .input-area:disabled {
+  background: #f5f5f5;
+  color: #999;
+  cursor: not-allowed;
+  border-color: #d1d5db;
+}
+
+.input-wrapper .input-area::placeholder {
+  color: #9ca3af;
+  opacity: 1;
+}
+
+.input-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 12px;
+  padding: 0 4px;
+}
+
+.char-count {
+  font-size: 12px;
+  color: #6b7280;
+  font-weight: 500;
+  transition: color 0.2s;
+}
+
+.char-count.warning {
+  color: #f59e0b;
+}
+
+.input-actions {
+  display: flex;
+  gap: 8px;
+  align-items: center;
+}
+
+.send-button {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 44px;
+  height: 44px;
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
   color: white;
   border: none;
-  border-radius: 8px;
+  border-radius: 12px;
   cursor: pointer;
-  font-weight: 500;
-  transition: all 0.2s;
-  height: 40px;
+  transition: all 0.3s ease;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.3);
 }
 
-.send-btn:hover {
-  background-color: #3aa876;
+.send-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 16px rgba(16, 185, 129, 0.4);
 }
 
-.send-btn:disabled {
-  background-color: #9ca3af;
+.send-button:active:not(:disabled) {
+  transform: translateY(-1px);
+}
+
+.send-button:disabled {
+  background: #d1d5db;
   cursor: not-allowed;
+  transform: none;
+  box-shadow: none;
+}
+
+.send-icon {
+  width: 20px;
+  height: 20px;
+  transition: transform 0.2s ease;
+}
+
+.send-button:hover:not(:disabled) .send-icon {
+  transform: scale(1.1);
 }
 
 @media (max-width: 768px) {
@@ -612,6 +824,39 @@ onMounted(() => {
   .admin-main {
     flex: none;
     height: calc(100vh - 64px - 250px);
+  }
+  
+  .chat-input {
+    padding: 12px;
+  }
+  
+  .input-wrapper .input-area {
+    padding: 12px 16px;
+    font-size: 16px; /* 防止iOS缩放 */
+  }
+  
+  .send-button {
+    width: 40px;
+    height: 40px;
+  }
+  
+  .send-icon {
+    width: 18px;
+    height: 18px;
+  }
+  
+  .message-content {
+    max-width: 90%;
+    padding: 12px 16px;
+    font-size: 13px;
+  }
+  
+  .chat-history {
+    padding: 16px;
+  }
+  
+  .char-count {
+    font-size: 11px;
   }
 }
 </style>

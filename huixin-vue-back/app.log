@@ -11321,3 +11321,44 @@ AssertionError: write() before start_response
 2025-06-03 17:36:02,734 - INFO -  * Debugger PIN: 123-613-595
 2025-06-03 17:36:12,291 - WARNING -  * Debugger is active!
 2025-06-03 17:36:12,314 - INFO -  * Debugger PIN: 123-613-595
+2025-07-21 23:49:55,376 - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.31.143:5000
+2025-07-21 23:49:55,377 - INFO - [33mPress CTRL+C to quit[0m
+2025-07-21 23:49:55,377 - INFO -  * Restarting with watchdog (windowsapi)
+2025-07-21 23:49:58,699 - WARNING -  * Debugger is active!
+2025-07-21 23:49:58,701 - INFO -  * Debugger PIN: 504-503-576
+2025-07-21 23:52:17,728 - INFO - [31m[1mWARNING: This is a development server. Do not use it in a production deployment. Use a production WSGI server instead.[0m
+ * Running on all addresses (0.0.0.0)
+ * Running on http://127.0.0.1:5000
+ * Running on http://192.168.31.143:5000
+2025-07-21 23:52:17,729 - INFO - [33mPress CTRL+C to quit[0m
+2025-07-21 23:52:17,729 - INFO -  * Restarting with watchdog (windowsapi)
+2025-07-21 23:52:21,125 - WARNING -  * Debugger is active!
+2025-07-21 23:52:21,128 - INFO -  * Debugger PIN: 504-503-576
+2025-07-21 23:52:22,801 - INFO - 127.0.0.1 - - [21/Jul/2025 23:52:22] "OPTIONS /login HTTP/1.1" 200 -
+2025-07-21 23:52:23,069 - INFO - 127.0.0.1 - - [21/Jul/2025 23:52:23] "POST /login HTTP/1.1" 200 -
+2025-07-21 23:52:23,112 - INFO - 127.0.0.1 - - [21/Jul/2025 23:52:23] "OPTIONS /api/clear-chat-context HTTP/1.1" 200 -
+2025-07-21 23:52:23,375 - INFO - 127.0.0.1 - - [21/Jul/2025 23:52:23] "POST /api/clear-chat-context HTTP/1.1" 200 -
+2025-07-21 23:52:24,606 - INFO - 127.0.0.1 - - [21/Jul/2025 23:52:24] "OPTIONS /api/user/info HTTP/1.1" 200 -
+2025-07-21 23:52:24,922 - INFO - 127.0.0.1 - - [21/Jul/2025 23:52:24] "GET /api/user/info HTTP/1.1" 200 -
+2025-07-21 23:52:25,186 - INFO - 4t5OSbDYo0EHl7gRAAAA: Sending packet OPEN data {'sid': '4t5OSbDYo0EHl7gRAAAA', 'upgrades': ['websocket'], 'pingTimeout': 20000, 'pingInterval': 25000, 'maxPayload': 1000000}
+2025-07-21 23:52:25,187 - INFO - 127.0.0.1 - - [21/Jul/2025 23:52:25] "GET /socket.io/?EIO=4&transport=polling&t=aavz0wvx HTTP/1.1" 200 -
+2025-07-21 23:52:25,233 - INFO - 4t5OSbDYo0EHl7gRAAAA: Received packet MESSAGE data 0{"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjpbNSwidGVzdDEiLCJmNmUwYTFlMmFjNDE5NDVhOWFhN2ZmOGE4YWFhMGNlYmMxMmEzYmNjOTgxYTkyOWFkNWNmODEwYTA5MGUxMWFlIiw1LCJmYWxzZSIsbnVsbCwiMTExQHFxLmNvbSIsIm1hbGUiXSwiZXhwIjoxNzUzMTE2NzQzfQ.dHQWIzpQpI1dEeG40KH7CsLd3UQRvmmk5Jw_u9oMuEQ"}
+2025-07-21 23:52:25,234 - INFO - 4t5OSbDYo0EHl7gRAAAA: Sending packet MESSAGE data 0{"sid":"2FGsK_vfVURW--5-AAAB"}
+2025-07-21 23:52:25,234 - INFO - 127.0.0.1 - - [21/Jul/2025 23:52:25] "POST /socket.io/?EIO=4&transport=polling&t=aaw6dqlw&sid=4t5OSbDYo0EHl7gRAAAA HTTP/1.1" 200 -
+2025-07-21 23:52:25,497 - INFO - 127.0.0.1 - - [21/Jul/2025 23:52:25] "GET /socket.io/?EIO=4&transport=polling&t=aaw6f6g6&sid=4t5OSbDYo0EHl7gRAAAA HTTP/1.1" 200 -
+2025-07-21 23:52:25,499 - INFO - 4t5OSbDYo0EHl7gRAAAA: Received request to upgrade to websocket
+2025-07-21 23:52:25,501 - INFO - 127.0.0.1 - - [21/Jul/2025 23:52:25] "GET /socket.io/?EIO=4&transport=polling&t=aawf0jmh&sid=4t5OSbDYo0EHl7gRAAAA HTTP/1.1" 200 -
+2025-07-21 23:52:25,808 - INFO - 4t5OSbDYo0EHl7gRAAAA: Received packet MESSAGE data 2["user_connect",{"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VyX2lkIjpbNSwidGVzdDEiLCJmNmUwYTFlMmFjNDE5NDVhOWFhN2ZmOGE4YWFhMGNlYmMxMmEzYmNjOTgxYTkyOWFkNWNmODEwYTA5MGUxMWFlIiw1LCJmYWxzZSIsbnVsbCwiMTExQHFxLmNvbSIsIm1hbGUiXSwiZXhwIjoxNzUzMTE2NzQzfQ.dHQWIzpQpI1dEeG40KH7CsLd3UQRvmmk5Jw_u9oMuEQ"}]
+2025-07-21 23:52:25,808 - INFO - received event "user_connect" from 2FGsK_vfVURW--5-AAAB [/]
+2025-07-21 23:52:25,809 - INFO - 127.0.0.1 - - [21/Jul/2025 23:52:25] "POST /socket.io/?EIO=4&transport=polling&t=aawf1g0c&sid=4t5OSbDYo0EHl7gRAAAA HTTP/1.1" 200 -
+2025-07-21 23:52:25,808 - INFO - 2FGsK_vfVURW--5-AAAB is entering room user_5 [/]
+2025-07-21 23:52:25,809 - INFO - emitting event "connect_response" to 2FGsK_vfVURW--5-AAAB [/]
+2025-07-21 23:52:25,809 - INFO - 4t5OSbDYo0EHl7gRAAAA: Sending packet MESSAGE data 2["connect_response",{"status":"success","message":"Connection successful"}]
+2025-07-21 23:52:25,811 - INFO - 4t5OSbDYo0EHl7gRAAAA: Upgrade to websocket successful
+2025-07-21 23:52:29,877 - INFO - 127.0.0.1 - - [21/Jul/2025 23:52:29] "OPTIONS /api/stream-chat HTTP/1.1" 200 -
+2025-07-21 23:52:30,222 - INFO - emitting event "dangerous_chat_alert" to admin_room [/]
+2025-07-21 23:52:30,222 - INFO - 127.0.0.1 - - [21/Jul/2025 23:52:30] "POST /api/stream-chat HTTP/1.1" 200 -
+2025-07-21 23:52:35,939 - INFO - 127.0.0.1 - - [21/Jul/2025 23:52:35] "GET /socket.io/?EIO=4&transport=websocket&sid=4t5OSbDYo0EHl7gRAAAA HTTP/1.1" 200 -

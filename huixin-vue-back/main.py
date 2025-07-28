@@ -1,3 +1,4 @@
+ -*- coding: utf-8 -*-
 import base64
 import datetime
 import threading
@@ -8,8 +9,6 @@ from flask_socketio import SocketIO, emit, join_room, leave_room  # 添加Socket
 
 import requests
 from torchvision import transforms
-import sqlite3
-from sqlite3 import Error
 import hashlib
 from reportlab.pdfbase import pdfmetrics
 from reportlab.pdfbase.ttfonts import TTFont
@@ -22,6 +21,19 @@ import logging
 import sys
 from datetime import timedelta
 import secrets
+from mongodb_config import init_mongodb
+from bson import ObjectId
+
+# 初始化MongoDB（确保在应用启动时就完成初始化）
+try:
+    init_mongodb()
+    logging.info("MongoDB初始化成功")
+except Exception as e:
+    logging.error(f"MongoDB初始化失败: {str(e)}")
+    raise e
+
+# 导入已初始化的管理器
+from mongodb_config import user_manager, chat_manager, message_manager
 
 # 注册字体 - 注释掉避免文件不存在错误
 # pdfmetrics.registerFont(TTFont('SimHei', 'SimHei.ttf'))  # 确保路径正确，或使用系统字体路径
@@ -127,25 +139,35 @@ def login():
         username_or_email = data.get('username')  # 前端传来的可能是用户名或邮箱
         password = data.get('password')
         
-        conn = create_connection('user.db')
-        with conn:
-            cursor = conn.cursor()
-            # 同时查询用户名或邮箱
-            cursor.execute("SELECT * FROM users WHERE username=? OR email=?", (username_or_email, username_or_email))
-            user = cursor.fetchone()
-            if user and user[2] == sha256_hash(password):
-                token = generate_token(user)
+        try:
+            # 先尝试按邮箱查找
+            user = user_manager.get_user_by_email(username_or_email)
+            
+            # 如果按邮箱没找到，尝试按用户名查找
+            if not user:
+                # 由于MongoDB中没有直接按用户名查找的方法，需要扩展
+                from mongodb_config import mongodb
+                user = mongodb.users.find_one({
+                    "$or": [
+                        {"username": username_or_email},
+                        {"email": username_or_email}
+                    ],
+                    "is_active": True
+                })
+            
+            if user and user['password'] == sha256_hash(password):
+                token = generate_token([str(user['_id']), user['username']])
                 return jsonify({
                     'code': 0,
                     'message': '登录成功',
                     'data': {
                         'token': token,
                         'user': {
-                            'id': user[0],
-                            'username': user[1],
-                            'email': user[6],
-                            'avatar': user[5] or '',
-                            'chance': user[3]
+                            'id': str(user['_id']),
+                            'username': user['username'],
+                            'email': user['email'],
+                            'avatar': user.get('avatar', ''),
+                            'chance': user.get('chance', 10)
                         }
                     }
                 }), 200
@@ -154,19 +176,16 @@ def login():
                     'code': 1,
                     'message': '用户名/邮箱或密码错误'
                 }), 401
+        except Exception as e:
+            logging.error(f"登录错误: {str(e)}")
+            return jsonify({
+                'code': 1,
+                'message': '登录失败，请稍后重试'
+            }), 500
     return render_template('login.html')
 
 
-# 配置数据库连接
-def create_connection(db_file):
-    """ 创建一个到SQLite数据库的连接 """
-    conn = None
-    try:
-        conn = sqlite3.connect(db_file)
-        return conn
-    except Error as e:
-        print(e)
-    return conn
+
 
 
 @app.route('/register', methods=['GET', 'POST'])
@@ -185,59 +204,40 @@ def register():
                     'message': '请填写所有必需的字段'
                 }), 400
 
-            # 创建数据库连接
-            conn = create_connection('user.db')
-            with conn:
-                cursor = conn.cursor()
-                
-                # 检查用户名是否已存在
-                cursor.execute("SELECT * FROM users WHERE username=?", (username,))
-                if cursor.fetchone():
-                    return jsonify({
-                        'code': 1,
-                        'message': '用户名已存在'
-                    }), 400
-                
-                # 检查邮箱是否已存在
-                cursor.execute("SELECT * FROM users WHERE email=?", (email,))
-                if cursor.fetchone():
-                    return jsonify({
-                        'code': 1,
-                        'message': '邮箱已被注册'
-                    }), 400
-
-                # 插入新用户
-                cursor.execute(
-                    "INSERT INTO users (username, password, email, chance, is_team, gender) VALUES (?, ?, ?, ?, ?, ?)",
-                    (username, sha256_hash(password), email, 5, 'false', gender)
-                )
-                
-                # 为用户创建个人表
-                cursor.execute(f'''
-                CREATE TABLE IF NOT EXISTS {username} (  
-                    id INTEGER PRIMARY KEY,  
-                    patient_name TEXT,  
-                    date TEXT,  
-                    image_type TEXT,  
-                    result TEXT,  
-                    patient_info_name TEXT,  
-                    patient_info_gender TEXT,  
-                    patient_info_age INTEGER,  
-                    patient_info_medical_record_number TEXT,  
-                    image_url TEXT,  
-                    Neural_Network TEXT,
-                    doctor_notes TEXT
-                )  
-                ''')
-                conn.commit()
-                
+            # 检查邮箱是否已存在
+            existing_user = user_manager.get_user_by_email(email)
+            if existing_user:
                 return jsonify({
-                    'code': 0,
-                    'message': '注册成功'
-                }), 200
+                    'code': 1,
+                    'message': '邮箱已被注册'
+                }), 400
+            
+            # 检查用户名是否已存在
+            from mongodb_config import mongodb
+            existing_username = mongodb.users.find_one({"username": username, "is_active": True})
+            if existing_username:
+                return jsonify({
+                    'code': 1,
+                    'message': '用户名已存在'
+                }), 400
+
+            # 创建新用户
+            user_id = user_manager.create_user(
+                username=username,
+                email=email,
+                password=sha256_hash(password),
+                gender=gender,
+                chance=5,
+                is_team='false'
+            )
+            
+            return jsonify({
+                'code': 0,
+                'message': '注册成功'
+            }), 200
                 
         except Exception as e:
-            print(f"注册错误: {str(e)}")
+            logging.error(f"注册错误: {str(e)}")
             return jsonify({
                 'code': 1,
                 'message': '注册失败，请稍后重试'
@@ -246,23 +246,7 @@ def register():
     return render_template('register.html')
 
 
-def init_db(conn):
-    """ 初始化数据库，创建用户表 """
-    try:
-        sql_create_users_table = """CREATE TABLE IF NOT EXISTS users (  
-                                    id integer PRIMARY KEY,  
-                                    username text NOT NULL,  
-                                    password text NOT NULL,
-                                    chance integer NOT NULL,
-                                    is_team text,
-                                    avatar text,
-                                    email text NOT NULL UNIQUE,
-                                    gender text
-                                );"""
-        cursor = conn.cursor()
-        cursor.execute(sql_create_users_table)
-    except Error as e:
-        print(e)
+
 
 
 @app.route('/forgot', methods=['GET', 'POST'])
@@ -288,8 +272,12 @@ def getusername():
     if not user_id:
         return jsonify({'message': 'Invalid token!'}), 401
     try:
-        # 返回包含用户名的JSON响应
-        return jsonify({'username': user_id[1]})
+        # 从MongoDB获取用户信息
+        user = user_manager.get_user_by_id(user_id[0])
+        if user:
+            return jsonify({'username': user['username']})
+        else:
+            return jsonify({'message': 'User not found'}), 404
     except Exception as e:
         # 如果发生错误，返回500错误和错误信息
         return jsonify({'error': str(e)}), 500
@@ -315,31 +303,26 @@ def get_user_info():
     if not user_id:
         return jsonify({'message': 'Invalid token!'}), 401
     
-    conn = create_connection('user.db')
     try:
-        with conn:
-            cursor = conn.cursor()
-            cursor.execute("SELECT id, username, email, chance, is_team, avatar, gender FROM users WHERE id=?", (user_id[0],))
-            user = cursor.fetchone()
-            if user:
-                return jsonify({
-                    'code': 0,
-                    'message': 'success',
-                    'data': {
-                        'id': user[0],
-                        'username': user[1],
-                        'email': user[2],
-                        'chance': user[3],
-                        'is_team': user[4],
-                        'avatar': user[5] or '',
-                        'gender': user[6]
-                    }
-                })
-            return jsonify({'message': 'User not found'}), 404
+        user = user_manager.get_user_by_id(user_id[0])
+        if user:
+            return jsonify({
+                'code': 0,
+                'message': 'success',
+                'data': {
+                    'id': str(user['_id']),
+                    'username': user['username'],
+                    'email': user['email'],
+                    'chance': user.get('chance', 10),
+                    'is_team': user.get('is_team', ''),
+                    'avatar': user.get('avatar', ''),
+                    'gender': user.get('gender', '')
+                }
+            })
+        return jsonify({'message': 'User not found'}), 404
     except Exception as e:
+        logging.error(f"获取用户信息错误: {str(e)}")
         return jsonify({'message': str(e)}), 500
-    finally:
-        conn.close()
 
 
 url = "https://api.siliconflow.cn/v1/chat/completions"
@@ -347,6 +330,8 @@ dangerous = 0
 current_context = []
 # 存储用户连接的字典
 user_connections = {}
+# 存储用户当前活跃聊天ID的字典
+user_current_chats = {}
 
 # 添加一个API端点，用于清除用户的聊天上下文
 @app.route('/api/clear-chat-context', methods=['POST'])
@@ -391,6 +376,305 @@ def clear_chat_context():
             'message': f'清除聊天上下文失败: {str(e)}'
         }), 500
 
+# 新增聊天管理API
+@app.route('/api/chats', methods=['GET'])
+def get_user_chats():
+    """获取用户的对话列表"""
+    token = request.headers.get('Authorization')
+    if not token:
+        return jsonify({'message': 'Token is missing!'}), 401
+    user_id = verify_token(token)
+    if not user_id:
+        return jsonify({'message': 'Invalid token!'}), 401
+    
+    try:
+        page = int(request.args.get('page', 1))
+        limit = int(request.args.get('limit', 20))
+        
+        chats = chat_manager.get_user_chats(user_id[0], page, limit)
+        return jsonify({
+            'code': 0,
+            'message': 'success',
+            'data': chats
+        })
+    except Exception as e:
+        logging.error(f"获取对话列表错误: {str(e)}")
+        return jsonify({
+            'code': 1,
+            'message': f'获取对话列表失败: {str(e)}'
+        }), 500
+
+@app.route('/api/chats', methods=['POST'])
+def create_new_chat():
+    """创建新对话"""
+    token = request.headers.get('Authorization')
+    if not token:
+        return jsonify({'message': 'Token is missing!'}), 401
+    user_id = verify_token(token)
+    if not user_id:
+        return jsonify({'message': 'Invalid token!'}), 401
+    
+    try:
+        data = request.get_json()
+        # 初始标题设为空，等第一条消息后再更新
+        title = data.get('title', '')
+        chat_type = data.get('type', 'normal')  # 新增：支持传入对话类型
+        
+        chat_id = chat_manager.create_chat(user_id[0], title, chat_type)
+        
+        # 设置为当前活跃聊天
+        user_current_chats[user_id[0]] = chat_id
+        
+        # 清除当前上下文，开始新对话
+        global current_context
+        current_context = []
+        
+        return jsonify({
+            'code': 0,
+            'message': '创建对话成功',
+            'data': {
+                'chat_id': chat_id,
+                'title': title if title else '新对话'
+            }
+        })
+    except Exception as e:
+        logging.error(f"创建新对话错误: {str(e)}")
+        return jsonify({
+            'code': 1,
+            'message': f'创建新对话失败: {str(e)}'
+        }), 500
+
+@app.route('/api/chats/<chat_id>', methods=['DELETE'])
+def hide_chat(chat_id):
+    """隐藏对话（软删除）"""
+    token = request.headers.get('Authorization')
+    if not token:
+        return jsonify({'message': 'Token is missing!'}), 401
+    user_id = verify_token(token)
+    if not user_id:
+        return jsonify({'message': 'Invalid token!'}), 401
+    
+    try:
+        # 验证对话是否属于当前用户
+        chat = chat_manager.get_chat_by_id(chat_id)
+        if not chat or chat['user_id'] != user_id[0]:
+            return jsonify({
+                'code': 1,
+                'message': '对话不存在或无权限'
+            }), 404
+        
+        success = chat_manager.hide_chat(chat_id)
+        if success:
+            return jsonify({
+                'code': 0,
+                'message': '删除对话成功'
+            })
+        else:
+            return jsonify({
+                'code': 1,
+                'message': '删除对话失败'
+            }), 500
+    except Exception as e:
+        logging.error(f"删除对话错误: {str(e)}")
+        return jsonify({
+            'code': 1,
+            'message': f'删除对话失败: {str(e)}'
+        }), 500
+
+@app.route('/api/chats/<chat_id>/messages', methods=['GET'])
+def get_chat_messages(chat_id):
+    """获取对话的消息历史"""
+    token = request.headers.get('Authorization')
+    if not token:
+        return jsonify({'message': 'Token is missing!'}), 401
+    user_id = verify_token(token)
+    if not user_id:
+        return jsonify({'message': 'Invalid token!'}), 401
+    
+    try:
+        # 验证对话是否属于当前用户
+        chat = chat_manager.get_chat_by_id(chat_id)
+        if not chat or chat['user_id'] != user_id[0]:
+            return jsonify({
+                'code': 1,
+                'message': '对话不存在或无权限'
+            }), 404
+        
+        page = int(request.args.get('page', 1))
+        limit = int(request.args.get('limit', 50))
+        group_messages = request.args.get('group', 'false').lower() == 'true'
+        
+        # 使用新的方法获取完整对话和消息
+        full_chat = message_manager.get_chat_with_messages(chat_id)
+        if not full_chat:
+            return jsonify({
+                'code': 1,
+                'message': '对话不存在'
+            }), 404
+        
+        all_messages = full_chat.get('messages', [])
+        
+        # 分页处理
+        start_idx = (page - 1) * limit
+        end_idx = start_idx + limit
+        messages = all_messages[start_idx:end_idx]
+        
+        # 如果需要分组消息（用于可折叠显示）
+        if group_messages:
+            grouped_messages = []
+            current_group = None
+            
+            for msg in messages:
+                if current_group is None or current_group['sender'] != msg['sender']:
+                    # 开始新的消息组
+                    current_group = {
+                        'sender': msg['sender'],
+                        'timestamp': msg['timestamp'],
+                        'messages': [msg],
+                        'collapsed': False  # 默认展开
+                    }
+                    grouped_messages.append(current_group)
+                else:
+                    # 添加到当前组
+                    current_group['messages'].append(msg)
+                    current_group['timestamp'] = msg['timestamp']  # 更新为最新时间
+            
+            return jsonify({
+                'code': 0,
+                'message': 'success',
+                'data': {
+                    'chat': {
+                        '_id': full_chat['_id'],
+                        'title': full_chat['title'],
+                        'created_at': full_chat['created_at'],
+                        'updated_at': full_chat['updated_at'],
+                        'message_count': full_chat['message_count']
+                    },
+                    'messages': grouped_messages,
+                    'total_groups': len(grouped_messages),
+                    'total_messages': len(all_messages)
+                }
+            })
+        else:
+            return jsonify({
+                'code': 0,
+                'message': 'success',
+                'data': {
+                    'chat': {
+                        '_id': full_chat['_id'],
+                        'title': full_chat['title'],
+                        'created_at': full_chat['created_at'],
+                        'updated_at': full_chat['updated_at'],
+                        'message_count': full_chat['message_count']
+                    },
+                    'messages': messages,
+                    'total_messages': len(all_messages)
+                }
+            })
+    except Exception as e:
+        logging.error(f"获取消息历史错误: {str(e)}")
+        return jsonify({
+            'code': 1,
+            'message': f'获取消息历史失败: {str(e)}'
+        }), 500
+
+@app.route('/api/chats/<chat_id>/load', methods=['POST'])
+def load_chat_context(chat_id):
+    """加载对话上下文"""
+    token = request.headers.get('Authorization')
+    if not token:
+        return jsonify({'message': 'Token is missing!'}), 401
+    user_id = verify_token(token)
+    if not user_id:
+        return jsonify({'message': 'Invalid token!'}), 401
+    
+    try:
+        # 验证对话是否属于当前用户
+        chat = chat_manager.get_chat_by_id(chat_id)
+        if not chat or chat['user_id'] != user_id[0]:
+            return jsonify({
+                'code': 1,
+                'message': '对话不存在或无权限'
+            }), 404
+        
+        # 设置为当前活跃聊天
+        user_current_chats[user_id[0]] = chat_id
+        
+        # 获取最近的消息作为上下文
+        recent_messages = message_manager.get_latest_messages(chat_id, 10)
+        
+        # 更新全局上下文
+        global current_context
+        current_context = []
+        
+        for msg in recent_messages:
+            if msg['sender'] == 'user':
+                current_context.append({
+                    "role": "user",
+                    "content": msg['content']
+                })
+            elif msg['sender'] == 'assistant':
+                current_context.append({
+                    "role": "assistant", 
+                    "content": msg['content']
+                })
+        
+        return jsonify({
+            'code': 0,
+            'message': '对话上下文加载成功',
+            'data': {
+                'chat': chat,
+                'context_loaded': len(current_context)
+            }
+        })
+    except Exception as e:
+        logging.error(f"加载对话上下文错误: {str(e)}")
+        return jsonify({
+            'code': 1,
+            'message': f'加载对话上下文失败: {str(e)}'
+        }), 500
+
+@app.route('/api/chats/<chat_id>/toggle-group', methods=['POST'])
+def toggle_message_group(chat_id):
+    """切换消息组的折叠状态"""
+    token = request.headers.get('Authorization')
+    if not token:
+        return jsonify({'message': 'Token is missing!'}), 401
+    user_id = verify_token(token)
+    if not user_id:
+        return jsonify({'message': 'Invalid token!'}), 401
+    
+    try:
+        # 验证对话是否属于当前用户
+        chat = chat_manager.get_chat_by_id(chat_id)
+        if not chat or chat['user_id'] != user_id[0]:
+            return jsonify({
+                'code': 1,
+                'message': '对话不存在或无权限'
+            }), 404
+        
+        data = request.get_json()
+        group_index = data.get('group_index')
+        collapsed = data.get('collapsed', False)
+        
+        # 这里可以将折叠状态保存到用户偏好设置中
+        # 目前只返回成功响应，前端可以本地管理状态
+        
+        return jsonify({
+            'code': 0,
+            'message': '状态更新成功',
+            'data': {
+                'group_index': group_index,
+                'collapsed': collapsed
+            }
+        })
+    except Exception as e:
+        logging.error(f"切换消息组状态错误: {str(e)}")
+        return jsonify({
+            'code': 1,
+            'message': f'操作失败: {str(e)}'
+        }), 500
+
 def process_message(message):
     global dangerous
     label, dangerous = classifier.predict(message)
@@ -416,8 +700,19 @@ def stream_chat():
     thread.start()
     thread.join()  # 等待线程完成
     
-    # 如果检测到危险消息
+    # 获取或创建当前聊天
+    current_chat_id = user_current_chats.get(user_id[0])
+    if not current_chat_id:
+        # 如果没有当前聊天，根据消息危险性创建不同类型的对话
+        chat_type = "dangerous" if dangerous > 0.5 else "normal"
+        current_chat_id = chat_manager.create_chat(user_id[0], "新对话", chat_type)
+        user_current_chats[user_id[0]] = current_chat_id
+    
+    # 如果检测到危险消息，更新对话类型
     if dangerous > 0.5:
+        # 更新现有对话为危险类型
+        chat_manager.update_chat(current_chat_id, {"type": "dangerous"})
+        
         print('检测到危险消息，需要人工干预:', user_message)
         # 将聊天内容记录到危险对话字典
         user_id_str = str(user_id[0])
@@ -426,6 +721,7 @@ def stream_chat():
             # 初始化用户的危险聊天记录
             dangerous_chats[user_id_str] = {
                 'username': user_id[1],
+                'chat_id': current_chat_id,  # 添加chat_id以便后续消息保存到数据库
                 'messages': current_context.copy() + [
                     {"role": "user", "content": user_message}
                 ],
@@ -440,6 +736,18 @@ def stream_chat():
                 "content": user_message
             })
             dangerous_chats[user_id_str]['last_updated'] = datetime.datetime.now().isoformat()
+        
+        # 保存用户消息到MongoDB
+        try:
+            message_manager.add_message(
+                chat_id=current_chat_id,
+                message_type="text",
+                content=user_message,
+                sender="user",
+                danger_level=dangerous
+            )
+        except Exception as e:
+            logging.error(f"保存危险消息失败: {str(e)}")
         
         # 通知所有在线管理员有新的危险对话
         socketio.emit('dangerous_chat_alert', {
@@ -461,6 +769,18 @@ def stream_chat():
             "is_system": True,
             "messageId": "system_risk_alert"  # 添加固定messageId用于前端去重
         })
+        
+        # 保存系统消息到MongoDB
+        try:
+            message_manager.add_message(
+                chat_id=current_chat_id,
+                message_type="text",
+                content=admin_message,
+                sender="system",
+                danger_level=dangerous
+            )
+        except Exception as e:
+            logging.error(f"保存系统消息失败: {str(e)}")
         
         # 返回一个固定提示
         return admin_message
@@ -494,6 +814,14 @@ def stream_chat():
     def generate():
         assistant_reply = ''
         try:
+            # 先保存用户消息到MongoDB
+            user_message_id = message_manager.add_message(
+                chat_id=current_chat_id,
+                message_type="text",
+                content=user_message,
+                sender="user"
+            )
+            
             # 发起 POST 请求，启用流式响应
             with requests.post(url, json=payload, headers=headers, stream=True) as response:
                 response.raise_for_status()  # 检查响应状态码
@@ -521,7 +849,17 @@ def stream_chat():
                             except json.JSONDecodeError:
                                 # 如果 JSON 解析失败，记录错误（或跳过）
                                 print(f"Failed to parse JSON: {line}")
-            # 成功获取完整回复后更新上下文
+            
+            # 成功获取完整回复后保存助手消息到MongoDB
+            if assistant_reply:
+                assistant_message_id = message_manager.add_message(
+                    chat_id=current_chat_id,
+                    message_type="text",
+                    content=assistant_reply,
+                    sender="assistant"
+                )
+            
+            # 更新上下文
             current_context.extend([
                 {"role": "user", "content": user_message},
                 {"role": "assistant", "content": assistant_reply}
@@ -529,8 +867,22 @@ def stream_chat():
             # 保留最多5轮对话（10条消息）
             if len(current_context) > 10:
                 current_context[:] = current_context[-10:]
+            
+            # 始终更新对话标题为用户的最新消息（对话结束前的最后一条语言）
+            try:
+                # 截取用户消息的前20个字符作为标题
+                new_title = user_message[:20] + "..." if len(user_message) > 20 else user_message
+                chat_manager.update_chat_title(current_chat_id, new_title)
+            except Exception as e:
+                logging.error(f"更新对话标题失败: {str(e)}")
+                
         except requests.RequestException as e:
             # 处理请求异常，例如网络错误或 API 返回错误状态码
+            yield f"data: Error: {str(e)}\n\n"
+            yield "data: [DONE]\n\n"
+        except Exception as e:
+            # 处理其他异常，如数据库保存错误
+            logging.error(f"聊天处理错误: {str(e)}")
             yield f"data: Error: {str(e)}\n\n"
             yield "data: [DONE]\n\n"
 
@@ -712,13 +1064,6 @@ def analyze_image(file_path):
         logging.error(f"Analysis error: {str(e)}")
         return jsonify({'message': '分析过程中出现错误', 'error': str(e)}), 500
 
-
-# 创建数据库连接并初始化
-conn = create_connection('user.db')
-if conn is not None:
-    init_db(conn)
-    conn.close()
-
 @app.route('/api/reset-password', methods=['POST'])
 def reset_password():
     try:
@@ -731,32 +1076,27 @@ def reset_password():
                 'message': '请提供邮箱地址'
             }), 400
             
-        conn = create_connection('user.db')
-        with conn:
-            cursor = conn.cursor()
-            cursor.execute("SELECT * FROM users WHERE email=?", (email,))
-            user = cursor.fetchone()
-            
-            if not user:
-                return jsonify({
-                    'code': 1,
-                    'message': '该邮箱未注册'
-                }), 404
-                
-            # 生成重置密码的token
-            reset_token = generate_token(user)
-            
-            # TODO: 发送重置密码邮件
-            # 这里应该实现发送邮件的功能
-            # 为了演示，我们直接返回成功
-            
+        user = user_manager.get_user_by_email(email)
+        if not user:
             return jsonify({
-                'code': 0,
-                'message': '重置密码链接已发送到您的邮箱'
-            }), 200
+                'code': 1,
+                'message': '该邮箱未注册'
+            }), 404
+                
+        # 生成重置密码的token
+        reset_token = generate_token([str(user['_id']), user['username']])
+        
+        # TODO: 发送重置密码邮件
+        # 这里应该实现发送邮件的功能
+        # 为了演示，我们直接返回成功
+        
+        return jsonify({
+            'code': 0,
+            'message': '重置密码链接已发送到您的邮箱'
+        }), 200
             
     except Exception as e:
-        print(f"重置密码错误: {str(e)}")
+        logging.error(f"重置密码错误: {str(e)}")
         return jsonify({
             'code': 1,
             'message': '重置密码失败，请稍后重试'
@@ -783,21 +1123,24 @@ def update_password():
                 'message': '无效或过期的重置链接'
             }), 401
             
-        conn = create_connection('user.db')
-        with conn:
-            cursor = conn.cursor()
-            # 更新密码
-            cursor.execute(
-                "UPDATE users SET password=? WHERE id=?",
-                (sha256_hash(new_password), user_id[0])
-            )
-            
+        # 更新密码
+        success = user_manager.update_user(user_id[0], {
+            'password': sha256_hash(new_password)
+        })
+        
+        if success:
             return jsonify({
                 'code': 0,
                 'message': '密码更新成功'
             }), 200
+        else:
+            return jsonify({
+                'code': 1,
+                'message': '用户不存在或更新失败'
+            }), 404
             
     except Exception as e:
+        logging.error(f"更新密码错误: {str(e)}")
         return jsonify({
             'code': 1,
             'message': '更新密码失败，请稍后重试'
@@ -816,32 +1159,32 @@ def reset_password_direct():
                 'message': '请提供邮箱和新密码'
             }), 400
             
-        conn = create_connection('user.db')
-        with conn:
-            cursor = conn.cursor()
-            # 检查邮箱是否存在
-            cursor.execute("SELECT * FROM users WHERE email=?", (email,))
-            user = cursor.fetchone()
+        # 检查邮箱是否存在
+        user = user_manager.get_user_by_email(email)
+        if not user:
+            return jsonify({
+                'code': 1,
+                'message': '该邮箱未注册'
+            }), 404
             
-            if not user:
-                return jsonify({
-                    'code': 1,
-                    'message': '该邮箱未注册'
-                }), 404
-                
-            # 更新密码
-            cursor.execute(
-                "UPDATE users SET password=? WHERE email=?",
-                (sha256_hash(new_password), email)
-            )
-            
+        # 更新密码
+        success = user_manager.update_user(str(user['_id']), {
+            'password': sha256_hash(new_password)
+        })
+        
+        if success:
             return jsonify({
                 'code': 0,
                 'message': '密码重置成功'
             }), 200
+        else:
+            return jsonify({
+                'code': 1,
+                'message': '密码重置失败'
+            }), 500
             
     except Exception as e:
-        print(f"重置密码错误: {str(e)}")
+        logging.error(f"重置密码错误: {str(e)}")
         return jsonify({
             'code': 1,
             'message': '重置密码失败，请稍后重试'
@@ -1158,6 +1501,19 @@ def handle_admin_message(data):
         'messageId': message_id  # 存储消息ID
     })
     
+    # 保存管理员消息到数据库
+    try:
+        chat_id = dangerous_chats[user_id].get('chat_id')
+        if chat_id:
+            message_manager.add_message(
+                chat_id=chat_id,
+                message_type="text",
+                content=content,
+                sender="admin"
+            )
+    except Exception as e:
+        logging.error(f"保存管理员消息失败: {str(e)}")
+    
     # 发送消息给所有管理员，更新聊天状态
     emit('new_message', {
         'userId': user_id,
@@ -1213,6 +1569,19 @@ def handle_user_message(data):
             'time': current_time
         })
         
+        # 保存用户消息到数据库
+        try:
+            chat_id = dangerous_chats[user_id_str].get('chat_id')
+            if chat_id:
+                message_manager.add_message(
+                    chat_id=chat_id,
+                    message_type="text",
+                    content=content,
+                    sender="user"
+                )
+        except Exception as e:
+            logging.error(f"保存用户危险对话消息失败: {str(e)}")
+        
         # 查找处理该用户的管理员
         admin_id = dangerous_chats[user_id_str].get('admin_id')
         
@@ -1235,8 +1604,19 @@ def handle_user_message(data):
             }, room='admin_room')
     else:
         # 创建新的危险对话记录
+        # 获取用户当前的chat_id，如果没有则创建新的chat
+        current_chat_id = user_current_chats.get(int(user_id_str))
+        if not current_chat_id:
+            # 为用户创建新的危险对话
+            current_chat_id = chat_manager.create_chat(int(user_id_str), "危险对话", "dangerous")
+            user_current_chats[int(user_id_str)] = current_chat_id
+        else:
+            # 更新现有对话为危险类型
+            chat_manager.update_chat(current_chat_id, {"type": "dangerous"})
+        
         dangerous_chats[user_id_str] = {
             'username': user_connections[user_id_str]['username'],
+            'chat_id': current_chat_id,  # 添加chat_id
             'messages': [{
                 'role': 'user',
                 'content': content,
@@ -1245,6 +1625,17 @@ def handle_user_message(data):
             'is_active': True,
             'admin_id': None
         }
+        
+        # 保存用户消息到数据库
+        try:
+            message_manager.add_message(
+                chat_id=current_chat_id,
+                message_type="text",
+                content=content,
+                sender="user"
+            )
+        except Exception as e:
+            logging.error(f"保存WebSocket用户危险消息失败: {str(e)}")
         
         # 通知所有管理员有新的危险对话
         socketio.emit('dangerous_chat_alert', {
@@ -1258,8 +1649,14 @@ def handle_user_message(data):
 if __name__ == '__main__':
     app.jinja_env.variable_start_string = '[['
     app.jinja_env.variable_end_string = ']]'
-    # 初始化
-    classifier = EmotionClassifier(model_path="./emotion_model", slang_file="slang_map.csv")
+    
+    # 初始化情感分析模型
+    import os
+    current_dir = os.path.dirname(os.path.abspath(__file__))
+    classifier = EmotionClassifier(
+        model_path=os.path.join(current_dir, "emotion_model"), 
+        slang_file=os.path.join(current_dir, "slang_map.csv")
+    )
     
     # 通过SocketIO启动应用
     socketio.run(app, debug=True, host='0.0.0.0', port=5000, allow_unsafe_werkzeug=True, log_output=True)
