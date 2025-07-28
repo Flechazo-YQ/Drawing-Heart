@@ -23,6 +23,7 @@ class MongoDB:
         self.users = self.db.users
         self.chats = self.db.chats
         self.messages = self.db.messages
+        self.drawing_analyses = self.db.drawing_analyses  # 新增：绘画分析结果集合
         
         # 创建索引
         self._create_indexes()
@@ -41,6 +42,12 @@ class MongoDB:
             # 为消息数组中的字段创建索引
             self.chats.create_index("messages.timestamp")
             self.chats.create_index("messages.sender")
+            
+            # 绘画分析结果集合索引
+            self.drawing_analyses.create_index("user_id")
+            self.drawing_analyses.create_index("analysis_date")
+            self.drawing_analyses.create_index([("user_id", 1), ("analysis_date", -1)])
+            self.drawing_analyses.create_index("created_at")
             
             logging.info("数据库索引创建完成")
         except Exception as e:
@@ -397,20 +404,218 @@ class MessageManager:
             logging.error(f"获取完整对话失败: {str(e)}")
             return None
 
+class DrawingAnalysisManager:
+    """绘画分析结果管理器"""
+    def __init__(self, db: MongoDB):
+        self.db = db
+    
+    def save_analysis(self, user_id: str, image_path: str, analysis_result: str, **kwargs) -> str:
+        """
+        保存绘画分析结果
+        返回分析记录ID
+        """
+        analysis_data = {
+            "user_id": ObjectId(user_id),
+            "image_path": image_path,
+            "analysis_result": analysis_result,
+            "analysis_date": datetime.datetime.utcnow().strftime("%Y-%m-%d"),  # 只保存日期部分
+            "created_at": datetime.datetime.utcnow(),
+            "updated_at": datetime.datetime.utcnow(),
+            "metadata": {
+                "image_size": kwargs.get("image_size", ""),
+                "analysis_type": kwargs.get("analysis_type", "house_tree_person"),
+                "ai_model": kwargs.get("ai_model", "doubao-1-5-vision-pro"),
+                "confidence_score": kwargs.get("confidence_score", 0.0),
+                "analysis_duration": kwargs.get("analysis_duration", 0),  # 分析耗时（秒）
+            },
+            "tags": kwargs.get("tags", []),  # 分析标签，如["焦虑", "抑郁", "积极"]
+            "emotional_indicators": {
+                "anxiety_level": kwargs.get("anxiety_level", 0),
+                "depression_level": kwargs.get("depression_level", 0),
+                "stress_level": kwargs.get("stress_level", 0),
+                "confidence_level": kwargs.get("confidence_level", 0),
+                "creativity_level": kwargs.get("creativity_level", 0),
+            },
+            "is_active": True
+        }
+        
+        result = self.db.drawing_analyses.insert_one(analysis_data)
+        return str(result.inserted_id)
+    
+    def get_today_analysis(self, user_id: str) -> Optional[Dict]:
+        """
+        获取用户当日的绘画分析结果
+        """
+        try:
+            today = datetime.datetime.utcnow().strftime("%Y-%m-%d")
+            analysis = self.db.drawing_analyses.find_one({
+                "user_id": ObjectId(user_id),
+                "analysis_date": today,
+                "is_active": True
+            }, sort=[("created_at", -1)])  # 获取当日最新的分析结果
+            
+            if analysis:
+                analysis["_id"] = str(analysis["_id"])
+                analysis["user_id"] = str(analysis["user_id"])
+            
+            return analysis
+        except Exception as e:
+            logging.error(f"获取当日分析结果失败: {str(e)}")
+            return None
+    
+    def get_latest_analysis(self, user_id: str) -> Optional[Dict]:
+        """
+        获取用户最新的绘画分析结果（不限日期）
+        """
+        try:
+            analysis = self.db.drawing_analyses.find_one({
+                "user_id": ObjectId(user_id),
+                "is_active": True
+            }, sort=[("created_at", -1)])  # 按创建时间降序，获取最新的分析结果
+            
+            if analysis:
+                analysis["_id"] = str(analysis["_id"])
+                analysis["user_id"] = str(analysis["user_id"])
+            
+            return analysis
+        except Exception as e:
+            logging.error(f"获取最新分析结果失败: {str(e)}")
+            return None
+    
+    def get_recent_analysis(self, user_id: str, hours: int = 4) -> Optional[Dict]:
+        """
+        获取用户在指定小时内的最新绘画分析结果
+        如果是0小时，则获取当日的分析结果
+        
+        Args:
+            user_id: 用户ID
+            hours: 时间范围（小时），0表示当日
+        
+        Returns:
+            分析结果字典或None
+        """
+        try:
+            current_time = datetime.datetime.utcnow()
+            
+            if hours == 0:
+                # 获取当日分析结果
+                start_of_day = current_time.replace(hour=0, minute=0, second=0, microsecond=0)
+                end_of_day = start_of_day + datetime.timedelta(days=1)
+                time_filter = {
+                    "created_at": {
+                        "$gte": start_of_day,
+                        "$lt": end_of_day
+                    }
+                }
+            else:
+                # 获取指定小时内的分析结果
+                time_threshold = current_time - datetime.timedelta(hours=hours)
+                time_filter = {
+                    "created_at": {"$gte": time_threshold}
+                }
+            
+            analysis = self.db.drawing_analyses.find_one({
+                "user_id": ObjectId(user_id),
+                "is_active": True,
+                **time_filter
+            }, sort=[("created_at", -1)])  # 按创建时间降序，获取最新的分析结果
+            
+            if analysis:
+                analysis["_id"] = str(analysis["_id"])
+                analysis["user_id"] = str(analysis["user_id"])
+            
+            return analysis
+        except Exception as e:
+            logging.error(f"获取近期分析结果失败: {str(e)}")
+            return None
+    
+    def get_user_analyses(self, user_id: str, limit: int = 10, page: int = 1) -> List[Dict]:
+        """
+        获取用户的历史分析结果
+        """
+        try:
+            skip = (page - 1) * limit
+            analyses = list(self.db.drawing_analyses.find({
+                "user_id": ObjectId(user_id),
+                "is_active": True
+            }).sort("created_at", -1).skip(skip).limit(limit))
+            
+            # 转换ObjectId为字符串
+            for analysis in analyses:
+                analysis["_id"] = str(analysis["_id"])
+                analysis["user_id"] = str(analysis["user_id"])
+            
+            return analyses
+        except Exception as e:
+            logging.error(f"获取用户分析历史失败: {str(e)}")
+            return []
+    
+    def get_analysis_by_date_range(self, user_id: str, start_date: str, end_date: str) -> List[Dict]:
+        """
+        获取用户指定日期范围内的分析结果
+        """
+        try:
+            analyses = list(self.db.drawing_analyses.find({
+                "user_id": ObjectId(user_id),
+                "analysis_date": {"$gte": start_date, "$lte": end_date},
+                "is_active": True
+            }).sort("analysis_date", -1))
+            
+            # 转换ObjectId为字符串
+            for analysis in analyses:
+                analysis["_id"] = str(analysis["_id"])
+                analysis["user_id"] = str(analysis["user_id"])
+            
+            return analyses
+        except Exception as e:
+            logging.error(f"获取日期范围分析结果失败: {str(e)}")
+            return []
+    
+    def update_analysis(self, analysis_id: str, update_data: Dict) -> bool:
+        """
+        更新分析结果
+        """
+        try:
+            update_data["updated_at"] = datetime.datetime.utcnow()
+            result = self.db.drawing_analyses.update_one(
+                {"_id": ObjectId(analysis_id)},
+                {"$set": update_data}
+            )
+            return result.modified_count > 0
+        except Exception as e:
+            logging.error(f"更新分析结果失败: {str(e)}")
+            return False
+    
+    def delete_analysis(self, analysis_id: str) -> bool:
+        """
+        软删除分析结果
+        """
+        try:
+            result = self.db.drawing_analyses.update_one(
+                {"_id": ObjectId(analysis_id)},
+                {"$set": {"is_active": False, "updated_at": datetime.datetime.utcnow()}}
+            )
+            return result.modified_count > 0
+        except Exception as e:
+            logging.error(f"删除分析结果失败: {str(e)}")
+            return False
+
 # 全局数据库实例
 mongodb = None
 user_manager = None
 chat_manager = None
 message_manager = None
+drawing_analysis_manager = None
 
 def init_mongodb(connection_string="mongodb://localhost:27017/", database_name="huixin_db"):
     """初始化MongoDB连接"""
-    global mongodb, user_manager, chat_manager, message_manager
+    global mongodb, user_manager, chat_manager, message_manager, drawing_analysis_manager
     
     mongodb = MongoDB(connection_string, database_name)
     user_manager = UserManager(mongodb)
     chat_manager = ChatManager(mongodb)
     message_manager = MessageManager(mongodb)
+    drawing_analysis_manager = DrawingAnalysisManager(mongodb)
     
     logging.info("MongoDB初始化完成")
     return mongodb

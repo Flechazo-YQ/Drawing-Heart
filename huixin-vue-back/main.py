@@ -1,26 +1,27 @@
- -*- coding: utf-8 -*-
+# -*- coding: utf-8 -*-
 import base64
 import datetime
 import threading
 import jwt
-from flask import render_template, jsonify, send_from_directory, Flask, request, json
-from flask_cors import CORS  # 添加CORS支持
-from flask_socketio import SocketIO, emit, join_room, leave_room  # 添加SocketIO支持
-
 import requests
-from torchvision import transforms
 import hashlib
-from reportlab.pdfbase import pdfmetrics
-from reportlab.pdfbase.ttfonts import TTFont
 import json
 import os
-from flask import Response, stream_with_context
-from openai import OpenAI
-from 封装 import EmotionClassifier
+import re  # 添加正则表达式模块
 import logging
 import sys
-from datetime import timedelta
 import secrets
+import httpx  # 添加httpx导入
+from datetime import timedelta
+from flask import render_template, jsonify, send_from_directory, Flask, request, json
+from flask import Response, stream_with_context
+from flask_cors import CORS  # 添加CORS支持
+from flask_socketio import SocketIO, emit, join_room, leave_room  # 添加SocketIO支持
+from torchvision import transforms
+from reportlab.pdfbase import pdfmetrics
+from reportlab.pdfbase.ttfonts import TTFont
+from openai import OpenAI
+from 封装 import EmotionClassifier
 from mongodb_config import init_mongodb
 from bson import ObjectId
 
@@ -33,7 +34,7 @@ except Exception as e:
     raise e
 
 # 导入已初始化的管理器
-from mongodb_config import user_manager, chat_manager, message_manager
+from mongodb_config import user_manager, chat_manager, message_manager, drawing_analysis_manager
 
 # 注册字体 - 注释掉避免文件不存在错误
 # pdfmetrics.registerFont(TTFont('SimHei', 'SimHei.ttf'))  # 确保路径正确，或使用系统字体路径
@@ -324,10 +325,134 @@ def get_user_info():
         logging.error(f"获取用户信息错误: {str(e)}")
         return jsonify({'message': str(e)}), 500
 
+@app.route('/api/user/analyses', methods=['GET'])
+def get_user_analyses():
+    """获取用户的绘画分析历史"""
+    token = request.headers.get('Authorization')
+    if not token:
+        return jsonify({'message': 'Token is missing!'}), 401
+    user_id = verify_token(token)
+    if not user_id:
+        return jsonify({'message': 'Invalid token!'}), 401
+    
+    try:
+        page = int(request.args.get('page', 1))
+        limit = int(request.args.get('limit', 10))
+        
+        analyses = drawing_analysis_manager.get_user_analyses(user_id[0], limit, page)
+        
+        return jsonify({
+            'code': 0,
+            'message': 'success',
+            'data': {
+                'analyses': analyses,
+                'page': page,
+                'limit': limit,
+                'total': len(analyses)
+            }
+        })
+    except Exception as e:
+        logging.error(f"获取用户分析历史错误: {str(e)}")
+        return jsonify({
+            'code': 1,
+            'message': f'获取分析历史失败: {str(e)}'
+        }), 500
+
+@app.route('/api/user/today-analysis', methods=['GET'])
+def get_today_analysis():
+    """获取用户当日的绘画分析结果"""
+    token = request.headers.get('Authorization')
+    if not token:
+        return jsonify({'message': 'Token is missing!'}), 401
+    user_id = verify_token(token)
+    if not user_id:
+        return jsonify({'message': 'Invalid token!'}), 401
+    
+    try:
+        today_analysis = drawing_analysis_manager.get_today_analysis(user_id[0])
+        
+        if today_analysis:
+            return jsonify({
+                'code': 0,
+                'message': 'success',
+                'data': today_analysis
+            })
+        else:
+            return jsonify({
+                'code': 1,
+                'message': '今日暂无分析记录'
+            }), 404
+    except Exception as e:
+        logging.error(f"获取当日分析结果错误: {str(e)}")
+        return jsonify({
+            'code': 1,
+            'message': f'获取当日分析结果失败: {str(e)}'
+        }), 500
+
+@app.route('/api/user/latest-analysis', methods=['GET'])
+def get_latest_analysis():
+    """获取用户最新的绘画分析结果（可选择时间限制）"""
+    token = request.headers.get('Authorization')
+    if not token:
+        return jsonify({'message': 'Token is missing!'}), 401
+    user_id = verify_token(token)
+    if not user_id:
+        return jsonify({'message': 'Invalid token!'}), 401
+    
+    # 获取时间限制参数，默认为不限制时间
+    time_limit = request.args.get('time_limit', 'none')  # none, today, 4hours
+    
+    try:
+        latest_analysis = None
+        
+        if time_limit == 'today':
+            # 获取当日分析结果
+            latest_analysis = drawing_analysis_manager.get_recent_analysis(user_id[0], hours=0)
+        elif time_limit == '4hours':
+            # 获取4小时内分析结果
+            latest_analysis = drawing_analysis_manager.get_recent_analysis(user_id[0], hours=4)
+        elif time_limit == 'recent':
+            # 获取当日或4小时内的分析结果（优先当日）
+            latest_analysis = drawing_analysis_manager.get_recent_analysis(user_id[0], hours=0)
+            if not latest_analysis:
+                latest_analysis = drawing_analysis_manager.get_recent_analysis(user_id[0], hours=4)
+        else:
+            # 默认获取最新分析结果（不限时间）
+            latest_analysis = drawing_analysis_manager.get_latest_analysis(user_id[0])
+        
+        if latest_analysis:
+            return jsonify({
+                'code': 0,
+                'message': 'success',
+                'data': latest_analysis
+            })
+        else:
+            time_desc = ""
+            if time_limit == 'today':
+                time_desc = "今日"
+            elif time_limit == '4hours':
+                time_desc = "4小时内"
+            elif time_limit == 'recent':
+                time_desc = "当日或4小时内"
+            else:
+                time_desc = ""
+            
+            return jsonify({
+                'code': 1,
+                'message': f'暂无{time_desc}分析记录'
+            }), 404
+    except Exception as e:
+        logging.error(f"获取最新分析结果错误: {str(e)}")
+        return jsonify({
+            'code': 1,
+            'message': f'获取最新分析结果失败: {str(e)}'
+        }), 500
+
 
 url = "https://api.siliconflow.cn/v1/chat/completions"
 dangerous = 0
-current_context = []
+# 使用字典存储每个用户的上下文，避免全局变量混乱
+user_contexts = {}
 # 存储用户连接的字典
 user_connections = {}
 # 存储用户当前活跃聊天ID的字典
@@ -348,9 +473,9 @@ def clear_chat_context():
     try:
         user_id_str = str(user_id[0])
         
-        # 清除全局变量中的上下文
-        global current_context
-        current_context = []
+        # 清除用户特定的上下文
+        if user_id_str in user_contexts:
+            user_contexts[user_id_str] = []
         
         # 如果用户在危险对话列表中，清除其记录
         if user_id_str in dangerous_chats:
@@ -360,9 +485,7 @@ def clear_chat_context():
         if user_id_str in user_latest_images:
             del user_latest_images[user_id_str]
             
-        # 清除全局的文本结果
-        global text_result
-        text_result = ''
+        # 注意：不再清除全局text_result，因为现在使用数据库中的分析结果
         
         return jsonify({
             'code': 0,
@@ -374,6 +497,82 @@ def clear_chat_context():
         return jsonify({
             'code': 1,
             'message': f'清除聊天上下文失败: {str(e)}'
+        }), 500
+
+# 新增API：清除用户的当前活跃聊天
+@app.route('/api/clear-current-chat', methods=['POST'])
+def clear_current_chat():
+    """清除用户的当前活跃聊天，下次对话将创建新的聊天"""
+    token = request.headers.get('Authorization')
+    if not token:
+        return jsonify({'message': 'Token is missing!'}), 401
+    user_id = verify_token(token)
+    if not user_id:
+        return jsonify({'message': 'Invalid token!'}), 401
+    
+    try:
+        user_id_str = str(user_id[0])
+        
+        # 清除用户的当前活跃聊天
+        if user_id_str in user_current_chats:
+            old_chat_id = user_current_chats[user_id_str]
+            del user_current_chats[user_id_str]
+            logging.info(f"清除用户 {user_id_str} 的当前聊天: {old_chat_id}")
+        
+        # 清除用户的上下文
+        if user_id_str in user_contexts:
+            user_contexts[user_id_str] = []
+        
+        return jsonify({
+            'code': 0,
+            'message': '已清除当前聊天，下次对话将创建新的聊天'
+        })
+    except Exception as e:
+        logging.error(f"清除当前聊天失败: {str(e)}")
+        return jsonify({
+            'code': 1,
+            'message': f'清除当前聊天失败: {str(e)}'
+        }), 500
+
+# 新增调试API：检查用户的聊天状态
+@app.route('/api/debug/chat-status', methods=['GET'])
+def debug_chat_status():
+    """调试API：检查用户的聊天状态"""
+    token = request.headers.get('Authorization')
+    if not token:
+        return jsonify({'message': 'Token is missing!'}), 401
+    user_id = verify_token(token)
+    if not user_id:
+        return jsonify({'message': 'Invalid token!'}), 401
+    
+    try:
+        user_id_str = str(user_id[0])
+        
+        # 获取用户的当前聊天ID
+        current_chat = user_current_chats.get(user_id_str, "无")
+        
+        # 获取用户的上下文长度
+        context_length = len(user_contexts.get(user_id_str, []))
+        
+        # 获取用户的聊天列表
+        user_chats = chat_manager.get_user_chats(user_id[0])
+        
+        return jsonify({
+            'code': 0,
+            'message': 'success',
+            'data': {
+                'user_id': user_id_str,
+                'current_chat_id': current_chat,
+                'context_length': context_length,
+                'total_chats': len(user_chats),
+                'chat_list': [{'id': str(chat['_id']), 'title': chat['title']} for chat in user_chats[:5]]  # 只显示前5个
+            }
+        })
+    except Exception as e:
+        logging.error(f"获取聊天状态失败: {str(e)}")
+        return jsonify({
+            'code': 1,
+            'message': f'获取聊天状态失败: {str(e)}'
         }), 500
 
 # 新增聊天管理API
@@ -422,12 +621,14 @@ def create_new_chat():
         
         chat_id = chat_manager.create_chat(user_id[0], title, chat_type)
         
-        # 设置为当前活跃聊天
-        user_current_chats[user_id[0]] = chat_id
+        # 设置为当前活跃聊天 - 统一使用字符串类型用户ID
+        user_id_str = str(user_id[0])
+        user_current_chats[user_id_str] = chat_id
         
-        # 清除当前上下文，开始新对话
-        global current_context
-        current_context = []
+        # 清除用户的当前上下文，开始新对话
+        user_contexts[user_id_str] = []
+        
+        logging.info(f"用户 {user_id_str} 创建新对话: {chat_id}")
         
         return jsonify({
             'code': 0,
@@ -597,24 +798,26 @@ def load_chat_context(chat_id):
                 'message': '对话不存在或无权限'
             }), 404
         
-        # 设置为当前活跃聊天
-        user_current_chats[user_id[0]] = chat_id
+        # 设置为当前活跃聊天 - 统一使用字符串类型用户ID
+        user_id_str = str(user_id[0])
+        user_current_chats[user_id_str] = chat_id
         
         # 获取最近的消息作为上下文
         recent_messages = message_manager.get_latest_messages(chat_id, 10)
         
-        # 更新全局上下文
-        global current_context
-        current_context = []
+        logging.info(f"用户 {user_id_str} 切换到对话: {chat_id}")
+        
+        # 更新用户特定的上下文（user_id_str已在上面定义）
+        user_contexts[user_id_str] = []
         
         for msg in recent_messages:
             if msg['sender'] == 'user':
-                current_context.append({
+                user_contexts[user_id_str].append({
                     "role": "user",
                     "content": msg['content']
                 })
             elif msg['sender'] == 'assistant':
-                current_context.append({
+                user_contexts[user_id_str].append({
                     "role": "assistant", 
                     "content": msg['content']
                 })
@@ -624,7 +827,7 @@ def load_chat_context(chat_id):
             'message': '对话上下文加载成功',
             'data': {
                 'chat': chat,
-                'context_loaded': len(current_context)
+                'context_loaded': len(user_contexts[user_id_str])
             }
         })
     except Exception as e:
@@ -700,13 +903,18 @@ def stream_chat():
     thread.start()
     thread.join()  # 等待线程完成
     
-    # 获取或创建当前聊天
-    current_chat_id = user_current_chats.get(user_id[0])
+    # 获取或创建当前聊天 - 统一使用字符串类型的用户ID
+    user_id_str = str(user_id[0])
+    current_chat_id = user_current_chats.get(user_id_str)
+    
     if not current_chat_id:
         # 如果没有当前聊天，根据消息危险性创建不同类型的对话
         chat_type = "dangerous" if dangerous > 0.5 else "normal"
         current_chat_id = chat_manager.create_chat(user_id[0], "新对话", chat_type)
-        user_current_chats[user_id[0]] = current_chat_id
+        user_current_chats[user_id_str] = current_chat_id
+        logging.info(f"为用户 {user_id_str} 创建新对话: {current_chat_id}")
+    else:
+        logging.info(f"用户 {user_id_str} 使用现有对话: {current_chat_id}")
     
     # 如果检测到危险消息，更新对话类型
     if dangerous > 0.5:
@@ -714,15 +922,17 @@ def stream_chat():
         chat_manager.update_chat(current_chat_id, {"type": "dangerous"})
         
         print('检测到危险消息，需要人工干预:', user_message)
-        # 将聊天内容记录到危险对话字典
-        user_id_str = str(user_id[0])
+        # 将聊天内容记录到危险对话字典（user_id_str已在上面定义）
+        
+        # 获取用户的上下文
+        user_context = user_contexts.get(user_id_str, [])
         
         if user_id_str not in dangerous_chats:
             # 初始化用户的危险聊天记录
             dangerous_chats[user_id_str] = {
                 'username': user_id[1],
                 'chat_id': current_chat_id,  # 添加chat_id以便后续消息保存到数据库
-                'messages': current_context.copy() + [
+                'messages': user_context.copy() + [
                     {"role": "user", "content": user_message}
                 ],
                 'is_active': True,
@@ -786,12 +996,51 @@ def stream_chat():
         return admin_message
     
     # 如果消息不危险，正常处理
+    # 每次对话都重新获取用户在当日或4小时内的最新绘画分析结果
+    latest_analysis = None
+    analysis_fetch_time = datetime.datetime.utcnow()
+    
+    try:
+        logging.info(f"开始获取用户 {user_id[0]} 的最新分析结果...")
+        
+        # 首先尝试获取当日的分析结果
+        latest_analysis = drawing_analysis_manager.get_recent_analysis(user_id[0], hours=0)
+        
+        if not latest_analysis:
+            # 如果当日没有分析结果，尝试获取4小时内的分析结果
+            latest_analysis = drawing_analysis_manager.get_recent_analysis(user_id[0], hours=4)
+        
+        if latest_analysis:
+            analysis_date = latest_analysis['analysis_date']
+            analysis_time = latest_analysis['created_at']
+            analysis_id = latest_analysis.get('_id', 'unknown')
+            logging.info(f"✅ 成功获取用户 {user_id[0]} 的分析结果 - ID: {analysis_id}, 日期: {analysis_date}, 创建时间: {analysis_time}")
+        else:
+            logging.info(f"ℹ️  用户 {user_id[0]} 在当日或4小时内暂无分析记录")
+    except Exception as e:
+        logging.error(f"❌ 获取用户 {user_id[0]} 的分析结果失败: {str(e)}")
+    
+    # 构建系统消息 - 完全基于数据库中的最新分析结果
+    if latest_analysis:
+        analysis_date = latest_analysis['analysis_date']
+        analysis_result = latest_analysis['analysis_result']
+        system_content = f"你现在是一名心理医师，你的名字叫绘心同学。用户在{analysis_date}完成了心理绘画测试，以下是最新的分析结果：{analysis_result} \n\n请结合这个分析结果帮助用户，用通俗易懂的语言与用户交流，用多轮对话的形式，每次别说太多。如果用户的问题与绘画分析相关，请参考分析结果给出建议。"
+        logging.info(f"🎯 AI将基于 {analysis_date} 的分析结果进行对话")
+    else:
+        # 如果没有符合时间条件的分析结果，不参考任何分析内容
+        system_content = "你现在是一名心理医师，你的名字叫绘心同学。请用温暖、专业的语言与用户交流，用多轮对话的形式，每次别说太多。如果用户需要心理绘画分析，请引导他们先完成绘画测试。"
+        logging.info("🔄 AI将不参考任何分析结果进行对话（无符合时间条件的分析）")
+    
+    # 获取用户的上下文
+    user_id_str = str(user_id[0])
+    user_context = user_contexts.get(user_id_str, [])
+    
     messages = [
         {
-            "content": "你现在是一名心理医师，你的名字叫绘心同学，结合下面用户的心理绘图分析结果帮助用户，请用通俗易懂的语言与用户交流，用多轮对话的形式，每次别说太多：" + text_result,
+            "content": system_content,
             "role": "system"
         }
-    ] + current_context.copy() + [
+    ] + user_context.copy() + [
         {"content": user_message, "role": "user"}
     ]
     payload = {
@@ -859,14 +1108,17 @@ def stream_chat():
                     sender="assistant"
                 )
             
-            # 更新上下文
-            current_context.extend([
+            # 更新用户特定的上下文
+            if user_id_str not in user_contexts:
+                user_contexts[user_id_str] = []
+            
+            user_contexts[user_id_str].extend([
                 {"role": "user", "content": user_message},
                 {"role": "assistant", "content": assistant_reply}
             ])
             # 保留最多5轮对话（10条消息）
-            if len(current_context) > 10:
-                current_context[:] = current_context[-10:]
+            if len(user_contexts[user_id_str]) > 10:
+                user_contexts[user_id_str] = user_contexts[user_id_str][-10:]
             
             # 始终更新对话标题为用户的最新消息（对话结束前的最后一条语言）
             try:
@@ -948,16 +1200,37 @@ def save_drawing():
             
         try:
             # 处理 Base64 数据
+            logging.info(f"Processing image data, size: {len(image_data)} characters")
+            
             if 'base64,' in image_data:
-                image_data = image_data.split('base64,')[1]
+                header, image_data = image_data.split('base64,', 1)
+                logging.info(f"Extracted base64 data from header: {header[:50]}...")
+            
+            # 清理Base64字符串，移除任何非base64字符
+            original_length = len(image_data)
+            image_data = re.sub(r'[^A-Za-z0-9+/=]', '', image_data)
+            if len(image_data) != original_length:
+                logging.info(f"Cleaned base64 string, removed {original_length - len(image_data)} invalid characters")
             
             # 补充缺失的填充
             missing_padding = len(image_data) % 4
             if missing_padding:
-                image_data += '=' * (4 - missing_padding)
+                padding = '=' * (4 - missing_padding)
+                image_data += padding
+                logging.info(f"Added {len(padding)} padding characters")
                 
             # 解码 Base64 数据
-            image_bytes = base64.b64decode(image_data.encode())
+            try:
+                image_bytes = base64.b64decode(image_data)
+                logging.info(f"Successfully decoded base64 data to {len(image_bytes)} bytes")
+            except Exception as decode_error:
+                logging.error(f"Base64 decode failed: {str(decode_error)}")
+                return jsonify({'message': f'图像数据解码失败: {str(decode_error)}'}), 400
+            
+            # 验证图像数据
+            if len(image_bytes) < 100:  # 太小的文件可能不是有效图像
+                logging.error(f"Image data too small: {len(image_bytes)} bytes")
+                return jsonify({'message': '图像数据太小，可能无效'}), 400
             
             # 生成文件名和保存图片
             file_name = f"drawing_{len(os.listdir(SAVE_DIR)) + 1}.png"
@@ -966,6 +1239,8 @@ def save_drawing():
             # 保存文件
             with open(file_path, 'wb') as f:
                 f.write(image_bytes)
+            
+            logging.info(f"Image saved successfully: {file_path}")
                 
             # 保存用户最新的图片URL
             user_latest_images[str(user_id[0])] = file_path
@@ -973,7 +1248,17 @@ def save_drawing():
             # 如果是分析请求，则进行AI分析
             should_analyze = data.get('analyze', False)
             if should_analyze:
-                return analyze_image(file_path)
+                logging.info(f"Starting analysis for image: {file_name}")
+                try:
+                    return analyze_image(file_path, file_name, user_id[0])  # 传递用户ID
+                except Exception as analysis_error:
+                    logging.error(f"Analysis failed for {file_name}: {str(analysis_error)}")
+                    # 即使分析失败，图片已经保存成功，返回文件信息
+                    return jsonify({
+                        'message': f'图片保存成功，但分析失败: {str(analysis_error)}',
+                        'file_name': file_name,
+                        'error': str(analysis_error)
+                    }), 200  # 使用200状态码，因为保存成功了
                 
             # 否则只返回保存成功的消息
             return jsonify({
@@ -982,87 +1267,153 @@ def save_drawing():
             }), 200
                 
         except Exception as e:
-            print(f"Error processing image: {str(e)}")
+            logging.error(f"Image processing error: {str(e)}")
             return jsonify({'message': f'图像处理失败: {str(e)}'}), 400
             
     except Exception as e:
         print(f"General error: {str(e)}")
         return jsonify({'message': f'保存失败: {str(e)}'}), 500
 
-def analyze_image(file_path):
+def analyze_image(file_path, file_name, user_id=None):
     """分析图片的函数"""
+    logging.info(f"Starting analyze_image function for {file_name} at {file_path}, user_id: {user_id}")
+    
     try:
         if not os.path.exists(file_path):
             logging.error(f"File not found for analysis: {file_path}")
             return jsonify({'message': '找不到要分析的图片文件'}), 404
             
-        client = OpenAI(
-            base_url="https://ark.cn-beijing.volces.com/api/v3",
-            api_key="d618ffd5-dd7c-4548-8cde-a82ba550f808"
-        )
+        # 验证文件大小
+        file_size = os.path.getsize(file_path)
+        logging.info(f"Analyzing image {file_name}, size: {file_size} bytes")
+        
+        if file_size == 0:
+            return jsonify({'message': '图片文件为空'}), 400
+        
+        if file_size > 10 * 1024 * 1024:  # 10MB限制
+            return jsonify({'message': '图片文件太大，请压缩后重试'}), 400
+            
+        # 初始化AI客户端
+        try:
+            # 创建自定义httpx客户端避免代理问题
+            http_client = httpx.Client()
+            client = OpenAI(
+                base_url="https://ark.cn-beijing.volces.com/api/v3",
+                api_key="d618ffd5-dd7c-4548-8cde-a82ba550f808",
+                http_client=http_client
+            )
+            logging.info("AI client initialized successfully")
+        except Exception as client_error:
+            logging.error(f"Failed to initialize AI client: {str(client_error)}")
+            return jsonify({'message': f'AI客户端初始化失败: {str(client_error)}'}), 500
         
         data_url = image_to_data_url(file_path)
         if not data_url:
+            logging.error(f"Failed to convert image to data URL: {file_path}")
             return jsonify({'message': '图片转换失败'}), 500
         
-        response = client.chat.completions.create(
-            model="doubao-1-5-vision-pro-32k-250115",
-            messages=[{
-                "role": "user",
-                "content": [
-                    {
-                        "type": "image_url",
-                        "image_url": {"url": data_url}
-                    },
-                    {"type": "text", "text": '''
-                    你是一个专业的心理分析师，请根据绘画静态数据：
-                    房、树、人的高清图像（需包含笔触细节）或以下结构化描述：
-                    尺寸/布局：各元素在纸上的位置、比例（如房屋占纸面50%、人物位于右下角）。
-                    线条特征：轻/重笔压、断续线条、反复涂抹区域。
-                    细节程度：门窗结构、树叶纹理、人物五官/手指等是否完整。
-                    特殊符号：天气（雨，太阳）、附加物（围墙，动物）
-                    进行专业分析用户的房树人绘画，并参考以下可以涉及的分析方面：
-                    阶段1：符号特征优先级分类
-                    高风险信号标记：
-                    人物无五官或躯体残缺 → 潜在身份认同障碍或抑郁倾向。
-                    树根缺失/悬浮或严重倾斜 → 缺乏安全感或情绪不稳定。
-                    房屋全封闭（无门窗）+ 尖刺状屋顶 → 防御性人格或创伤后应激可能。
-                    文化适配调节：
-                    若画纸边缘多次被线条穿透 → 在东亚文化中可能暗示压力，而在西方可能关联外向性（需标记此差异）。
-                    阶段2：生成心理画像框架
-                    核心维度与权重：
-                    情绪状态（权重高）：
-                    阴云/雨水+重压线条 → 焦虑/抑郁概率↑。
-                    明亮太阳+曲线线条 → 情绪稳定概率↑。
-                    人际关系模式（权重中）：
-                    房屋与人物距离＞画面1/3 → 家庭疏离感假设。
-                    树木孤立于角落 → 社会支持薄弱假设。
-                    自我认知（权重中）：
-                    人物大小异常（如极小） → 自卑或退缩倾向↑。
-                    矛盾点与可信度：
-                    若房屋细节丰富但人物极其简略 → 可能"重视家庭角色而忽视自我"，标注逻辑一致性矛盾（可信度↓）。
-                    最后生成用户的心理画像，判断用户心理状况是否健康和可能潜在的问题，若图片不是房树人相关，请使用温柔和蔼委婉地拒绝并引导用户重新绘画，适量使用语气词。
-                    最后输出包含：绘画描述、分析概述、具体分析、用户心理画像。                
-                    '''}
-                ]
-            }]
-        )
+        logging.info(f"Starting AI analysis for image: {file_name}")
         
-        # 获取分析结果
-        analysis_result = response.choices[0].message.content
-        
-        # 更新全局变量
-        global text_result
-        text_result = analysis_result
-        
-        return jsonify({
-            'message': '分析完成',
-            'analysis': analysis_result
-        }), 200
+        try:
+            response = client.chat.completions.create(
+                model="doubao-1-5-vision-pro-32k-250115",
+                messages=[{
+                    "role": "user",
+                    "content": [
+                        {
+                            "type": "image_url",
+                            "image_url": {"url": data_url}
+                        },
+                        {"type": "text", "text": '''
+                        你是一个专业的心理分析师，请根据绘画静态数据：
+                        房、树、人的高清图像（需包含笔触细节）或以下结构化描述：
+                        尺寸/布局：各元素在纸上的位置、比例（如房屋占纸面50%、人物位于右下角）。
+                        线条特征：轻/重笔压、断续线条、反复涂抹区域。
+                        细节程度：门窗结构、树叶纹理、人物五官/手指等是否完整。
+                        特殊符号：天气（雨，太阳）、附加物（围墙，动物）
+                        进行专业分析用户的房树人绘画，并参考以下可以涉及的分析方面：
+                        
+                        ### 绘画描述
+                        请详细描述画面中的内容，包括房屋、树木、人物的位置、大小和特征。
+                        
+                        ### 分析概述  
+                        基于绘画内容进行整体心理状态评估。
+                        
+                        ### 具体分析
+                        从以下几个维度进行分析：
+                        1. 情绪状态：通过线条力度、色彩选择等判断
+                        2. 人际关系：通过元素间距离、比例关系等分析
+                        3. 自我认知：通过人物描绘的详细程度等评估
+                        
+                        ### 用户心理画像
+                        综合分析结果，给出用户当前的心理状态评估和建议。
+                        
+                        若图片不是房树人相关绘画，请温和地引导用户重新绘画房树人作品。
+                        '''}
+                    ]
+                }],
+                max_tokens=4000,
+                temperature=0.7
+            )
+            
+            # 检查响应
+            if not response or not response.choices:
+                logging.error("AI service returned empty response")
+                return jsonify({'message': 'AI分析服务返回空响应，请稍后重试'}), 500
+            
+            # 获取分析结果
+            analysis_result = response.choices[0].message.content
+            
+            if not analysis_result or len(analysis_result.strip()) == 0:
+                logging.error("AI analysis returned empty content")
+                return jsonify({'message': 'AI分析返回空内容，请稍后重试'}), 500
+            
+            # 更新全局变量
+            global text_result
+            text_result = analysis_result
+            
+            # 保存分析结果到数据库
+            if user_id:
+                try:
+                    analysis_id = drawing_analysis_manager.save_analysis(
+                        user_id=user_id,
+                        image_path=file_path,
+                        analysis_result=analysis_result,
+                        image_size=f"{len(open(file_path, 'rb').read())} bytes",
+                        analysis_type="house_tree_person",
+                        ai_model="doubao-1-5-vision-pro-32k",
+                    )
+                    logging.info(f"Analysis result saved to database with ID: {analysis_id}")
+                except Exception as db_error:
+                    logging.error(f"Failed to save analysis to database: {str(db_error)}")
+                    # 继续执行，不因为数据库保存失败而影响返回结果
+            
+            logging.info(f"Analysis completed successfully for image: {file_name}, result length: {len(analysis_result)}")
+            
+            # 构建返回数据
+            return_data = {
+                'message': '分析完成',
+                'analysis': analysis_result,
+                'file_name': file_name
+            }
+            
+            logging.info(f"Returning analysis result: {return_data}")
+            
+            return jsonify(return_data), 200
+            
+        except Exception as api_error:
+            logging.error(f"AI API error for {file_name}: {str(api_error)}")
+            return jsonify({
+                'message': 'AI分析服务暂时不可用，请稍后重试',
+                'file_name': file_name
+            }), 503
         
     except Exception as e:
-        logging.error(f"Analysis error: {str(e)}")
-        return jsonify({'message': '分析过程中出现错误', 'error': str(e)}), 500
+        logging.error(f"General analysis error for {file_name}: {str(e)}")
+        return jsonify({
+            'message': f'分析过程中出现错误，请稍后重试', 
+            'file_name': file_name
+        }), 500
 
 @app.route('/api/reset-password', methods=['POST'])
 def reset_password():
@@ -1604,12 +1955,12 @@ def handle_user_message(data):
             }, room='admin_room')
     else:
         # 创建新的危险对话记录
-        # 获取用户当前的chat_id，如果没有则创建新的chat
-        current_chat_id = user_current_chats.get(int(user_id_str))
+        # 获取用户当前的chat_id，如果没有则创建新的chat - 统一使用字符串类型
+        current_chat_id = user_current_chats.get(user_id_str)
         if not current_chat_id:
             # 为用户创建新的危险对话
             current_chat_id = chat_manager.create_chat(int(user_id_str), "危险对话", "dangerous")
-            user_current_chats[int(user_id_str)] = current_chat_id
+            user_current_chats[user_id_str] = current_chat_id
         else:
             # 更新现有对话为危险类型
             chat_manager.update_chat(current_chat_id, {"type": "dangerous"})

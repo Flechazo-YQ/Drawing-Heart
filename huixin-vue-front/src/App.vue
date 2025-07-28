@@ -8,6 +8,9 @@ import { RouterView } from 'vue-router'
 
 <style>
 @import '@/assets/styles/base.css';
+  @import '@/assets/styles/responsive-4k.css';
+@import '@/assets/styles/utilities-4k.css';
+@import '@/assets/styles/fix-width-issue.css';
 
 * {
   margin: 0;

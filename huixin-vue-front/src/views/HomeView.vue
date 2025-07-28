@@ -84,9 +84,9 @@
 /* 导航栏容器 */
 .navbar-container {
   width: 100%;
-  max-width: 1200px; /* 最大宽度限制 */
+  max-width: var(--container-max-width, 1200px); /* 使用CSS变量 */
   margin: 0 auto; /* 水平居中 */
-  padding: 1rem 2rem;
+  padding: var(--spacing-unit, 1rem) calc(var(--spacing-unit, 1rem) * 2);
   display: flex;
   justify-content: space-between; /* 两端对齐 */
   align-items: center; /* 垂直居中 */
@@ -161,11 +161,11 @@
 /* Hero内容 */
 .hero-content {
   width: 100%;
-  max-width: 1200px;
+  max-width: var(--container-max-width, 1200px);
   margin: 0 auto;
   display: grid;
   grid-template-columns: 1fr 1fr; /* 两列布局 */
-  gap: 4rem;
+  gap: calc(var(--spacing-unit, 1rem) * 4);
   align-items: center;
   box-sizing: border-box;
 }
@@ -244,7 +244,7 @@
 /* 区域容器 */
 .section-container {
   width: 100%;
-  max-width: 1200px;
+  max-width: var(--container-max-width, 1200px);
   margin: 0 auto;
   box-sizing: border-box;
 }
@@ -262,7 +262,7 @@
 .features-grid {
   display: grid;
   grid-template-columns: repeat(3, 1fr); /* 三列布局 */
-  gap: 2rem;
+  gap: calc(var(--spacing-unit, 1rem) * 2);
 }
 
 /* 功能特性卡片 */
@@ -316,6 +316,82 @@
   .hero-content,
   .section-container {
     max-width: 1140px;
+  }
+}
+
+/* 2K分辨率优化 */
+@media (min-width: 2560px) {
+  .hero-text h1 {
+    font-size: 4rem;
+  }
+  
+  .hero-description {
+    font-size: 1.4rem;
+  }
+  
+  .section-title {
+    font-size: 3rem;
+  }
+  
+  .feature-card h3 {
+    font-size: 1.8rem;
+  }
+  
+  .feature-card p {
+    font-size: 1.25rem;
+  }
+  
+  .cta-button {
+    padding: 1.25rem 3rem;
+    font-size: 1.25rem;
+  }
+}
+
+/* 4K分辨率优化 */
+@media (min-width: 3840px) {
+  .hero-text h1 {
+    font-size: 5rem;
+    line-height: 1.1;
+  }
+  
+  .hero-description {
+    font-size: 1.6rem;
+    margin-bottom: 3rem;
+  }
+  
+  .section-title {
+    font-size: 3.5rem;
+    margin-bottom: 5rem;
+  }
+  
+  .feature-card {
+    padding: 3rem;
+  }
+  
+  .feature-card h3 {
+    font-size: 2rem;
+    margin-bottom: 1.5rem;
+  }
+  
+  .feature-card p {
+    font-size: 1.4rem;
+  }
+  
+  .cta-button {
+    padding: 1.5rem 3.5rem;
+    font-size: 1.4rem;
+  }
+  
+  .nav-link {
+    font-size: 1.3rem;
+  }
+  
+  .logo-text {
+    font-size: 2rem;
+  }
+  
+  .logo-subtitle {
+    font-size: 1.1rem;
   }
 }
 

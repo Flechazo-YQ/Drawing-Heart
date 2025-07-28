@@ -17,6 +17,10 @@ export default defineConfig({
       '@': fileURLToPath(new URL('./src', import.meta.url))
     },
   },
+  css: {
+    // CSS代码分割优化
+    devSourcemap: true
+  },
   server: {
     host: true,
     allowedHosts: [
