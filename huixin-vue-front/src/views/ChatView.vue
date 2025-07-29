@@ -625,6 +625,15 @@ const sendMessage = async () => {
         body: JSON.stringify({ message: userMsg })
       });
 
+      // 检查响应状态
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      // 检查Content-Type来确定响应类型
+      const contentType = response.headers.get('content-type');
+
+      // 流式响应处理
       const reader = response.body?.getReader();
       const decoder = new TextDecoder();
       let currentMessage = '';
@@ -634,7 +643,7 @@ const sendMessage = async () => {
       messages.value.push({
         type: 'assistant',
         content: '',
-        time: new Date().toISOString()  // 添加时间戳
+        time: new Date().toISOString()
       });
       const currentIndex = messages.value.length - 1;
 
@@ -645,6 +654,15 @@ const sendMessage = async () => {
         const text = decoder.decode(value);
         currentMessage += text;
         messages.value[currentIndex].content = currentMessage;
+      }
+
+      // 检查是否是危机言论检测的回复
+      if (currentMessage.includes('系统检测到您的内容可能存在风险')) {
+        isAdminMode.value = true;
+        // 保存状态变化
+        saveChatState();
+        // 初始化WebSocket连接以接收管理员消息
+        initWebSocket();
       }
     }
   } catch (error) {

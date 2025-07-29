@@ -954,9 +954,58 @@ def toggle_message_group(chat_id):
 
 def process_message(message):
     global dangerous
-    label, dangerous = classifier.predict(message)
-    dangerous = dangerous[0]
-    return dangerous
+    try:
+        logging.info(f"🔍 开始检测消息危险性: {message[:50]}...")
+        
+        # 先检查明显的危险关键词
+        danger_keywords = ['自杀', '自残', '死', '想死', '活不下去', '结束生命', '轻生']
+        has_danger_keyword = any(keyword in message for keyword in danger_keywords)
+        
+        if has_danger_keyword:
+            logging.warning(f"🚨 检测到危险关键词: {message}")
+            dangerous = 0.9  # 强制设置为高危险级别
+            label = "危险"
+        else:
+            # 使用模型进行预测
+            label, probs = classifier.predict(message)
+            # probs是一个数组[危险概率, 负面概率, 其他概率]
+            # 根据模型定义：0: "危险", 1: "负面", 2: "其他"
+            dangerous = probs[0]  # 危险类别的概率
+        
+        logging.info(f"🎯 危险检测结果: label={label}, dangerous_prob={dangerous:.4f}")
+        return dangerous
+    except Exception as e:
+        logging.error(f"❌ 情感分析模型预测失败: {str(e)}")
+        # 如果模型预测失败，但包含危险关键词，仍然标记为危险
+        danger_keywords = ['自杀', '自残', '死', '想死', '活不下去', '结束生命', '轻生']
+        if any(keyword in message for keyword in danger_keywords):
+            dangerous = 0.9
+        else:
+            dangerous = 0.0
+        return dangerous
+
+
+@app.route('/api/test-danger-detection', methods=['POST'])
+def test_danger_detection():
+    """测试危险检测功能的API端点"""
+    try:
+        data = request.get_json()
+        test_message = data.get('message', '')
+        
+        if not test_message:
+            return jsonify({'error': '消息不能为空'}), 400
+        
+        # 直接调用危险检测函数
+        danger_score = process_message(test_message)
+        
+        return jsonify({
+            'message': test_message,
+            'danger_score': float(danger_score),
+            'is_dangerous': danger_score > 0.3,
+            'threshold': 0.3
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 
 @app.route('/api/stream-chat', methods=['POST'])
@@ -973,39 +1022,43 @@ def stream_chat():
     user_message = user.get('message', '')
 
     # 检测消息是否危险
+    logging.info(f"📝 开始处理用户消息: {user_message[:30]}...")
+    
+    # 启用危险检测
     thread = threading.Thread(target=process_message, args=(user_message,))
     thread.start()
     thread.join()  # 等待线程完成
     
-    # 获取或创建当前聊天 - 统一使用字符串类型的用户ID
-    user_id_str = str(user_id[0])
-    current_chat_id = user_current_chats.get(user_id_str)
+    logging.info(f"⚠️ 危险检测完成，dangerous值: {dangerous}")
     
+    # 获取或创建当前聊天 - 统一使用字符串类型的用户ID
+    # 兼容 user_id 可能为字符串或列表
+    if isinstance(user_id, (list, tuple)):
+        user_id_str = str(user_id[0])
+        username = user_id[1] if len(user_id) > 1 else "未知用户"
+    else:
+        user_id_str = str(user_id)
+        username = "未知用户"
+
+    current_chat_id = user_current_chats.get(user_id_str)
+
     if not current_chat_id:
-        # 如果没有当前聊天，根据消息危险性创建不同类型的对话
         chat_type = "dangerous" if dangerous > 0.5 else "normal"
-        current_chat_id = chat_manager.create_chat(user_id[0], "新对话", chat_type)
+        current_chat_id = chat_manager.create_chat(user_id_str, "新对话", chat_type)
         user_current_chats[user_id_str] = current_chat_id
         logging.info(f"为用户 {user_id_str} 创建新对话: {current_chat_id}")
     else:
         logging.info(f"用户 {user_id_str} 使用现有对话: {current_chat_id}")
-    
-    # 如果检测到危险消息，更新对话类型
-    if dangerous > 0.5:
-        # 更新现有对话为危险类型
+
+    if dangerous > 0.3:
+        logging.warning(f"🚨 触发危险检测: dangerous={dangerous:.4f} > 0.3")
         chat_manager.update_chat(current_chat_id, {"type": "dangerous"})
-        
-        print('检测到危险消息，需要人工干预:', user_message)
-        # 将聊天内容记录到危险对话字典（user_id_str已在上面定义）
-        
-        # 获取用户的上下文
+        logging.warning(f'🚨 检测到危险消息，需要人工干预: {user_message}')
         user_context = user_contexts.get(user_id_str, [])
-        
         if user_id_str not in dangerous_chats:
-            # 初始化用户的危险聊天记录
             dangerous_chats[user_id_str] = {
-                'username': user_id[1],
-                'chat_id': current_chat_id,  # 添加chat_id以便后续消息保存到数据库
+                'username': username,
+                'chat_id': current_chat_id,
                 'messages': user_context.copy() + [
                     {"role": "user", "content": user_message}
                 ],
@@ -1014,9 +1067,8 @@ def stream_chat():
                 'last_updated': datetime.datetime.now().isoformat()
             }
         else:
-            # 更新现有聊天记录
             dangerous_chats[user_id_str]['messages'].append({
-                "role": "user", 
+                "role": "user",
                 "content": user_message
             })
             dangerous_chats[user_id_str]['last_updated'] = datetime.datetime.now().isoformat()
@@ -1034,13 +1086,15 @@ def stream_chat():
             logging.error(f"保存危险消息失败: {str(e)}")
         
         # 通知所有在线管理员有新的危险对话
+        logging.info(f"🔔 准备通知管理员危险对话，user_id: {user_id_str}")
         socketio.emit('dangerous_chat_alert', {
             'user': {
                 'userId': user_id_str,
-                'username': user_id[1],
+                'username': username,
                 'lastMessage': user_message
             }
         }, room='admin_room')
+        logging.info(f"✅ 已发送危险对话通知到admin_room")
         
         # 检查是否有管理员在线
         admin_message = "系统检测到您的内容可能存在风险，已切换到人工客服模式。请稍等片刻，管理员正在审核您的对话..."
@@ -1066,8 +1120,19 @@ def stream_chat():
         except Exception as e:
             logging.error(f"保存系统消息失败: {str(e)}")
         
-        # 返回一个固定提示
-        return admin_message
+        # 返回流式格式的系统提示，确保前端能正确处理
+        def generate_admin_message():
+            for char in admin_message:
+                yield char
+        
+        return Response(
+            stream_with_context(generate_admin_message()),
+            mimetype='text/event-stream',
+            headers={
+                'Cache-Control': 'no-cache',
+                'Connection': 'keep-alive'
+            }
+        )
     
     # 如果消息不危险，正常处理
     # 每次对话都重新获取用户在当日或4小时内的最新绘画分析结果
@@ -1805,45 +1870,43 @@ def handle_user_connect(data):
     if not user_id:
         emit('error', {'message': 'Invalid token'})
         return
-    
-    # 保存用户的连接信息
-    user_id_str = str(user_id[0])
+
+    # 兼容 user_id 可能为字符串或列表
+    if isinstance(user_id, (list, tuple)):
+        user_id_str = str(user_id[0])
+        username = user_id[1] if len(user_id) > 1 else "未知用户"
+    else:
+        user_id_str = str(user_id)
+        username = "未知用户"
+
     user_connections[user_id_str] = {
         'sid': request.sid,
-        'username': user_id[1],
+        'username': username,
         'connected_at': datetime.datetime.now().isoformat()
     }
-    
-    # 将用户加入以用户ID命名的房间
+
     join_room(f'user_{user_id_str}')
-    
-    # 发送连接成功响应
     emit('connect_response', {'status': 'success', 'message': 'Connection successful'})
-    
-    # 检查是否有未处理的消息需要发送给用户
+
     if user_id_str in dangerous_chats:
-        # 获取最近的管理员回复，排除系统自动生成的提示消息
         admin_messages = [
-            msg for msg in dangerous_chats[user_id_str]['messages'] 
+            msg for msg in dangerous_chats[user_id_str]['messages']
             if msg.get('role') == 'admin' and (
-                # 如果有messageId且不是系统风险提示，或者没有is_system标记，则包含
-                (msg.get('messageId') != 'system_risk_alert') or 
+                (msg.get('messageId') != 'system_risk_alert') or
                 not msg.get('is_system', False)
             )
         ]
-        
         if admin_messages:
-            # 发送最近的几条管理员消息
             recent_messages = admin_messages[-3:] if len(admin_messages) > 3 else admin_messages
             for msg in recent_messages:
                 socketio.emit('admin_reply', {
                     'role': 'admin',
                     'content': msg.get('content'),
                     'time': msg.get('time', datetime.datetime.now().isoformat()),
-                    'messageId': msg.get('messageId')  # 添加消息ID
+                    'messageId': msg.get('messageId')
                 }, room=f'user_{user_id_str}')
-    
-    print(f'User {user_id[1]} connected with SID: {request.sid}')
+
+    print(f'User {username} connected with SID: {request.sid}')
 
 # 管理员发送消息给用户
 @socketio.on('admin_message')
@@ -1860,7 +1923,7 @@ def handle_admin_message(data):
         emit('error', {'message': 'Unauthorized'})
         return
     
-    user_id = data.get('userId')
+    user_id = str(data.get('userId'))
     content = data.get('content')
     message_id = data.get('messageId')  # 获取消息ID
     
@@ -2030,10 +2093,20 @@ if __name__ == '__main__':
     # 初始化情感分析模型
     import os
     current_dir = os.path.dirname(os.path.abspath(__file__))
-    classifier = EmotionClassifier(
-        model_path=os.path.join(current_dir, "emotion_model"), 
-        slang_file=os.path.join(current_dir, "slang_map.csv")
-    )
+    try:
+        classifier = EmotionClassifier(
+            model_path=os.path.join(current_dir, "emotion_model"), 
+            slang_file=os.path.join(current_dir, "slang_map.csv")
+        )
+        logging.info("✅ 情感分析模型初始化成功")
+    except Exception as e:
+        logging.error(f"❌ 情感分析模型初始化失败: {str(e)}")
+        # 创建一个简单的假分类器用于测试
+        class DummyClassifier:
+            def predict(self, text):
+                return ("normal", [0.1])  # 默认返回安全级别
+        classifier = DummyClassifier()
+        logging.warning("⚠️ 使用虚拟分类器，危险检测功能不可用")
     
     # 通过SocketIO启动应用
     socketio.run(app, debug=True, host='0.0.0.0', port=5000, allow_unsafe_werkzeug=True, log_output=True)
