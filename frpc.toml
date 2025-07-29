@@ -1,0 +1,19 @@
+# frpc.toml（客户端配置文件）
+serverAddr = "101.132.253.65"
+serverPort = 7000
+auth.method = "token"
+auth.token = "aqing15757390510"
+
+[[proxies]]
+name = "hello"
+type = "tcp"
+localIP = "127.0.0.1"
+localPort = 5173
+remotePort = 5173
+
+[[proxies]]
+name = "world"
+type = "tcp"
+localIP = "127.0.0.1"
+localPort = 5000
+remotePort = 5000

@@ -24,6 +24,7 @@ from openai import OpenAI
 from 封装 import EmotionClassifier
 from mongodb_config import init_mongodb
 from bson import ObjectId
+from Handler.EmailCodeHandler import EmailCodeHandler # 导入邮件处理模块
 
 # 初始化MongoDB（确保在应用启动时就完成初始化）
 try:
@@ -39,7 +40,14 @@ from mongodb_config import user_manager, chat_manager, message_manager, drawing_
 # 注册字体 - 注释掉避免文件不存在错误
 # pdfmetrics.registerFont(TTFont('SimHei', 'SimHei.ttf'))  # 确保路径正确，或使用系统字体路径
 app = Flask(__name__)
-CORS(app, resources={r"/*": {"origins": "*"}}, supports_credentials=True)  # 启用CORS
+CORS(app, resources={
+    r"/*": {
+        "origins": "*",
+        "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
+        "allow_headers": ["Content-Type", "Authorization", "X-Requested-With"],
+        "supports_credentials": True
+    }
+})  # 配置更详细的CORS设置以支持移动端
 socketio = SocketIO(app, cors_allowed_origins="*", async_mode='threading', logger=True, engineio_logger=True)  # 初始化SocketIO
 UPLOAD_FOLDER = 'uploads'
 ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif'}
@@ -54,8 +62,11 @@ transform = transforms.Compose([
 has_SECRET_KEY = 'jjj111@'
 ALGORITHM = 'HS256'
 ACCESS_TOKEN_EXPIRE_MINUTES = 60
-ip = 'http://101.132.253.65:5173/'
+ip = 'http://n42294i452.wicp.vip'
 text_result = ''
+
+# 用于存储验证码和其过期时间
+verification_codes = {}
 
 # 配置日志
 logging.basicConfig(
@@ -92,8 +103,12 @@ def generate_token(user_id):
 def verify_token(token):
     try:
         payload = jwt.decode(token, has_SECRET_KEY, algorithms=[ALGORITHM])
-        user_id = payload['user_id']
-        return user_id
+        user_id_data = payload['user_id']
+        # 确保返回的是ID字符串，无论存储的是元组还是字符串
+        if isinstance(user_id_data, list): # 在jwt中元组会变成列表
+            return user_id_data # 返回原列表格式以保持兼容性
+        # 如果是字符串，包装成列表以保持兼容性
+        return [user_id_data]
     except jwt.ExpiredSignatureError:
         return None  # 令牌已过期
     except jwt.InvalidTokenError:
@@ -104,16 +119,64 @@ def allowed_file(filename):
     return '.' in filename and filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
 
+# 添加全局OPTIONS处理，支持预检请求
+@app.before_request
+def handle_preflight():
+    if request.method == "OPTIONS":
+        response = Response()
+        response.headers.add("Access-Control-Allow-Origin", "*")
+        response.headers.add('Access-Control-Allow-Headers', "*")
+        response.headers.add('Access-Control-Allow-Methods', "*")
+        return response
+
+# 添加错误处理器
+@app.errorhandler(400)
+def bad_request(error):
+    return jsonify({
+        'status': 'error',
+        'message': 'Bad Request - 请求格式不正确',
+        'code': 400
+    }), 400
+
+@app.errorhandler(404)
+def not_found(error):
+    return jsonify({
+        'status': 'error', 
+        'message': 'Not Found - 请求的资源不存在',
+        'code': 404,
+        'available_endpoints': {
+            '根路径': '/',
+            'API登录': '/api/login',
+            'API注册': '/api/register'
+        }
+    }), 404
+
+@app.errorhandler(500)
+def internal_error(error):
+    return jsonify({
+        'status': 'error',
+        'message': 'Internal Server Error - 服务器内部错误', 
+        'code': 500
+    }), 500
+
+
 @app.route('/')
 def index():
-    try:
-        with open('templates/Home.html', 'r', encoding='utf-8') as file:
-            html_content = file.read()
-            # 返回HTML内容作为响应
-        return Response(html_content, mimetype='text/html')
-    except FileNotFoundError:
-        # 如果文件不存在，返回404错误
-        return 'File not found', 404
+    """API状态检查端点"""
+    return jsonify({
+        'status': 'success',
+        'message': '绘心同学后端API服务正在运行',
+        'version': '1.0.0',
+        'timestamp': datetime.datetime.now().isoformat(),
+        'endpoints': {
+            '登录': '/api/login',
+            '注册': '/api/register', 
+            '绘画分析': '/api/save',
+            '心理对话': '/api/stream-chat',
+            '用户信息': '/api/user/info',
+            '发送验证码': '/api/send-code'
+        }
+    })
 
 
 @app.route('/draw')
@@ -133,121 +196,132 @@ def analyse():
     return render_template('index.html')
 
 
-@app.route('/login', methods=['GET', 'POST'])
+@app.route('/api/login', methods=['GET', 'POST'])
 def login():
     if request.method == 'POST':
         data = request.get_json()
-        username_or_email = data.get('username')  # 前端传来的可能是用户名或邮箱
+        username_or_email = data.get('username')
         password = data.get('password')
         
-        try:
-            # 先尝试按邮箱查找
+        # 先尝试用用户名查找
+        user = user_manager.get_user_by_username(username_or_email)
+        
+        # 如果用户名找不到，尝试用邮箱查找
+        if not user:
             user = user_manager.get_user_by_email(username_or_email)
-            
-            # 如果按邮箱没找到，尝试按用户名查找
-            if not user:
-                # 由于MongoDB中没有直接按用户名查找的方法，需要扩展
-                from mongodb_config import mongodb
-                user = mongodb.users.find_one({
-                    "$or": [
-                        {"username": username_or_email},
-                        {"email": username_or_email}
-                    ],
-                    "is_active": True
-                })
-            
-            if user and user['password'] == sha256_hash(password):
-                token = generate_token([str(user['_id']), user['username']])
-                return jsonify({
-                    'code': 0,
-                    'message': '登录成功',
-                    'data': {
-                        'token': token,
-                        'user': {
-                            'id': str(user['_id']),
-                            'username': user['username'],
-                            'email': user['email'],
-                            'avatar': user.get('avatar', ''),
-                            'chance': user.get('chance', 10)
-                        }
-                    }
-                }), 200
-            else:
-                return jsonify({
-                    'code': 1,
-                    'message': '用户名/邮箱或密码错误'
-                }), 401
-        except Exception as e:
-            logging.error(f"登录错误: {str(e)}")
+        
+        # 如果找到用户并且密码正确
+        if user and user_manager.verify_password_by_hash(password, user.get('password')):
+            token = generate_token(str(user['_id']))
+            # 注意：确保返回格式符合前端预期
             return jsonify({
-                'code': 1,
-                'message': '登录失败，请稍后重试'
-            }), 500
+                'code': 0, 
+                'message': '登录成功', 
+                'token': token,
+                'data': {
+                    'token': token,
+                    'user': {
+                        'id': str(user['_id']),
+                        'username': user['username'],
+                        'email': user['email'],
+                        'avatar': user.get('avatar', '')
+                    }
+                }
+            })
+        else:
+            return jsonify({'code': 1, 'message': '用户名或密码错误'})
     return render_template('login.html')
 
 
+@app.route('/api/send-code', methods=['POST'])
+def send_verification_code():
+    """发送注册验证码"""
+    data = request.get_json()
+    email = data.get('email')
+    if not email:
+        return jsonify({'code': 1, 'message': '邮箱不能为空'}), 400
+
+    # 检查邮箱是否已被注册
+    if user_manager.get_user_by_email(email):
+        return jsonify({'code': 1, 'message': '该邮箱已被注册'}), 400
+
+    code = EmailCodeHandler.sendEmailCode(email)
+    if code:
+        # 存储验证码和过期时间（例如，10分钟后）
+        verification_codes[email] = {
+            'code': code,
+            'exp': datetime.datetime.utcnow() + datetime.timedelta(minutes=10)
+        }
+        logging.info(f"向 {email} 发送验证码: {code}")
+        return jsonify({'code': 0, 'message': '验证码已发送，请注意查收'})
+    else:
+        logging.error(f"向 {email} 发送验证码失败")
+        return jsonify({'code': 1, 'message': '验证码发送失败，请稍后重试'}), 500
 
 
-
-@app.route('/register', methods=['GET', 'POST'])
+@app.route('/api/register', methods=['GET', 'POST'])
 def register():
     if request.method == 'POST':
-        try:
-            data = request.get_json()
-            username = data.get('username')
-            password = data.get('password')
-            email = data.get('email')
-            gender = data.get('gender')
+        data = request.get_json()
+        username = data.get('username')
+        password = data.get('password')
+        email = data.get('email')
+        gender = data.get('gender')
+        code = data.get('code')
 
-            if not all([username, password, email, gender]):
-                return jsonify({
-                    'code': 1,
-                    'message': '请填写所有必需的字段'
-                }), 400
+        if not all([username, password, email, gender, code]):
+            return jsonify({'code': 1, 'message': '所有字段均为必填项'})
 
-            # 检查邮箱是否已存在
-            existing_user = user_manager.get_user_by_email(email)
-            if existing_user:
-                return jsonify({
-                    'code': 1,
-                    'message': '邮箱已被注册'
-                }), 400
-            
-            # 检查用户名是否已存在
-            from mongodb_config import mongodb
-            existing_username = mongodb.users.find_one({"username": username, "is_active": True})
-            if existing_username:
-                return jsonify({
-                    'code': 1,
-                    'message': '用户名已存在'
-                }), 400
+        # 验证验证码
+        stored_code_info = verification_codes.get(email)
+        if not stored_code_info or stored_code_info['code'] != code:
+            return jsonify({'code': 1, 'message': '验证码错误'})
+        
+        if datetime.datetime.utcnow() > stored_code_info['exp']:
+            if email in verification_codes:
+                del verification_codes[email]
+            return jsonify({'code': 1, 'message': '验证码已过期，请重新发送'})
 
-            # 创建新用户
-            user_id = user_manager.create_user(
-                username=username,
-                email=email,
-                password=sha256_hash(password),
-                gender=gender,
-                chance=5,
-                is_team='false'
-            )
+        if user_manager.get_user_by_username(username):
+            return jsonify({'code': 1, 'message': '用户名已存在'})
+        if user_manager.get_user_by_email(email):
+            return jsonify({'code': 1, 'message': '邮箱已被注册'})
+        
+        user_manager.create_user(username, password, email, gender)
+        
+        # 注册成功后删除验证码
+        if email in verification_codes:
+            del verification_codes[email]
             
-            return jsonify({
-                'code': 0,
-                'message': '注册成功'
-            }), 200
-                
-        except Exception as e:
-            logging.error(f"注册错误: {str(e)}")
-            return jsonify({
-                'code': 1,
-                'message': '注册失败，请稍后重试'
-            }), 500
-            
+        return jsonify({'code': 0, 'message': '注册成功'})
     return render_template('register.html')
 
 
+@app.route('/api/send-reset-code', methods=['POST'])
+def send_reset_code():
+    """发送重置密码验证码"""
+    try:
+        data = request.get_json()
+        email = data.get('email')
+        if not email:
+            return jsonify({'code': 1, 'message': '邮箱不能为空'}), 400
 
+        # 检查邮箱是否存在
+        user = user_manager.get_user_by_email(email)
+        if not user:
+            return jsonify({'code': 1, 'message': '该邮箱未注册'}), 400
+        
+        code = EmailCodeHandler.sendEmailCode(email)
+        if code:
+            verification_codes[email] = {
+                'code': code,
+                'exp': datetime.datetime.utcnow() + datetime.timedelta(minutes=10)
+            }
+            return jsonify({'code': 0, 'message': '验证码已发送，请注意查收'})
+        else:
+            return jsonify({'code': 1, 'message': '验证码发送失败，请稍后重试'}), 500
+    except Exception as e:
+        return jsonify({'code': 1, 'message': f'验证码发送失败: {str(e)}'}), 500
 
 
 @app.route('/forgot', methods=['GET', 'POST'])
@@ -261,7 +335,7 @@ def privacy():
     return render_template('index.html')  # 返回前端入口文件
 
 
-@app.route('/getusername', methods=['GET'])
+@app.route('/api/getusername', methods=['GET'])
 def getusername():
     """
     处理获取用户名的请求，并返回JSON格式的响应。
@@ -880,9 +954,58 @@ def toggle_message_group(chat_id):
 
 def process_message(message):
     global dangerous
-    label, dangerous = classifier.predict(message)
-    dangerous = dangerous[0]
-    return dangerous
+    try:
+        logging.info(f"🔍 开始检测消息危险性: {message[:50]}...")
+        
+        # 先检查明显的危险关键词
+        danger_keywords = ['自杀', '自残', '死', '想死', '活不下去', '结束生命', '轻生']
+        has_danger_keyword = any(keyword in message for keyword in danger_keywords)
+        
+        if has_danger_keyword:
+            logging.warning(f"🚨 检测到危险关键词: {message}")
+            dangerous = 0.9  # 强制设置为高危险级别
+            label = "危险"
+        else:
+            # 使用模型进行预测
+            label, probs = classifier.predict(message)
+            # probs是一个数组[危险概率, 负面概率, 其他概率]
+            # 根据模型定义：0: "危险", 1: "负面", 2: "其他"
+            dangerous = probs[0]  # 危险类别的概率
+        
+        logging.info(f"🎯 危险检测结果: label={label}, dangerous_prob={dangerous:.4f}")
+        return dangerous
+    except Exception as e:
+        logging.error(f"❌ 情感分析模型预测失败: {str(e)}")
+        # 如果模型预测失败，但包含危险关键词，仍然标记为危险
+        danger_keywords = ['自杀', '自残', '死', '想死', '活不下去', '结束生命', '轻生']
+        if any(keyword in message for keyword in danger_keywords):
+            dangerous = 0.9
+        else:
+            dangerous = 0.0
+        return dangerous
+
+
+@app.route('/api/test-danger-detection', methods=['POST'])
+def test_danger_detection():
+    """测试危险检测功能的API端点"""
+    try:
+        data = request.get_json()
+        test_message = data.get('message', '')
+        
+        if not test_message:
+            return jsonify({'error': '消息不能为空'}), 400
+        
+        # 直接调用危险检测函数
+        danger_score = process_message(test_message)
+        
+        return jsonify({
+            'message': test_message,
+            'danger_score': float(danger_score),
+            'is_dangerous': danger_score > 0.3,
+            'threshold': 0.3
+        })
+    except Exception as e:
+        return jsonify({'error': str(e)}), 500
 
 
 @app.route('/api/stream-chat', methods=['POST'])
@@ -899,39 +1022,43 @@ def stream_chat():
     user_message = user.get('message', '')
 
     # 检测消息是否危险
+    logging.info(f"📝 开始处理用户消息: {user_message[:30]}...")
+    
+    # 启用危险检测
     thread = threading.Thread(target=process_message, args=(user_message,))
     thread.start()
     thread.join()  # 等待线程完成
     
-    # 获取或创建当前聊天 - 统一使用字符串类型的用户ID
-    user_id_str = str(user_id[0])
-    current_chat_id = user_current_chats.get(user_id_str)
+    logging.info(f"⚠️ 危险检测完成，dangerous值: {dangerous}")
     
+    # 获取或创建当前聊天 - 统一使用字符串类型的用户ID
+    # 兼容 user_id 可能为字符串或列表
+    if isinstance(user_id, (list, tuple)):
+        user_id_str = str(user_id[0])
+        username = user_id[1] if len(user_id) > 1 else "未知用户"
+    else:
+        user_id_str = str(user_id)
+        username = "未知用户"
+
+    current_chat_id = user_current_chats.get(user_id_str)
+
     if not current_chat_id:
-        # 如果没有当前聊天，根据消息危险性创建不同类型的对话
         chat_type = "dangerous" if dangerous > 0.5 else "normal"
-        current_chat_id = chat_manager.create_chat(user_id[0], "新对话", chat_type)
+        current_chat_id = chat_manager.create_chat(user_id_str, "新对话", chat_type)
         user_current_chats[user_id_str] = current_chat_id
         logging.info(f"为用户 {user_id_str} 创建新对话: {current_chat_id}")
     else:
         logging.info(f"用户 {user_id_str} 使用现有对话: {current_chat_id}")
-    
-    # 如果检测到危险消息，更新对话类型
-    if dangerous > 0.5:
-        # 更新现有对话为危险类型
+
+    if dangerous > 0.3:
+        logging.warning(f"🚨 触发危险检测: dangerous={dangerous:.4f} > 0.3")
         chat_manager.update_chat(current_chat_id, {"type": "dangerous"})
-        
-        print('检测到危险消息，需要人工干预:', user_message)
-        # 将聊天内容记录到危险对话字典（user_id_str已在上面定义）
-        
-        # 获取用户的上下文
+        logging.warning(f'🚨 检测到危险消息，需要人工干预: {user_message}')
         user_context = user_contexts.get(user_id_str, [])
-        
         if user_id_str not in dangerous_chats:
-            # 初始化用户的危险聊天记录
             dangerous_chats[user_id_str] = {
-                'username': user_id[1],
-                'chat_id': current_chat_id,  # 添加chat_id以便后续消息保存到数据库
+                'username': username,
+                'chat_id': current_chat_id,
                 'messages': user_context.copy() + [
                     {"role": "user", "content": user_message}
                 ],
@@ -940,9 +1067,8 @@ def stream_chat():
                 'last_updated': datetime.datetime.now().isoformat()
             }
         else:
-            # 更新现有聊天记录
             dangerous_chats[user_id_str]['messages'].append({
-                "role": "user", 
+                "role": "user",
                 "content": user_message
             })
             dangerous_chats[user_id_str]['last_updated'] = datetime.datetime.now().isoformat()
@@ -960,13 +1086,15 @@ def stream_chat():
             logging.error(f"保存危险消息失败: {str(e)}")
         
         # 通知所有在线管理员有新的危险对话
+        logging.info(f"🔔 准备通知管理员危险对话，user_id: {user_id_str}")
         socketio.emit('dangerous_chat_alert', {
             'user': {
                 'userId': user_id_str,
-                'username': user_id[1],
+                'username': username,
                 'lastMessage': user_message
             }
         }, room='admin_room')
+        logging.info(f"✅ 已发送危险对话通知到admin_room")
         
         # 检查是否有管理员在线
         admin_message = "系统检测到您的内容可能存在风险，已切换到人工客服模式。请稍等片刻，管理员正在审核您的对话..."
@@ -992,8 +1120,19 @@ def stream_chat():
         except Exception as e:
             logging.error(f"保存系统消息失败: {str(e)}")
         
-        # 返回一个固定提示
-        return admin_message
+        # 返回流式格式的系统提示，确保前端能正确处理
+        def generate_admin_message():
+            for char in admin_message:
+                yield char
+        
+        return Response(
+            stream_with_context(generate_admin_message()),
+            mimetype='text/event-stream',
+            headers={
+                'Cache-Control': 'no-cache',
+                'Connection': 'keep-alive'
+            }
+        )
     
     # 如果消息不危险，正常处理
     # 每次对话都重新获取用户在当日或4小时内的最新绘画分析结果
@@ -1178,7 +1317,7 @@ def image_to_data_url(file_path):
 # 添加一个字典来存储用户的最新图片URL
 user_latest_images = {}
 
-@app.route('/save', methods=['POST'])
+@app.route('/api/save', methods=['POST'])
 def save_drawing():
     token = request.headers.get('Authorization')
     if not token:
@@ -1348,7 +1487,7 @@ def analyze_image(file_path, file_name, user_id=None):
                         ### 用户心理画像
                         综合分析结果，给出用户当前的心理状态评估和建议。
                         
-                        若图片不是房树人相关绘画，请温和地引导用户重新绘画房树人作品。
+                        若图片不是房树人相关绘画，请温和地引导用户重新绘制房树人作品。
                         '''}
                     ]
                 }],
@@ -1417,129 +1556,81 @@ def analyze_image(file_path, file_name, user_id=None):
 
 @app.route('/api/reset-password', methods=['POST'])
 def reset_password():
+    data = request.get_json()
+    token = data.get('token')
+    new_password = data.get('password')
+    
+    user_id = verify_token(token)
+    if not user_id:
+        return jsonify({'code': 1, 'message': '无效或过期的链接'})
+    
     try:
-        data = request.get_json()
-        email = data.get('email')
-        
-        if not email:
-            return jsonify({
-                'code': 1,
-                'message': '请提供邮箱地址'
-            }), 400
-            
-        user = user_manager.get_user_by_email(email)
-        if not user:
-            return jsonify({
-                'code': 1,
-                'message': '该邮箱未注册'
-            }), 404
-                
-        # 生成重置密码的token
-        reset_token = generate_token([str(user['_id']), user['username']])
-        
-        # TODO: 发送重置密码邮件
-        # 这里应该实现发送邮件的功能
-        # 为了演示，我们直接返回成功
-        
-        return jsonify({
-            'code': 0,
-            'message': '重置密码链接已发送到您的邮箱'
-        }), 200
-            
+        user_manager.update_password_by_id(user_id, new_password)
+        return jsonify({'code': 0, 'message': '密码重置成功'})
     except Exception as e:
-        logging.error(f"重置密码错误: {str(e)}")
-        return jsonify({
-            'code': 1,
-            'message': '重置密码失败，请稍后重试'
-        }), 500
+        return jsonify({'code': 1, 'message': f'密码重置失败: {str(e)}'})
 
 @app.route('/api/update-password', methods=['POST'])
 def update_password():
+    token = request.headers.get('Authorization')
+    if not token:
+        return jsonify({'code': 1, 'message': '未提供授权码'}), 401
+    
+    user_id = verify_token(token)
+    if not user_id:
+        return jsonify({'code': 1, 'message': '无效或过期的授权码'}), 401
+    
+    data = request.get_json()
+    old_password = data.get('old_password')
+    new_password = data.get('new_password')
+    
     try:
-        data = request.get_json()
-        token = data.get('token')
-        new_password = data.get('password')
+        user = user_manager.get_user_by_id(user_id)
+        if not user_manager.verify_password(user['username'], old_password):
+            return jsonify({'code': 1, 'message': '旧密码不正确'})
         
-        if not all([token, new_password]):
-            return jsonify({
-                'code': 1,
-                'message': '请提供所有必需的字段'
-            }), 400
-            
-        # 验证token
-        user_id = verify_token(token)
-        if not user_id:
-            return jsonify({
-                'code': 1,
-                'message': '无效或过期的重置链接'
-            }), 401
-            
-        # 更新密码
-        success = user_manager.update_user(user_id[0], {
-            'password': sha256_hash(new_password)
-        })
-        
-        if success:
-            return jsonify({
-                'code': 0,
-                'message': '密码更新成功'
-            }), 200
-        else:
-            return jsonify({
-                'code': 1,
-                'message': '用户不存在或更新失败'
-            }), 404
-            
+        user_manager.update_password_by_id(user_id, new_password)
+        return jsonify({'code': 0, 'message': '密码更新成功'})
     except Exception as e:
-        logging.error(f"更新密码错误: {str(e)}")
-        return jsonify({
-            'code': 1,
-            'message': '更新密码失败，请稍后重试'
-        }), 500
+        return jsonify({'code': 1, 'message': f'密码更新失败: {str(e)}'})
 
 @app.route('/api/reset-password-direct', methods=['POST'])
 def reset_password_direct():
+    data = request.get_json()
+    email = data.get('email')
+    password = data.get('password')
+    code = data.get('code')
+
+    if not all([email, password, code]):
+        return jsonify({'code': 1, 'message': '所有字段均为必填项'})
+
+    # 验证验证码
+    stored_code_info = verification_codes.get(email)
+    if not stored_code_info or stored_code_info['code'] != code:
+        return jsonify({'code': 1, 'message': '验证码错误'})
+
+    if datetime.datetime.utcnow() > stored_code_info['exp']:
+        if email in verification_codes:
+            del verification_codes[email]
+        return jsonify({'code': 1, 'message': '验证码已过期，请重新发送'})
+
+    user = user_manager.get_user_by_email(email)
+    if not user:
+        return jsonify({'code': 1, 'message': '该邮箱未注册'})
+    
     try:
-        data = request.get_json()
-        email = data.get('email')
-        new_password = data.get('password')
+        user_id = str(user['_id'])
+        result = user_manager.update_password_by_id(user_id, password)
         
-        if not all([email, new_password]):
-            return jsonify({
-                'code': 1,
-                'message': '请提供邮箱和新密码'
-            }), 400
-            
-        # 检查邮箱是否存在
-        user = user_manager.get_user_by_email(email)
-        if not user:
-            return jsonify({
-                'code': 1,
-                'message': '该邮箱未注册'
-            }), 404
-            
-        # 更新密码
-        success = user_manager.update_user(str(user['_id']), {
-            'password': sha256_hash(new_password)
-        })
-        
-        if success:
-            return jsonify({
-                'code': 0,
-                'message': '密码重置成功'
-            }), 200
+        if result:
+            # 成功后删除验证码
+            if email in verification_codes:
+                del verification_codes[email]
+            return jsonify({'code': 0, 'message': '密码重置成功'})
         else:
-            return jsonify({
-                'code': 1,
-                'message': '密码重置失败'
-            }), 500
-            
+            return jsonify({'code': 1, 'message': '密码重置失败，请稍后再试'})
     except Exception as e:
-        logging.error(f"重置密码错误: {str(e)}")
-        return jsonify({
-            'code': 1,
-            'message': '重置密码失败，请稍后重试'
-        }), 500
+        return jsonify({'code': 1, 'message': f'密码重置失败: {str(e)}'})
 
 @app.route('/api/admin/login', methods=['POST'])
 def admin_login():
@@ -1779,45 +1870,43 @@ def handle_user_connect(data):
     if not user_id:
         emit('error', {'message': 'Invalid token'})
         return
-    
-    # 保存用户的连接信息
-    user_id_str = str(user_id[0])
+
+    # 兼容 user_id 可能为字符串或列表
+    if isinstance(user_id, (list, tuple)):
+        user_id_str = str(user_id[0])
+        username = user_id[1] if len(user_id) > 1 else "未知用户"
+    else:
+        user_id_str = str(user_id)
+        username = "未知用户"
+
     user_connections[user_id_str] = {
         'sid': request.sid,
-        'username': user_id[1],
+        'username': username,
         'connected_at': datetime.datetime.now().isoformat()
     }
-    
-    # 将用户加入以用户ID命名的房间
+
     join_room(f'user_{user_id_str}')
-    
-    # 发送连接成功响应
     emit('connect_response', {'status': 'success', 'message': 'Connection successful'})
-    
-    # 检查是否有未处理的消息需要发送给用户
+
     if user_id_str in dangerous_chats:
-        # 获取最近的管理员回复，排除系统自动生成的提示消息
         admin_messages = [
-            msg for msg in dangerous_chats[user_id_str]['messages'] 
+            msg for msg in dangerous_chats[user_id_str]['messages']
             if msg.get('role') == 'admin' and (
-                # 如果有messageId且不是系统风险提示，或者没有is_system标记，则包含
-                (msg.get('messageId') != 'system_risk_alert') or 
+                (msg.get('messageId') != 'system_risk_alert') or
                 not msg.get('is_system', False)
             )
         ]
-        
         if admin_messages:
-            # 发送最近的几条管理员消息
             recent_messages = admin_messages[-3:] if len(admin_messages) > 3 else admin_messages
             for msg in recent_messages:
                 socketio.emit('admin_reply', {
                     'role': 'admin',
                     'content': msg.get('content'),
                     'time': msg.get('time', datetime.datetime.now().isoformat()),
-                    'messageId': msg.get('messageId')  # 添加消息ID
+                    'messageId': msg.get('messageId')
                 }, room=f'user_{user_id_str}')
-    
-    print(f'User {user_id[1]} connected with SID: {request.sid}')
+
+    print(f'User {username} connected with SID: {request.sid}')
 
 # 管理员发送消息给用户
 @socketio.on('admin_message')
@@ -1834,7 +1923,7 @@ def handle_admin_message(data):
         emit('error', {'message': 'Unauthorized'})
         return
     
-    user_id = data.get('userId')
+    user_id = str(data.get('userId'))
     content = data.get('content')
     message_id = data.get('messageId')  # 获取消息ID
     
@@ -2004,10 +2093,20 @@ if __name__ == '__main__':
     # 初始化情感分析模型
     import os
     current_dir = os.path.dirname(os.path.abspath(__file__))
-    classifier = EmotionClassifier(
-        model_path=os.path.join(current_dir, "emotion_model"), 
-        slang_file=os.path.join(current_dir, "slang_map.csv")
-    )
+    try:
+        classifier = EmotionClassifier(
+            model_path=os.path.join(current_dir, "emotion_model"), 
+            slang_file=os.path.join(current_dir, "slang_map.csv")
+        )
+        logging.info("✅ 情感分析模型初始化成功")
+    except Exception as e:
+        logging.error(f"❌ 情感分析模型初始化失败: {str(e)}")
+        # 创建一个简单的假分类器用于测试
+        class DummyClassifier:
+            def predict(self, text):
+                return ("normal", [0.1])  # 默认返回安全级别
+        classifier = DummyClassifier()
+        logging.warning("⚠️ 使用虚拟分类器，危险检测功能不可用")
     
     # 通过SocketIO启动应用
     socketio.run(app, debug=True, host='0.0.0.0', port=5000, allow_unsafe_werkzeug=True, log_output=True)

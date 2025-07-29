@@ -9,7 +9,11 @@
         </div>
       </div>
     </nav>
+<<<<<<< HEAD
     
+=======
+
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
     <div class="terms-content">
       <h1>服务条款</h1>
       <div class="terms-section">
@@ -62,7 +66,11 @@
       <div class="terms-section">
         <h2>8. 联系方式</h2>
         <p>如果您对这些条款有任何疑问，请通过以下方式联系我们：</p>
+<<<<<<< HEAD
         <p>邮箱：support@huixin.com</p>
+=======
+        <p>邮箱：1241010058@zust.edu.cn</p>
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
       </div>
     </div>
   </div>
@@ -178,4 +186,8 @@ li {
     font-size: 1.25rem;
   }
 }
+<<<<<<< HEAD
 </style> 
+=======
+</style>
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845

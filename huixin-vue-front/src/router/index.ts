@@ -46,6 +46,14 @@ const router = createRouter({
       component: () => import('../views/ForgetPasswordView.vue')
     },
     {
+<<<<<<< HEAD
+=======
+      path: '/about',
+      name: 'about',
+      component: () => import('../views/AboutView.vue')
+    },
+    {
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
       path: '/terms',
       name: 'terms',
       component: () => import('../views/TermsOfServiceView.vue')

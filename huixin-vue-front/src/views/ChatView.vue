@@ -1,24 +1,56 @@
 <template>
   <div class="chat-container">
+<<<<<<< HEAD
     <!-- 聊天历史侧边栏 -->
     <ChatSidebar 
+=======
+    <!-- 统一导航栏 -->
+    <nav class="modern-nav">
+      <div class="nav-content">
+        <div class="nav-logo">
+          <img src="@/assets/images/logo.png" alt="绘心同学" class="logo-img" />
+          <span>绘心同学</span>
+        </div>
+        <div class="nav-actions">
+          <router-link to="/" class="nav-link">首页</router-link>
+          <router-link to="/draw" class="nav-link">绘画空间</router-link>
+          <router-link to="/chat" class="nav-link active">心理对话</router-link>
+          <router-link to="/user" class="nav-link">个人空间</router-link>
+          <button class="nav-button logout-btn" @click="handleLogout">退出登录</button>
+        </div>
+      </div>
+    </nav>
+
+    <!-- 聊天历史侧边栏 -->
+    <ChatSidebar
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
       :isOpen="sidebarOpen"
       @close="sidebarOpen = false"
       @chatLoaded="handleChatLoaded"
       @newChat="handleNewChat"
     />
+<<<<<<< HEAD
     
+=======
+
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
     <!-- 顶部工具栏 -->
     <div class="chat-header">
       <button class="sidebar-toggle-btn" @click="toggleSidebar">
         <span class="menu-icon">☰</span> 聊天历史
       </button>
       <div class="chat-title">{{ currentChatTitle }}</div>
+<<<<<<< HEAD
       <button class="back-button" @click="goBack">
         <span class="back-icon">←</span> 返回
       </button>
     </div>
     
+=======
+      <div class="header-spacer"></div>
+    </div>
+
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
     <div class="chat-messages" ref="messagesContainer">
       <!-- 空状态显示 -->
       <div v-if="messages.length === 0" class="empty-chat">
@@ -26,7 +58,11 @@
         <h3>开始和绘心同学对话吧</h3>
         <p>分享您的想法和感受，我会用心倾听</p>
       </div>
+<<<<<<< HEAD
       
+=======
+
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
       <!-- 消息列表 -->
       <div v-for="(message, index) in messages" :key="index" :class="['message', message.type]">
         <img :src="getAvatarSrc(message.type)" :class="['avatar', message.type]"
@@ -39,10 +75,17 @@
 
     <div class="chat-input">
       <div class="input-wrapper">
+<<<<<<< HEAD
         <textarea 
           v-model="inputMessage" 
           ref="inputTextarea"
           placeholder="在这里分享您的想法和感受，绘心同学正在倾听..." 
+=======
+        <textarea
+          v-model="inputMessage"
+          ref="inputTextarea"
+          placeholder="在这里分享您的想法和感受，绘心同学正在倾听..."
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
           @keydown="handleKeyDown"
           @input="handleInput"
           :disabled="isLoading"
@@ -54,9 +97,15 @@
             {{ inputMessage.length }}/500
           </span>
           <div class="input-actions">
+<<<<<<< HEAD
             <button 
               class="send-button" 
               @click="(e: MouseEvent) => sendMessage()" 
+=======
+            <button
+              class="send-button"
+              @click="(e: MouseEvent) => sendMessage()"
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
               :disabled="isLoading || !inputMessage.trim()"
               :title="isLoading ? '发送中...' : '发送消息 (Enter)'"
             >
@@ -103,6 +152,17 @@ const isAdminMode = ref(false)
 const adminTyping = ref(false)
 const processedMessageIds = ref<Set<string>>(new Set())
 
+<<<<<<< HEAD
+=======
+// 退出登录处理
+const handleLogout = () => {
+  localStorage.removeItem('token')
+  localStorage.removeItem('userInfo')
+  localStorage.removeItem('isLoggedIn')
+  router.push('/login')
+}
+
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
 // 新增的聊天历史相关变量
 const sidebarOpen = ref(false)
 const currentChatId = ref<string>('')
@@ -137,7 +197,11 @@ const toggleSidebar = () => {
 const handleChatLoaded = async (chatId: string) => {
   currentChatId.value = chatId
   sidebarOpen.value = false
+<<<<<<< HEAD
   
+=======
+
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
   // 加载聊天消息
   await loadChatMessages(chatId)
 }
@@ -148,7 +212,11 @@ const handleNewChat = (chatId: string) => {
   currentChatTitle.value = '新对话'
   messages.value = []
   sidebarOpen.value = false
+<<<<<<< HEAD
   
+=======
+
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
   // 清除管理员模式
   isAdminMode.value = false
   processedMessageIds.value.clear()
@@ -158,13 +226,18 @@ const handleNewChat = (chatId: string) => {
 const loadChatMessages = async (chatId: string) => {
   try {
     const token = localStorage.getItem('token')
+<<<<<<< HEAD
     
+=======
+
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
     const response = await fetch(`${config.baseURL}/api/chats/${chatId}/messages`, {
       headers: {
         'Authorization': token || '',
         'Content-Type': 'application/json'
       }
     })
+<<<<<<< HEAD
     
     const result = await response.json()
     
@@ -177,16 +250,38 @@ const loadChatMessages = async (chatId: string) => {
       // 转换消息格式
       messages.value = messagesList.map((msg: any) => ({
         type: msg.sender === 'user' ? 'user' : 
+=======
+
+    const result = await response.json()
+
+    if (result.code === 0) {
+      const chat = result.data.chat
+      const messagesList = result.data.messages
+
+      currentChatTitle.value = chat.title
+
+      // 转换消息格式
+      messages.value = messagesList.map((msg: any) => ({
+        type: msg.sender === 'user' ? 'user' :
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
               msg.sender === 'assistant' ? 'assistant' : 'admin',
         content: msg.content,
         time: msg.timestamp,
         messageId: msg._id
       }))
+<<<<<<< HEAD
       
       // 滚动到底部
       await nextTick()
       scrollToBottom()
       
+=======
+
+      // 滚动到底部
+      await nextTick()
+      scrollToBottom()
+
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
     } else {
       ElMessage.error(result.message || '加载聊天消息失败')
     }
@@ -203,12 +298,20 @@ const saveChatState = () => {
       // 获取用户ID
       const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}')
       const userId = userInfo.id
+<<<<<<< HEAD
       
+=======
+
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
       if (!userId) {
         console.error('保存聊天记录失败：找不到用户ID')
         return
       }
+<<<<<<< HEAD
       
+=======
+
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
       // 使用用户ID作为标识保存聊天记录
       localStorage.setItem(`chatMessages_${userId}`, JSON.stringify(messages.value))
       localStorage.setItem(`isAdminMode_${userId}`, isAdminMode.value.toString())
@@ -225,33 +328,57 @@ const restoreChatState = () => {
     // 获取用户ID
     const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}')
     const userId = userInfo.id
+<<<<<<< HEAD
     
+=======
+
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
     if (!userId) {
       console.error('恢复聊天记录失败：找不到用户ID')
       return false
     }
+<<<<<<< HEAD
     
     const savedMessages = localStorage.getItem(`chatMessages_${userId}`)
     const savedAdminMode = localStorage.getItem(`isAdminMode_${userId}`)
     const lastTimestamp = localStorage.getItem(`lastChatTimestamp_${userId}`)
     
+=======
+
+    const savedMessages = localStorage.getItem(`chatMessages_${userId}`)
+    const savedAdminMode = localStorage.getItem(`isAdminMode_${userId}`)
+    const lastTimestamp = localStorage.getItem(`lastChatTimestamp_${userId}`)
+
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
     // 如果有保存的消息且不超过24小时
     if (savedMessages && lastTimestamp) {
       const currentTime = new Date().getTime()
       const savedTime = parseInt(lastTimestamp)
       const hoursDiff = (currentTime - savedTime) / (1000 * 60 * 60)
+<<<<<<< HEAD
       
       if (hoursDiff < 24) {
         messages.value = JSON.parse(savedMessages)
         isAdminMode.value = savedAdminMode === 'true'
         
+=======
+
+      if (hoursDiff < 24) {
+        messages.value = JSON.parse(savedMessages)
+        isAdminMode.value = savedAdminMode === 'true'
+
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
         // 初始化已处理消息ID集合
         processedMessageIds.value = new Set(
           messages.value
             .filter(msg => msg.messageId)
             .map(msg => msg.messageId as string)
         )
+<<<<<<< HEAD
         
+=======
+
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
         return true
       }
     }
@@ -330,12 +457,21 @@ watch(isAdminMode, (newValue) => {
 onMounted(async () => {
   // 添加页面类名以便CSS样式正确应用
   document.body.classList.add('chat-page')
+<<<<<<< HEAD
   
   await getUserInfo()
   
   // 获取用户登录状态
   const isJustLoggedIn = checkIfJustLoggedIn()
   
+=======
+
+  await getUserInfo()
+
+  // 获取用户登录状态
+  const isJustLoggedIn = checkIfJustLoggedIn()
+
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
   // 如果用户刚登录或没有恢复成功的聊天记录，显示欢迎消息
   if (isJustLoggedIn) {
     // 用户刚刚登录，显示欢迎消息
@@ -346,7 +482,11 @@ onMounted(async () => {
   } else {
     // 尝试恢复聊天状态
     const restored = restoreChatState()
+<<<<<<< HEAD
     
+=======
+
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
     // 如果没有恢复成功，显示欢迎消息
     if (!restored) {
       messages.value.push({
@@ -355,6 +495,7 @@ onMounted(async () => {
       })
     }
   }
+<<<<<<< HEAD
   
   // 初始化WebSocket连接
   initWebSocket()
@@ -362,6 +503,15 @@ onMounted(async () => {
   // 监听页面关闭事件，保存聊天状态
   window.addEventListener('beforeunload', saveChatState)
   
+=======
+
+  // 初始化WebSocket连接
+  initWebSocket()
+
+  // 监听页面关闭事件，保存聊天状态
+  window.addEventListener('beforeunload', saveChatState)
+
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
   // 滚动到底部
   scrollToBottom()
 })
@@ -372,6 +522,7 @@ const checkIfJustLoggedIn = () => {
     // 获取登录时设置的时间戳
     const lastLoginTimestamp = localStorage.getItem('lastLoginTimestamp')
     if (!lastLoginTimestamp) return false
+<<<<<<< HEAD
     
     const currentTime = new Date().getTime()
     const loginTime = parseInt(lastLoginTimestamp)
@@ -379,6 +530,15 @@ const checkIfJustLoggedIn = () => {
     // 计算时间差（分钟）
     const timeDiffMinutes = (currentTime - loginTime) / (1000 * 60)
     
+=======
+
+    const currentTime = new Date().getTime()
+    const loginTime = parseInt(lastLoginTimestamp)
+
+    // 计算时间差（分钟）
+    const timeDiffMinutes = (currentTime - loginTime) / (1000 * 60)
+
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
     // 如果时间差小于5分钟，认为是刚刚登录
     return timeDiffMinutes < 5
   } catch (error) {
@@ -391,10 +551,17 @@ const checkIfJustLoggedIn = () => {
 onUnmounted(() => {
   // 移除页面类名
   document.body.classList.remove('chat-page')
+<<<<<<< HEAD
   
   // 移除事件监听器
   window.removeEventListener('beforeunload', saveChatState)
   
+=======
+
+  // 移除事件监听器
+  window.removeEventListener('beforeunload', saveChatState)
+
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
   // 关闭WebSocket连接
   if (socket) {
     socket.disconnect()
@@ -417,10 +584,17 @@ const initWebSocket = () => {
   if (socket) {
     socket.disconnect()
   }
+<<<<<<< HEAD
   
   // 获取WebSocket URL，确保始终有一个有效值
   const socketUrl = config.socketUrl || `${window.location.protocol === 'https:' ? 'https://' : 'http://'}${window.location.hostname}:5000`;
   
+=======
+
+  // 获取WebSocket URL，确保始终有一个有效值
+  const socketUrl = config.socketUrl || `${window.location.protocol === 'https:' ? 'https://' : 'http://'}${window.location.hostname}:5000`;
+
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
   // 创建WebSocket连接
   socket = io(socketUrl, {
     auth: {
@@ -432,7 +606,11 @@ const initWebSocket = () => {
     reconnectionDelayMax: 5000,
     timeout: 20000
   })
+<<<<<<< HEAD
   
+=======
+
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
   // 连接事件
   socket.on('connect', () => {
     console.log('WebSocket连接成功')
@@ -441,13 +619,21 @@ const initWebSocket = () => {
       token: localStorage.getItem('token')
     })
   })
+<<<<<<< HEAD
   
+=======
+
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
   // 连接错误事件
   socket.on('connect_error', (error: any) => {
     console.error('WebSocket连接错误:', error)
     ElMessage.error('连接服务器失败，请刷新页面重试')
   })
+<<<<<<< HEAD
   
+=======
+
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
   // 断开连接事件
   socket.on('disconnect', (reason: string) => {
     console.log('WebSocket断开连接:', reason)
@@ -456,29 +642,49 @@ const initWebSocket = () => {
       socket.connect()
     }
   })
+<<<<<<< HEAD
   
   // 接收管理员回复
   socket.on('admin_reply', (message: any) => {
     console.log('收到管理员回复:', message)
     
+=======
+
+  // 接收管理员回复
+  socket.on('admin_reply', (message: any) => {
+    console.log('收到管理员回复:', message)
+
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
     // 检查消息是否已经处理过（避免重复）
     if (message.messageId && processedMessageIds.value.has(message.messageId)) {
       console.log('消息已处理，忽略重复消息:', message.messageId)
       return
     }
+<<<<<<< HEAD
     
+=======
+
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
     // 标记消息为已处理
     if (message.messageId) {
       processedMessageIds.value.add(message.messageId)
     }
+<<<<<<< HEAD
     
+=======
+
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
     // 检查是否是系统风险提示消息，并且已经在消息列表中有相同内容的消息
     const systemRiskMessage = "系统检测到您的内容可能存在风险，已切换到人工客服模式。请稍等片刻，管理员正在审核您的对话...";
     if (message.content === systemRiskMessage && messages.value.some(msg => msg.content === systemRiskMessage)) {
       console.log('已存在相同的系统风险提示消息，忽略重复消息');
       return;
     }
+<<<<<<< HEAD
     
+=======
+
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
     adminTyping.value = false
     messages.value.push({
       type: 'admin',
@@ -490,7 +696,11 @@ const initWebSocket = () => {
     saveChatState()
     scrollToBottom()
   })
+<<<<<<< HEAD
   
+=======
+
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
   // 连接响应
   socket.on('connect_response', (data: any) => {
     console.log('连接响应:', data)
@@ -498,7 +708,11 @@ const initWebSocket = () => {
       console.log('用户身份验证成功')
     }
   })
+<<<<<<< HEAD
   
+=======
+
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
   // 错误事件
   socket.on('error', (data: any) => {
     console.error('WebSocket错误:', data)
@@ -512,6 +726,7 @@ const reconnectSocket = () => {
     ElMessage.error('连接服务器失败，请刷新页面重试')
     return
   }
+<<<<<<< HEAD
   
   reconnectAttempts.value++
   console.log(`尝试重新连接 (${reconnectAttempts.value}/${maxReconnectAttempts})`)
@@ -520,6 +735,16 @@ const reconnectSocket = () => {
     socket.disconnect()
   }
   
+=======
+
+  reconnectAttempts.value++
+  console.log(`尝试重新连接 (${reconnectAttempts.value}/${maxReconnectAttempts})`)
+
+  if (socket) {
+    socket.disconnect()
+  }
+
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
   setTimeout(() => {
     initWebSocket()
   }, 1000) // 1秒后重试
@@ -551,20 +776,32 @@ const handleInput = () => {
 // 修改发送消息逻辑
 const sendMessage = async () => {
   if (!inputMessage.value.trim() || isLoading.value) return;
+<<<<<<< HEAD
   
   const userMsg = inputMessage.value.trim();
   inputMessage.value = '';
   
+=======
+
+  const userMsg = inputMessage.value.trim();
+  inputMessage.value = '';
+
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
   // 重置输入框高度
   if (inputTextarea.value) {
     inputTextarea.value.style.height = 'auto'
   }
+<<<<<<< HEAD
   
+=======
+
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
   // 添加用户消息到消息列表
   messages.value.push({
     type: 'user',
     content: userMsg
   });
+<<<<<<< HEAD
   
   // 自动滚动到底部
   await nextTick();
@@ -573,6 +810,16 @@ const sendMessage = async () => {
   try {
     isLoading.value = true;
     
+=======
+
+  // 自动滚动到底部
+  await nextTick();
+  scrollToBottom();
+
+  try {
+    isLoading.value = true;
+
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
     // 检查是否处于管理员模式
     if (isAdminMode.value) {
       // 使用WebSocket发送消息
@@ -592,7 +839,11 @@ const sendMessage = async () => {
         router.push('/login');
         return;
       }
+<<<<<<< HEAD
       
+=======
+
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
       const response = await fetch(`${config.baseURL}${config.chatPath}`, {
         method: 'POST',
         headers: {
@@ -602,16 +853,35 @@ const sendMessage = async () => {
         body: JSON.stringify({ message: userMsg })
       });
 
+<<<<<<< HEAD
+=======
+      // 检查响应状态
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+      }
+
+      // 检查Content-Type来确定响应类型
+      const contentType = response.headers.get('content-type');
+
+      // 流式响应处理
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
       const reader = response.body?.getReader();
       const decoder = new TextDecoder();
       let currentMessage = '';
 
       if (!reader) throw new Error('无法读取响应流');
 
+<<<<<<< HEAD
       messages.value.push({ 
         type: 'assistant', 
         content: '',
         time: new Date().toISOString()  // 添加时间戳
+=======
+      messages.value.push({
+        type: 'assistant',
+        content: '',
+        time: new Date().toISOString()
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
       });
       const currentIndex = messages.value.length - 1;
 
@@ -623,6 +893,18 @@ const sendMessage = async () => {
         currentMessage += text;
         messages.value[currentIndex].content = currentMessage;
       }
+<<<<<<< HEAD
+=======
+
+      // 检查是否是危机言论检测的回复
+      if (currentMessage.includes('系统检测到您的内容可能存在风险')) {
+        isAdminMode.value = true;
+        // 保存状态变化
+        saveChatState();
+        // 初始化WebSocket连接以接收管理员消息
+        initWebSocket();
+      }
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
     }
   } catch (error) {
     console.error('发送消息失败:', error);
@@ -639,6 +921,94 @@ const sendMessage = async () => {
 </script>
 
 <style scoped>
+<<<<<<< HEAD
+=======
+/* 统一导航栏样式 */
+.modern-nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 64px;
+  background: #ffffff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  z-index: 100;
+}
+
+.nav-content {
+  max-width: 1920px;
+  margin: 0 auto;
+  padding: 0 2rem;
+  height: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.nav-logo {
+  color: #1a1a1a;
+  font-size: 1.5rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: default; /* 默认光标，不显示可点击状态 */
+}
+
+.logo-img {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+}
+
+.nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.nav-link {
+  color: #4a4a4a;
+  text-decoration: none;
+  font-size: 1rem;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  transition: all 0.2s;
+}
+
+.nav-link:hover {
+  color: #42b983;
+  background-color: rgba(66, 185, 131, 0.1);
+}
+
+.nav-link.active {
+  color: #42b983;
+  background-color: rgba(66, 185, 131, 0.1);
+  font-weight: 600;
+}
+
+.nav-button {
+  background: none;
+  border: 1px solid #ddd;
+  color: #4a4a4a;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-size: 1rem;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.logout-btn {
+  border-color: #ff6b6b;
+  color: #ff6b6b;
+}
+
+.logout-btn:hover {
+  background-color: #ff6b6b;
+  color: white;
+}
+
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
 .chat-container {
   height: 100vh;
   width: 100%;
@@ -648,6 +1018,10 @@ const sendMessage = async () => {
   display: flex;
   flex-direction: column;
   padding: calc(var(--spacing-unit, 1rem) * 1.25);
+<<<<<<< HEAD
+=======
+  padding-top: 84px; /* 为导航栏留出空间 */
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
   box-sizing: border-box;
 }
 
@@ -660,6 +1034,13 @@ const sendMessage = async () => {
   margin-bottom: 15px;
 }
 
+<<<<<<< HEAD
+=======
+.header-spacer {
+  width: 100px; /* 占位元素，保持标题居中 */
+}
+
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
 .sidebar-toggle-btn {
   padding: 10px 16px;
   background: #28a745;
@@ -1023,43 +1404,75 @@ const sendMessage = async () => {
     min-width: 100%;
     padding: 12px;
   }
+<<<<<<< HEAD
   
+=======
+
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
   .chat-input {
     padding: 12px;
     border-radius: 12px;
   }
+<<<<<<< HEAD
   
+=======
+
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
   .input-wrapper textarea {
     padding: 12px 16px;
     font-size: 16px; /* 防止iOS缩放 */
   }
+<<<<<<< HEAD
   
+=======
+
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
   .send-button {
     width: 40px;
     height: 40px;
   }
+<<<<<<< HEAD
   
+=======
+
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
   .send-icon {
     width: 18px;
     height: 18px;
   }
+<<<<<<< HEAD
   
+=======
+
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
   .message-content {
     max-width: 85%;
     padding: 12px 16px;
     font-size: 14px;
   }
+<<<<<<< HEAD
   
+=======
+
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
   .avatar {
     width: 36px;
     height: 36px;
   }
+<<<<<<< HEAD
   
+=======
+
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
   .chat-messages {
     padding: 16px;
     margin-bottom: 16px;
   }
+<<<<<<< HEAD
   
+=======
+
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
   .char-count {
     font-size: 11px;
   }
@@ -1071,41 +1484,73 @@ const sendMessage = async () => {
     max-width: 95vw;
     padding: 20px;
   }
+<<<<<<< HEAD
   
+=======
+
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
   .chat-messages {
     padding: 20px;
     height: calc(100vh - 200px);
   }
+<<<<<<< HEAD
   
+=======
+
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
   .message-content {
     max-width: 85%; /* 参考手机端的85% */
     font-size: 15px;
     padding: 14px 18px;
   }
+<<<<<<< HEAD
   
   .message {
     max-width: 90%; /* 增加到90% */
   }
   
+=======
+
+  .message {
+    max-width: 90%; /* 增加到90% */
+  }
+
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
   .avatar {
     width: 40px;
     height: 40px;
   }
+<<<<<<< HEAD
   
+=======
+
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
   .input-wrapper textarea {
     font-size: 15px;
     padding: 14px 18px;
   }
+<<<<<<< HEAD
   
+=======
+
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
   .send-button {
     width: 42px;
     height: 42px;
   }
+<<<<<<< HEAD
   
   .chat-title {
     font-size: 17px;
   }
   
+=======
+
+  .chat-title {
+    font-size: 17px;
+  }
+
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
   .sidebar-toggle-btn,
   .back-button {
     padding: 10px 14px;
@@ -1119,37 +1564,65 @@ const sendMessage = async () => {
     max-width: 1000px;
     padding: 24px;
   }
+<<<<<<< HEAD
   
+=======
+
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
   .chat-messages {
     padding: 22px;
     height: calc(100vh - 210px);
   }
+<<<<<<< HEAD
   
+=======
+
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
   .message-content {
     max-width: 85%; /* 参考手机端的85% */
     font-size: 15px;
     padding: 15px 19px;
   }
+<<<<<<< HEAD
   
   .message {
     max-width: 90%; /* 增加到90% */
   }
   
+=======
+
+  .message {
+    max-width: 90%; /* 增加到90% */
+  }
+
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
   .avatar {
     width: 41px;
     height: 41px;
   }
+<<<<<<< HEAD
   
+=======
+
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
   .input-wrapper textarea {
     font-size: 15px;
     padding: 15px 19px;
   }
+<<<<<<< HEAD
   
+=======
+
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
   .send-button {
     width: 43px;
     height: 43px;
   }
+<<<<<<< HEAD
   
+=======
+
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
   .chat-title {
     font-size: 17px;
   }
@@ -1160,7 +1633,11 @@ const sendMessage = async () => {
   .chat-container {
     max-width: 1200px; /* 聊天容器最大宽度 */
   }
+<<<<<<< HEAD
   
+=======
+
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
   .message-content {
     max-width: 85%; /* 参考1199px以下的成功设置 */
     line-height: 1.6;
@@ -1169,7 +1646,11 @@ const sendMessage = async () => {
     overflow-wrap: break-word;
     hyphens: none;
   }
+<<<<<<< HEAD
   
+=======
+
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
   .message {
     max-width: 90%; /* 参考1199px以下的成功设置 */
   }
@@ -1181,7 +1662,11 @@ const sendMessage = async () => {
     max-width: 1400px; /* 2K屏幕下稍微增加聊天容器宽度 */
     padding: 30px;
   }
+<<<<<<< HEAD
   
+=======
+
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
   .message-content {
     font-size: 1.1rem;
     padding: 16px 20px;
@@ -1192,26 +1677,46 @@ const sendMessage = async () => {
     overflow-wrap: break-word;
     hyphens: none;
   }
+<<<<<<< HEAD
   
   .message {
     max-width: 90%; /* 保持与较小屏幕一致的90% */
   }
   
+=======
+
+  .message {
+    max-width: 90%; /* 保持与较小屏幕一致的90% */
+  }
+
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
   .chat-header {
     font-size: 1.2rem;
     padding: 20px 0;
   }
+<<<<<<< HEAD
   
+=======
+
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
   .input-wrapper textarea {
     font-size: 1.1rem;
     padding: 16px 20px;
   }
+<<<<<<< HEAD
   
+=======
+
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
   .send-button {
     width: 50px;
     height: 50px;
   }
+<<<<<<< HEAD
   
+=======
+
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
   .avatar {
     width: 50px;
     height: 50px;
@@ -1224,7 +1729,11 @@ const sendMessage = async () => {
     max-width: 1600px; /* 4K屏幕下的最大聊天容器宽度 */
     padding: 40px;
   }
+<<<<<<< HEAD
   
+=======
+
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
   .message-content {
     font-size: 1.3rem;
     padding: 20px 24px;
@@ -1235,36 +1744,61 @@ const sendMessage = async () => {
     overflow-wrap: break-word;
     hyphens: none;
   }
+<<<<<<< HEAD
   
   .message {
     max-width: 90%; /* 保持与较小屏幕一致的90% */
   }
   
+=======
+
+  .message {
+    max-width: 90%; /* 保持与较小屏幕一致的90% */
+  }
+
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
   .chat-header {
     font-size: 1.4rem;
     padding: 24px 0;
   }
+<<<<<<< HEAD
   
+=======
+
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
   .input-wrapper textarea {
     font-size: 1.3rem;
     padding: 20px 24px;
     min-height: 80px;
   }
+<<<<<<< HEAD
   
+=======
+
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
   .send-button {
     width: 60px;
     height: 60px;
   }
+<<<<<<< HEAD
   
+=======
+
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
   .send-icon {
     width: 28px;
     height: 28px;
   }
+<<<<<<< HEAD
   
+=======
+
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
   .avatar {
     width: 60px;
     height: 60px;
   }
+<<<<<<< HEAD
   
   .empty-chat h3 {
     font-size: 2rem;
@@ -1278,6 +1812,21 @@ const sendMessage = async () => {
     font-size: 1.6rem;
   }
   
+=======
+
+  .empty-chat h3 {
+    font-size: 2rem;
+  }
+
+  .empty-chat p {
+    font-size: 1.3rem;
+  }
+
+  .chat-title {
+    font-size: 1.6rem;
+  }
+
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
   .sidebar-toggle-btn,
   .back-button {
     padding: 12px 20px;
@@ -1303,4 +1852,8 @@ const sendMessage = async () => {
     box-shadow: 0 0 0 0 rgba(0, 122, 255, 0);
   }
 }
+<<<<<<< HEAD
 </style>
+=======
+</style>
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845

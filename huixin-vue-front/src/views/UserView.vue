@@ -2,6 +2,7 @@
   <div class="user-container">
     <nav class="modern-nav">
       <div class="nav-content">
+<<<<<<< HEAD
         <router-link to="/" class="nav-logo">
           <img src="@/assets/images/logo.png" alt="绘心同学" class="logo-img" />
           <span>绘心同学</span>
@@ -9,6 +10,18 @@
         <div class="nav-actions">
           <router-link to="/chat" class="nav-link">前往对话</router-link>
           <button class="nav-button" @click="handleLogout">退出登录</button>
+=======
+        <div class="nav-logo">
+          <img src="@/assets/images/logo.png" alt="绘心同学" class="logo-img" />
+          <span>绘心同学</span>
+        </div>
+        <div class="nav-actions">
+          <router-link to="/" class="nav-link">首页</router-link>
+          <router-link to="/draw" class="nav-link">绘画空间</router-link>
+          <router-link to="/chat" class="nav-link">心理对话</router-link>
+          <router-link to="/user" class="nav-link active">个人空间</router-link>
+          <button class="nav-button logout-btn" @click="handleLogout">退出登录</button>
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
         </div>
       </div>
     </nav>
@@ -133,10 +146,17 @@ const handleLogout = () => {
   color: #1a1a1a;
   font-size: 1.5rem;
   font-weight: 600;
+<<<<<<< HEAD
   text-decoration: none;
   display: flex;
   align-items: center;
   gap: 0.5rem;
+=======
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: default; /* 默认光标，不显示可点击状态 */
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
 }
 
 .logo-img {
@@ -152,6 +172,7 @@ const handleLogout = () => {
 }
 
 .nav-link {
+<<<<<<< HEAD
   padding: 0.5rem 1.25rem;
   border: none;
   border-radius: 6px;
@@ -173,12 +194,51 @@ const handleLogout = () => {
   background: #f3f4f6;
   color: #4a4a4a;
   font-size: 0.875rem;
+=======
+  color: #4a4a4a;
+  text-decoration: none;
+  font-size: 1rem;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  transition: all 0.2s;
+}
+
+.nav-link:hover {
+  color: #42b983;
+  background-color: rgba(66, 185, 131, 0.1);
+}
+
+.nav-link.active {
+  color: #42b983;
+  background-color: rgba(66, 185, 131, 0.1);
+  font-weight: 600;
+}
+
+.nav-button {
+  background: none;
+  border: 1px solid #ddd;
+  color: #4a4a4a;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  font-size: 1rem;
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
   cursor: pointer;
   transition: all 0.2s;
 }
 
+<<<<<<< HEAD
 .nav-button:hover {
   background: #ff000089;
+=======
+.logout-btn {
+  border-color: #ff6b6b;
+  color: #ff6b6b;
+}
+
+.logout-btn:hover {
+  background-color: #ff6b6b;
+  color: white;
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
 }
 
 .user-content {
@@ -338,4 +398,8 @@ const handleLogout = () => {
     font-size: 1.25rem;
   }
 }
+<<<<<<< HEAD
 </style>
+=======
+</style>
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845

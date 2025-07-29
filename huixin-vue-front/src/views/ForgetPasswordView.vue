@@ -21,21 +21,46 @@
           <form class="forget-form" @submit.prevent="handleSubmit">
             <div class="form-group">
               <label>电子邮箱</label>
+<<<<<<< HEAD
               <input 
                 v-model="email"
                 type="email" 
                 class="form-input" 
+=======
+              <input
+                v-model="email"
+                type="email"
+                class="form-input"
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
                 placeholder="请输入您的注册邮箱"
                 required
               />
             </div>
 
             <div class="form-group">
+<<<<<<< HEAD
               <label>新密码</label>
               <input 
                 v-model="password"
                 type="password" 
                 class="form-input" 
+=======
+              <label>邮箱验证码</label>
+              <div class="verification-code-group">
+                <input v-model="code" type="text" class="form-input" placeholder="请输入4位验证码" required />
+                <button @click.prevent="sendCode" :disabled="isSendingCode || countdown > 0" class="send-code-button">
+                  {{ countdown > 0 ? `${countdown}s` : '发送验证码' }}
+                </button>
+              </div>
+            </div>
+
+            <div class="form-group">
+              <label>新密码</label>
+              <input
+                v-model="password"
+                type="password"
+                class="form-input"
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
                 placeholder="请输入新密码"
                 required
               />
@@ -43,10 +68,17 @@
 
             <div class="form-group">
               <label>确认新密码</label>
+<<<<<<< HEAD
               <input 
                 v-model="confirmPassword"
                 type="password" 
                 class="form-input" 
+=======
+              <input
+                v-model="confirmPassword"
+                type="password"
+                class="form-input"
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
                 placeholder="请再次输入新密码"
                 required
               />
@@ -72,12 +104,46 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import config from '@/config' // 导入配置文件
+<<<<<<< HEAD
+=======
+import apiClient from '@/api' // 导入API客户端
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
 
 const router = useRouter()
 const email = ref('')
 const password = ref('')
 const confirmPassword = ref('')
+<<<<<<< HEAD
 const isLoading = ref(false)
+=======
+const code = ref('')
+const isLoading = ref(false)
+const isSendingCode = ref(false)
+const countdown = ref(0)
+
+const sendCode = async () => {
+  if (!email.value) {
+    ElMessage.error('请输入电子邮箱地址')
+    return
+  }
+  isSendingCode.value = true
+  try {
+    const response = await apiClient.post(config.sendResetCodePath, { email: email.value })
+    ElMessage.success('验证码已发送，请注意查收邮箱')
+    countdown.value = 60
+    const timer = setInterval(() => {
+      countdown.value--
+      if (countdown.value <= 0) {
+        clearInterval(timer)
+      }
+    }, 1000)
+  } catch (error) {
+    ElMessage.error(`请求失败，请稍后重试`)
+  } finally {
+    isSendingCode.value = false
+  }
+}
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
 
 const handleSubmit = async () => {
   if (password.value !== confirmPassword.value) {
@@ -87,6 +153,7 @@ const handleSubmit = async () => {
 
   try {
     isLoading.value = true
+<<<<<<< HEAD
     const response = await fetch(`${config.baseURL}/api/reset-password-direct`, {
       method: 'POST',
       headers: {
@@ -107,6 +174,25 @@ const handleSubmit = async () => {
     }
   } catch (error) {
     ElMessage.error('网络错误，请稍后重试')
+=======
+    const data = await apiClient.post(config.resetPasswordDirectPath, {
+      email: email.value,
+      password: password.value,
+      code: code.value
+    })
+
+    if (data.code === 0) {
+      ElMessage.success('密码重置成功，请使用新密码登录')
+      // 延迟跳转，让用户有时间看到成功消息
+      setTimeout(() => {
+        router.push('/login')
+      }, 1500)
+    } else {
+      // 错误已由 apiClient 拦截器处理
+    }
+  } catch (error) {
+    ElMessage.error('密码重置失败，请稍后再试')
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
   } finally {
     isLoading.value = false
   }
@@ -305,6 +391,32 @@ const handleSubmit = async () => {
   color: #3aa876;
 }
 
+<<<<<<< HEAD
+=======
+.verification-code-group {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.send-code-button {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #42b983;
+  background-color: #fff;
+  color: #42b983;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.send-code-button:disabled {
+  cursor: not-allowed;
+  background-color: #f0f2f5;
+  border-color: #e5e7eb;
+  color: #a0aec0;
+}
+
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
 @media (max-width: 1024px) {
   .forget-content {
     grid-template-columns: 1fr;
@@ -332,4 +444,8 @@ const handleSubmit = async () => {
     font-size: 1.75rem;
   }
 }
+<<<<<<< HEAD
 </style>
+=======
+</style>
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845

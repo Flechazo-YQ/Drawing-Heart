@@ -1,5 +1,6 @@
 <template>
   <div class="register-container">
+<<<<<<< HEAD
     <div class="register-content">
       <div class="register-left">
         <div class="brand-content">
@@ -7,6 +8,30 @@
             <h1>绘心同学</h1>
             <p class="brand-subtitle">AI心理绘画治疗平台</p>
           </router-link>
+=======
+    <!-- 统一导航栏 -->
+    <nav class="modern-nav">
+      <div class="nav-content">
+        <div class="nav-logo">
+          <img src="@/assets/images/logo.png" alt="绘心同学" class="logo-img" />
+          <span>绘心同学</span>
+        </div>
+        <div class="nav-actions">
+          <router-link to="/" class="nav-link">首页</router-link>
+          <router-link to="/login" class="nav-link">登录</router-link>
+          <router-link to="/register" class="nav-link active">注册</router-link>
+        </div>
+      </div>
+    </nav>
+
+    <div class="register-content">
+      <div class="register-left">
+        <div class="brand-content">
+          <div class="brand-logo">
+            <h1>绘心同学</h1>
+            <p class="brand-subtitle">AI心理绘画治疗平台</p>
+          </div>
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
           <div class="features-grid">
             <div class="feature-item">
               <span class="feature-icon">🎨</span>
@@ -40,7 +65,27 @@
 
             <div class="form-group">
               <label>电子邮箱</label>
+<<<<<<< HEAD
               <input v-model="formData.email" type="email" class="form-input" placeholder="请输入邮箱地址" required />
+=======
+              <input v-model="formData.email" type="email" class="form-input"
+                     :class="{ 'error': emailError }"
+                     placeholder="请输入邮箱地址"
+                     @blur="validateEmail"
+                     @input="clearEmailError"
+                     required />
+              <div v-if="emailError" class="error-message">{{ emailError }}</div>
+            </div>
+
+            <div class="form-group">
+              <label>邮箱验证码</label>
+              <div class="verification-code-group">
+                <input v-model="formData.code" type="text" class="form-input" placeholder="请输入4位验证码" required />
+                <button @click.prevent="sendCode" :disabled="isSendingCode || countdown > 0" class="send-code-button">
+                  {{ countdown > 0 ? `${countdown}s` : '发送验证码' }}
+                </button>
+              </div>
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
             </div>
 
             <div class="form-group">
@@ -103,6 +148,12 @@ import apiClient from '@/api'
 
 const router = useRouter()
 const isLoading = ref(false)
+<<<<<<< HEAD
+=======
+const isSendingCode = ref(false)
+const countdown = ref(0)
+const emailError = ref('')
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
 
 const formData = reactive({
   username: '',
@@ -110,11 +161,175 @@ const formData = reactive({
   password: '',
   confirmPassword: '',
   agreeToTerms: false,
+<<<<<<< HEAD
   gender: ''
 })
 
 const handleRegister = async () => {
   // 表单验证 (保持不变)
+=======
+  gender: '',
+  code: ''
+})
+
+// 邮箱验证函数
+const validateEmail = () => {
+  const email = formData.email.trim()
+
+  if (!email) {
+    emailError.value = ''
+    return false
+  }
+
+  // 检查@符号的存在和位置
+  const atIndex = email.indexOf('@')
+  if (atIndex === -1) {
+    emailError.value = '您的邮箱填写不规范'
+    return false
+  }
+
+  if (atIndex === 0) {
+    emailError.value = '您的邮箱填写不规范'
+    return false
+  }
+
+  if (atIndex === email.length - 1) {
+    emailError.value = '您的邮箱填写不规范'
+    return false
+  }
+
+  const localPart = email.substring(0, atIndex)
+  const domainPart = email.substring(atIndex + 1)
+
+  // 验证本地部分（@前面的部分）
+  if (!validateLocalPart(localPart)) {
+    return false
+  }
+
+  // 验证域名部分（@后面的部分）
+  if (!validateDomainPart(domainPart)) {
+    emailError.value = '您的邮箱填写不规范'
+    return false
+  }
+
+  emailError.value = ''
+  return true
+}
+
+// 验证邮箱本地部分（@符号前）
+const validateLocalPart = (localPart) => {
+  // 检查长度限制（最多64个字符）
+  if (localPart.length > 64) {
+    emailError.value = '您的邮箱填写不规范'
+    return false
+  }
+
+  // 检查是否为空
+  if (localPart.length === 0) {
+    emailError.value = '您的邮箱填写不规范'
+    return false
+  }
+
+  // 检查开头和结尾不能是句点
+  if (localPart.startsWith('.') || localPart.endsWith('.')) {
+    emailError.value = '您的邮箱填写不规范'
+    return false
+  }
+
+  // 检查连续的句点
+  if (localPart.includes('..')) {
+    emailError.value = '您的邮箱填写不规范'
+    return false
+  }
+
+  // 检查是否被引号包围
+  const isQuoted = localPart.startsWith('"') && localPart.endsWith('"')
+
+  if (isQuoted) {
+    // 被引号包围的情况，检查引号内的内容
+    const quotedContent = localPart.slice(1, -1)
+    // 被引号包围时，大部分字符都是允许的，包括空格
+    return true
+  } else {
+    // 未被引号包围的情况，检查字符合法性
+    const allowedChars = /^[A-Za-z0-9!#$%&'*+\-/=?^_`{|}~.]+$/
+
+    if (!allowedChars.test(localPart)) {
+      // 检查是否包含非法字符
+      const illegalChars = /["\s()<>,;:@\\]/
+      if (illegalChars.test(localPart)) {
+        emailError.value = '您的邮箱包含非法字符'
+        return false
+      } else {
+        emailError.value = '您的邮箱填写不规范'
+        return false
+      }
+    }
+  }
+
+  return true
+}
+
+// 验证邮箱域名部分（@符号后）
+const validateDomainPart = (domainPart) => {
+  // 基本域名格式检查
+  const domainRegex = /^[A-Za-z0-9]([A-Za-z0-9-]*[A-Za-z0-9])?(\.[A-Za-z0-9]([A-Za-z0-9-]*[A-Za-z0-9])?)*$/
+
+  if (!domainRegex.test(domainPart)) {
+    return false
+  }
+
+  // 检查是否包含至少一个点号
+  if (!domainPart.includes('.')) {
+    return false
+  }
+
+  return true
+}
+
+// 清除邮箱错误信息
+const clearEmailError = () => {
+  if (emailError.value) {
+    emailError.value = ''
+  }
+}
+
+const sendCode = async () => {
+  if (!formData.email) {
+    ElMessage.error('请输入电子邮箱地址')
+    return
+  }
+
+  // 发送验证码前先验证邮箱格式
+  if (!validateEmail()) {
+    return
+  }
+
+  isSendingCode.value = true
+  try {
+    await apiClient.post(config.sendCodePath, { email: formData.email })
+    ElMessage.success('验证码已发送，请注意查收')
+    countdown.value = 60
+    const timer = setInterval(() => {
+      countdown.value--
+      if (countdown.value <= 0) {
+        clearInterval(timer)
+      }
+    }, 1000)
+  } catch (error) {
+    // 错误已由 apiClient 拦截器处理
+  } finally {
+    isSendingCode.value = false
+  }
+}
+
+const handleRegister = async () => {
+  // 表单验证
+  if (!validateEmail()) {
+    return
+  }
+
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
   if (formData.password !== formData.confirmPassword) {
     ElMessage.error('两次输入的密码不一致')
     return
@@ -132,7 +347,12 @@ const handleRegister = async () => {
       username: formData.username,
       password: formData.password,
       email: formData.email,
+<<<<<<< HEAD
       gender: formData.gender
+=======
+      gender: formData.gender,
+      code: formData.code
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
     })
 
     console.log('服务器响应：', data)
@@ -157,12 +377,83 @@ const handleRegister = async () => {
 </script>
 
 <style scoped>
+<<<<<<< HEAD
+=======
+/* 统一导航栏样式 */
+.modern-nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 64px;
+  background: #ffffff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  z-index: 100;
+}
+
+.nav-content {
+  max-width: 1920px;
+  margin: 0 auto;
+  padding: 0 2rem;
+  height: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.nav-logo {
+  color: #1a1a1a;
+  font-size: 1.5rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: default;
+}
+
+.logo-img {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+}
+
+.nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.nav-link {
+  color: #4a4a4a;
+  text-decoration: none;
+  font-size: 1rem;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  transition: all 0.2s;
+}
+
+.nav-link:hover {
+  color: #42b983;
+  background-color: rgba(66, 185, 131, 0.1);
+}
+
+.nav-link.active {
+  color: #42b983;
+  background-color: rgba(66, 185, 131, 0.1);
+  font-weight: 600;
+}
+
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
 .register-container {
   min-height: 100vh;
   background-color: #f9fafb;
   display: flex;
   align-items: center;
   justify-content: center;
+<<<<<<< HEAD
+=======
+  padding-top: 64px; /* 为导航栏留出空间 */
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
 }
 
 .register-content {
@@ -188,12 +479,19 @@ const handleRegister = async () => {
 }
 
 .brand-logo {
+<<<<<<< HEAD
   text-decoration: none;
+=======
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 0.5rem;
   margin-bottom: 2rem;
+<<<<<<< HEAD
+=======
+  cursor: default; /* 默认光标，不显示可点击状态 */
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
 }
 
 .brand-logo h1 {
@@ -316,6 +614,32 @@ const handleRegister = async () => {
   margin-bottom: 0.6rem;
 }
 
+<<<<<<< HEAD
+=======
+.verification-code-group {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.send-code-button {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #42b983;
+  background-color: #fff;
+  color: #42b983;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.send-code-button:disabled {
+  cursor: not-allowed;
+  background-color: #f0f2f5;
+  border-color: #e5e7eb;
+  color: #a0aec0;
+}
+
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
 .form-group label {
   display: block;
   margin-bottom: 0.25rem;
@@ -339,6 +663,21 @@ const handleRegister = async () => {
   box-shadow: 0 0 0 3px rgba(66, 185, 131, 0.1);
 }
 
+<<<<<<< HEAD
+=======
+.form-input.error {
+  border-color: #ef4444;
+  box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
+}
+
+.error-message {
+  color: #ef4444;
+  font-size: 0.75rem;
+  margin-top: 0.25rem;
+  margin-bottom: 0;
+}
+
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
 .gender-selector {
   display: flex;
   gap: 0.75rem;
