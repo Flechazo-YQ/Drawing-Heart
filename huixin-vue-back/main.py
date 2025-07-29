@@ -129,17 +129,54 @@ def handle_preflight():
         response.headers.add('Access-Control-Allow-Methods', "*")
         return response
 
+# 添加错误处理器
+@app.errorhandler(400)
+def bad_request(error):
+    return jsonify({
+        'status': 'error',
+        'message': 'Bad Request - 请求格式不正确',
+        'code': 400
+    }), 400
+
+@app.errorhandler(404)
+def not_found(error):
+    return jsonify({
+        'status': 'error', 
+        'message': 'Not Found - 请求的资源不存在',
+        'code': 404,
+        'available_endpoints': {
+            '根路径': '/',
+            'API登录': '/api/login',
+            'API注册': '/api/register'
+        }
+    }), 404
+
+@app.errorhandler(500)
+def internal_error(error):
+    return jsonify({
+        'status': 'error',
+        'message': 'Internal Server Error - 服务器内部错误', 
+        'code': 500
+    }), 500
+
 
 @app.route('/')
 def index():
-    try:
-        with open('templates/Home.html', 'r', encoding='utf-8') as file:
-            html_content = file.read()
-            # 返回HTML内容作为响应
-        return Response(html_content, mimetype='text/html')
-    except FileNotFoundError:
-        # 如果文件不存在，返回404错误
-        return 'File not found', 404
+    """API状态检查端点"""
+    return jsonify({
+        'status': 'success',
+        'message': '绘心同学后端API服务正在运行',
+        'version': '1.0.0',
+        'timestamp': datetime.datetime.now().isoformat(),
+        'endpoints': {
+            '登录': '/api/login',
+            '注册': '/api/register', 
+            '绘画分析': '/api/save',
+            '心理对话': '/api/stream-chat',
+            '用户信息': '/api/user/info',
+            '发送验证码': '/api/send-code'
+        }
+    })
 
 
 @app.route('/draw')

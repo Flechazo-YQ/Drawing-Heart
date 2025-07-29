@@ -3,18 +3,38 @@
 // 获取当前环境
 const isDevelopment = import.meta.env.DEV;
 
-// 域名配置
-// 开发环境下，前端和后端可能运行在不同端口
-// 移动端访问时需要使用局域网IP
+// 检测是否为移动设备
+const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+// 域名配置 - 支持内网穿透
 const getApiDomain = () => {
   if (!isDevelopment) return '';
 
-  // 如果是通过IP访问的（移动端），则使用相同的主机但不同端口
   const currentHost = window.location.hostname;
-  if (currentHost === 'localhost' || currentHost === '127.0.0.1') {
+  const currentProtocol = window.location.protocol;
+
+  // 检测是否为内网穿透域名（如ngrok、cpolar等）
+  const isTunnelDomain = currentHost.includes('.ngrok') ||
+                        currentHost.includes('.cpolar') ||
+                        currentHost.includes('.frp') ||
+                        currentHost.includes('.r15.cpolar.top') ||
+                        currentHost.includes('4v22948452.eicp.vip') ||
+                        currentHost.includes('1075oj69wr205.vicp.fun') ||
+                        currentHost === '101.132.253.65'; // 您的frp服务器
+
+  if (isTunnelDomain) {
+    // 内网穿透情况下，需要使用对应的后端穿透地址
+    if (currentHost === '101.132.253.65') {
+      // 您的frp服务器配置：前端5173端口，后端5000端口
+      return `${currentProtocol}//101.132.253.65:5000`;
+    } else {
+      // 其他穿透服务（ngrok、cpolar等）
+      return `${currentProtocol}//${currentHost.replace(':5173', ':5000')}`;
+    }
+  } else if (currentHost === 'localhost' || currentHost === '127.0.0.1') {
     return 'http://localhost:5000';
   } else {
-    // 移动端通过IP访问时，使用相同的IP但端口改为5000
+    // 局域网IP访问
     return `http://${currentHost}:5000`;
   }
 };
@@ -24,9 +44,6 @@ const apiDomain = getApiDomain();
 // 协议配置
 const protocol = ''; // API请求使用相对路径，协议由浏览器自动处理
 const wsProtocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
-
-// 检测是否为移动设备
-const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
 // 导出配置对象
 export default {
