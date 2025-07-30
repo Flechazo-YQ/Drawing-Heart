@@ -2,6 +2,15 @@
   <div class="about-container">
     <nav class="modern-nav">
       <div class="nav-content">
+<<<<<<< HEAD
+        <router-link to="/" class="nav-logo">
+          <img src="@/assets/images/logo.png" alt="绘心同学" class="logo-img" />
+          <span>绘心同学</span>
+        </router-link>
+        <div class="nav-actions">
+          <router-link to="/chat" class="nav-link">开始对话</router-link>
+          <router-link to="/user" class="nav-link">个人中心</router-link>
+=======
         <div class="nav-logo">
           <img src="@/assets/images/logo.png" alt="绘心同学" class="logo-img" />
           <span>绘心同学</span>
@@ -23,6 +32,7 @@
           <router-link to="/about" class="nav-link active">关于我们</router-link>
           <router-link to="/user" class="nav-link">个人空间</router-link>
           <button class="nav-link logout-btn" @click="handleLogout">退出登录</button>
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
         </div>
       </div>
     </nav>
@@ -31,6 +41,8 @@
       <div class="about-section">
         <h1>关于绘心同学</h1>
         <p>欢迎来到绘心同学，这是一个专注于心理健康的智能对话平台。</p>
+<<<<<<< HEAD
+=======
 
         <div class="features-overview">
           <div class="feature-item">
@@ -51,11 +63,14 @@
             <router-link to="/user" class="feature-link">进入中心 →</router-link>
           </div>
         </div>
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
       </div>
     </main>
   </div>
 </template>
 
+<<<<<<< HEAD
+=======
 <script setup>
 import { ref, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
@@ -98,6 +113,7 @@ onMounted(() => {
 })
 </script>
 
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
 <style scoped>
 .about-container {
   min-height: 100vh;
@@ -129,10 +145,17 @@ onMounted(() => {
   color: #1a1a1a;
   font-size: 1.5rem;
   font-weight: 600;
+<<<<<<< HEAD
+  text-decoration: none;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+=======
   display: flex;
   align-items: center;
   gap: 0.5rem;
   cursor: default; /* 默认光标，不显示可点击状态 */
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
 }
 
 .logo-img {
@@ -156,6 +179,8 @@ onMounted(() => {
 
 .nav-link:hover {
   color: #42b983;
+<<<<<<< HEAD
+=======
   background-color: rgba(66, 185, 131, 0.1);
 }
 
@@ -183,6 +208,7 @@ onMounted(() => {
 .logout-btn:hover {
   background-color: #ff6b6b;
   color: white;
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
 }
 
 .about-content {
@@ -209,6 +235,8 @@ onMounted(() => {
 .about-section p {
   color: #4a4a4a;
   line-height: 1.6;
+<<<<<<< HEAD
+=======
   margin-bottom: 2rem;
 }
 
@@ -256,5 +284,6 @@ onMounted(() => {
 
 .feature-link:hover {
   color: #3aa876;
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
 }
 </style>

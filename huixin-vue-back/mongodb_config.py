@@ -57,11 +57,25 @@ class UserManager:
     def __init__(self, db: MongoDB):
         self.db = db
         
+<<<<<<< HEAD
+    def create_user(self, username: str, email: str, password: str, **kwargs) -> str:
+=======
     def create_user(self, username: str, password: str, email: str, gender: str, **kwargs) -> str:
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
         """
         创建新用户
         返回用户ID
         """
+<<<<<<< HEAD
+        user_data = {
+            "username": username,
+            "email": email,
+            "password": password,
+            "chance": kwargs.get("chance", 10),  # 默认机会次数
+            "is_team": kwargs.get("is_team", ""),
+            "avatar": kwargs.get("avatar", ""),
+            "gender": kwargs.get("gender", ""),
+=======
         import hashlib  # 导入hashlib用于密码哈希
         
         # 密码哈希处理
@@ -75,6 +89,7 @@ class UserManager:
             "is_team": kwargs.get("is_team", ""),
             "avatar": kwargs.get("avatar", ""),
             "gender": gender,
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
             "created_at": datetime.datetime.utcnow(),
             "updated_at": datetime.datetime.utcnow(),
             "is_active": True,
@@ -84,6 +99,8 @@ class UserManager:
         
         result = self.db.users.insert_one(user_data)
         return str(result.inserted_id)
+<<<<<<< HEAD
+=======
         
     def verify_password(self, username: str, password: str) -> bool:
         """验证用户密码"""
@@ -104,11 +121,21 @@ class UserManager:
         # 哈希输入的密码并与存储的哈希值比较
         hashed_password = hashlib.sha256(password.encode()).hexdigest()
         return stored_hash == hashed_password
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
     
     def get_user_by_email(self, email: str) -> Optional[Dict]:
         """根据邮箱获取用户"""
         return self.db.users.find_one({"email": email, "is_active": True})
     
+<<<<<<< HEAD
+    def get_user_by_id(self, user_id: str) -> Optional[Dict]:
+        """根据ID获取用户"""
+        try:
+            return self.db.users.find_one({"_id": ObjectId(user_id), "is_active": True})
+        except:
+            return None
+    
+=======
     def get_user_by_username(self, username: str) -> Optional[Dict]:
         """根据用户名获取用户"""
         return self.db.users.find_one({"username": username, "is_active": True})
@@ -148,6 +175,7 @@ class UserManager:
             logging.error(f"更新用户密码失败: {str(e)}")
             return False
     
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
     def update_user(self, user_id: str, update_data: Dict) -> bool:
         """更新用户信息"""
         try:

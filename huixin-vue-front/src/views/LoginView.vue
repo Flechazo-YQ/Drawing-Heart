@@ -1,5 +1,14 @@
 <template>
   <div class="login-container">
+<<<<<<< HEAD
+    <div class="login-content">
+      <div class="login-left">
+        <div class="brand-content">
+          <router-link to="/" class="brand-logo">
+            <h1>绘心同学</h1>
+            <p class="brand-subtitle">AI心理绘画治疗平台</p>
+          </router-link>
+=======
     <!-- 统一导航栏 -->
     <nav class="modern-nav">
       <div class="nav-content">
@@ -22,6 +31,7 @@
             <h1>绘心同学</h1>
             <p class="brand-subtitle">AI心理绘画治疗平台</p>
           </div>
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
           <div class="hero-image">
             <img src="@/assets/images/3.png" alt="心理诊断" />
           </div>
@@ -36,10 +46,17 @@
           <form class="login-form" @submit.prevent="handleLogin">
             <div class="form-group">
               <label>用户名 / 邮箱</label>
+<<<<<<< HEAD
+              <input 
+                v-model="formData.usernameOrEmail"
+                type="text" 
+                class="form-input" 
+=======
               <input
                 v-model="formData.usernameOrEmail"
                 type="text"
                 class="form-input"
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
                 placeholder="请输入用户名或邮箱"
                 required
               />
@@ -47,10 +64,17 @@
 
             <div class="form-group">
               <label>密码</label>
+<<<<<<< HEAD
+              <input 
+                v-model="formData.password"
+                type="password" 
+                class="form-input" 
+=======
               <input
                 v-model="formData.password"
                 type="password"
                 class="form-input"
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
                 placeholder="请输入密码"
                 required
               />
@@ -98,11 +122,19 @@ const formData = reactive({
 const handleLogin = async () => {
   try {
     isLoading.value = true
+<<<<<<< HEAD
+    
+    // 添加请求超时控制
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), config.requestTimeout || 30000);
+    
+=======
 
     // 添加请求超时控制
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), config.requestTimeout || 30000);
 
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
     try {
       const response = await fetch(`${config.baseURL}${config.loginPath}`, {
         method: 'POST',
@@ -116,9 +148,15 @@ const handleLogin = async () => {
         }),
         signal: controller.signal
       })
+<<<<<<< HEAD
+      
+      clearTimeout(timeout);
+      
+=======
 
       clearTimeout(timeout);
 
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
       // 检查是否能获取到JSON响应
       let data;
       try {
@@ -126,6 +164,38 @@ const handleLogin = async () => {
       } catch (e) {
         throw new Error('服务器返回了无效的数据格式')
       }
+<<<<<<< HEAD
+      
+      if (data.code === 0) {
+        // 登录成功，保存token和用户信息
+        localStorage.setItem('token', data.data.token)
+        localStorage.setItem('userInfo', JSON.stringify({
+          id: data.data.user.id,
+          username: data.data.user.username,
+          email: data.data.user.email,
+          avatar: data.data.user.avatar
+        }))
+        // 添加登录状态标志
+        localStorage.setItem('isLoggedIn', 'true')
+        
+        // 如果选择了"记住我"，保存用户名
+        if (formData.remember) {
+          localStorage.setItem('rememberLogin', 'true')
+          localStorage.setItem('savedUsername', formData.usernameOrEmail)
+        } else {
+          localStorage.removeItem('rememberLogin')
+          localStorage.removeItem('savedUsername')
+        }
+        
+        // 清除用户的聊天记录和状态
+        const userData = data.data.user;
+        await clearChatHistory(userData.id);
+        
+        // 设置最新登录时间戳，用于在聊天页面检测是否刚登录
+        localStorage.setItem('lastLoginTimestamp', new Date().getTime().toString());
+        
+        router.push('/draw') // 登录成功后跳转到绘画页面
+=======
 
       if (data.code === 0) {
         // 登录成功，保存token
@@ -175,6 +245,7 @@ const handleLogin = async () => {
         localStorage.setItem('lastLoginTimestamp', new Date().getTime().toString());
 
         router.push('/') // 登录成功后跳转到首页
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
       } else {
         ElMessage.error(data.message || '登录失败')
       }
@@ -197,16 +268,28 @@ const handleLogin = async () => {
 // 清除聊天历史记录和状态的函数
 const clearChatHistory = async (userId) => {
   if (!userId) return;
+<<<<<<< HEAD
+  
+=======
 
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
   // 清除与聊天相关的所有localStorage条目
   localStorage.removeItem(`chatMessages_${userId}`);
   localStorage.removeItem(`isAdminMode_${userId}`);
   localStorage.removeItem(`lastChatTimestamp_${userId}`);
+<<<<<<< HEAD
+  
+  // 清除可能存在的其他聊天相关状态
+  localStorage.removeItem('text_result');
+  localStorage.removeItem('current_context');
+  
+=======
 
   // 清除可能存在的其他聊天相关状态
   localStorage.removeItem('text_result');
   localStorage.removeItem('current_context');
 
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
   // 调用后端API清除服务器端的聊天上下文
   try {
     const token = localStorage.getItem('token');
@@ -239,6 +322,8 @@ onMounted(() => {
 </script>
 
 <style scoped>
+<<<<<<< HEAD
+=======
 /* 统一导航栏样式 */
 .modern-nav {
   position: fixed;
@@ -303,13 +388,17 @@ onMounted(() => {
   font-weight: 600;
 }
 
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
 .login-container {
   min-height: 100vh;
   background-color: #f9fafb;
   display: flex;
   align-items: center;
   justify-content: center;
+<<<<<<< HEAD
+=======
   padding-top: 64px; /* 为导航栏留出空间 */
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
 }
 
 .login-content {
@@ -335,12 +424,19 @@ onMounted(() => {
 }
 
 .brand-logo {
+<<<<<<< HEAD
+  text-decoration: none;
+=======
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 0.5rem;
   margin-bottom: 2rem;
+<<<<<<< HEAD
+=======
   cursor: default; /* 默认光标，不显示可点击状态 */
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
 }
 
 .brand-logo h1 {
@@ -512,6 +608,29 @@ onMounted(() => {
   .login-left {
     padding: 6rem;
   }
+<<<<<<< HEAD
+  
+  .login-right {
+    padding: 6rem 4rem;
+  }
+  
+  .login-title {
+    font-size: 2.5rem;
+  }
+  
+  .login-subtitle {
+    font-size: 1.2rem;
+  }
+  
+  .brand-logo h1 {
+    font-size: 3rem;
+  }
+  
+  .brand-subtitle {
+    font-size: 1.3rem;
+  }
+  
+=======
 
   .login-right {
     padding: 6rem 4rem;
@@ -533,11 +652,16 @@ onMounted(() => {
     font-size: 1.3rem;
   }
 
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
   .form-input {
     padding: 1rem;
     font-size: 1.1rem;
   }
+<<<<<<< HEAD
+  
+=======
 
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
   .login-button {
     padding: 1rem;
     font-size: 1.2rem;
@@ -549,6 +673,17 @@ onMounted(() => {
   .login-left {
     padding: 8rem;
   }
+<<<<<<< HEAD
+  
+  .login-right {
+    padding: 8rem 6rem;
+  }
+  
+  .login-box {
+    max-width: 600px;
+  }
+  
+=======
 
   .login-right {
     padding: 8rem 6rem;
@@ -558,15 +693,31 @@ onMounted(() => {
     max-width: 600px;
   }
 
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
   .login-title {
     font-size: 3rem;
     margin-bottom: 1.5rem;
   }
+<<<<<<< HEAD
+  
+=======
 
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
   .login-subtitle {
     font-size: 1.4rem;
     margin-bottom: 3rem;
   }
+<<<<<<< HEAD
+  
+  .brand-logo h1 {
+    font-size: 4rem;
+  }
+  
+  .brand-subtitle {
+    font-size: 1.6rem;
+  }
+  
+=======
 
   .brand-logo h1 {
     font-size: 4rem;
@@ -576,31 +727,52 @@ onMounted(() => {
     font-size: 1.6rem;
   }
 
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
   .form-input {
     padding: 1.25rem;
     font-size: 1.3rem;
     border-radius: 12px;
   }
+<<<<<<< HEAD
+  
+=======
 
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
   .login-button {
     padding: 1.25rem;
     font-size: 1.4rem;
     border-radius: 12px;
   }
+<<<<<<< HEAD
+  
+  .form-group {
+    margin-bottom: 2rem;
+  }
+  
+=======
 
   .form-group {
     margin-bottom: 2rem;
   }
 
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
   .form-group label {
     font-size: 1.2rem;
     margin-bottom: 0.75rem;
   }
+<<<<<<< HEAD
+  
+  .form-options {
+    margin: 2rem 0;
+  }
+  
+=======
 
   .form-options {
     margin: 2rem 0;
   }
 
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
   .remember-me, .forgot-link {
     font-size: 1.1rem;
   }
@@ -610,7 +782,11 @@ onMounted(() => {
   .login-container {
     padding: 1rem;
   }
+<<<<<<< HEAD
+  
+=======
 
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
   .login-right {
     padding: 1rem;
   }
@@ -618,16 +794,28 @@ onMounted(() => {
   .login-box {
     padding: 1rem;
   }
+<<<<<<< HEAD
+  
+  .login-title {
+    font-size: 1.5rem;
+  }
+  
+=======
 
   .login-title {
     font-size: 1.5rem;
   }
 
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
   .login-subtitle {
     font-size: 0.85rem;
     margin-bottom: 1rem;
   }
+<<<<<<< HEAD
+  
+=======
 
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
   .form-group {
     margin-bottom: 0.75rem;
   }
@@ -639,10 +827,18 @@ onMounted(() => {
     padding: 0.75rem;
     font-size: 1rem;
   }
+<<<<<<< HEAD
+  
+=======
 
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
   .form-input {
     padding: 0.6rem 0.75rem;
     font-size: 1rem;
   }
 }
+<<<<<<< HEAD
 </style>
+=======
+</style>
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845

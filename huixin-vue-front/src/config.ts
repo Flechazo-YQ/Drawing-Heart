@@ -3,6 +3,12 @@
 // 获取当前环境
 const isDevelopment = import.meta.env.DEV;
 
+<<<<<<< HEAD
+// 域名配置
+// 在开发和生产环境中，我们都希望API请求发往当前域名，
+// 所以API相关的域名配置应该为空字符串，以形成相对路径。
+const apiDomain = '';
+=======
 // 检测是否为移动设备
 const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
@@ -40,11 +46,18 @@ const getApiDomain = () => {
 };
 
 const apiDomain = getApiDomain();
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
 
 // 协议配置
 const protocol = ''; // API请求使用相对路径，协议由浏览器自动处理
 const wsProtocol = window.location.protocol === 'https:' ? 'wss://' : 'ws://';
 
+<<<<<<< HEAD
+// 检测是否为移动设备
+const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+=======
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
 // 导出配置对象
 export default {
     // API基础URL - 始终为空字符串，使所有API请求都成为相对路径请求。
@@ -54,6 +67,12 @@ export default {
     socketUrl: `${wsProtocol}${window.location.host}`,
 
     // 其他配置项 - 确保API路径与后端路由匹配
+<<<<<<< HEAD
+    uploadPath: '/save',          // 修改为正确的上传路径
+    loginPath: '/login',          // 与后端路由匹配
+    registerPath: '/register',     // 与后端路由匹配
+    chatPath: '/api/stream-chat',  // 保持不变
+=======
     uploadPath: '/api/save',          // 使用与后端匹配的路径
     loginPath: '/api/login',          // 使用与后端匹配的路径
     registerPath: '/api/register',     // 使用与后端匹配的路径
@@ -64,6 +83,7 @@ export default {
     clearChatContextPath: '/api/clear-chat-context', // 修改为与后端匹配的路径，去掉/api
     userInfoPath: '/api/user/info',   // 修改为与后端匹配的路径
     chatsPath: '/api/chats',      // 这个路径在后端已经有/api前缀，保持不变
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
 
     // 超时设置 - 移动设备使用更长的超时时间
     requestTimeout: isMobile ? 60000 : 30000,

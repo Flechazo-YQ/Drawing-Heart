@@ -21,16 +21,30 @@
           <form class="forget-form" @submit.prevent="handleSubmit">
             <div class="form-group">
               <label>电子邮箱</label>
+<<<<<<< HEAD
+              <input 
+                v-model="email"
+                type="email" 
+                class="form-input" 
+=======
               <input
                 v-model="email"
                 type="email"
                 class="form-input"
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
                 placeholder="请输入您的注册邮箱"
                 required
               />
             </div>
 
             <div class="form-group">
+<<<<<<< HEAD
+              <label>新密码</label>
+              <input 
+                v-model="password"
+                type="password" 
+                class="form-input" 
+=======
               <label>邮箱验证码</label>
               <div class="verification-code-group">
                 <input v-model="code" type="text" class="form-input" placeholder="请输入4位验证码" required />
@@ -46,6 +60,7 @@
                 v-model="password"
                 type="password"
                 class="form-input"
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
                 placeholder="请输入新密码"
                 required
               />
@@ -53,10 +68,17 @@
 
             <div class="form-group">
               <label>确认新密码</label>
+<<<<<<< HEAD
+              <input 
+                v-model="confirmPassword"
+                type="password" 
+                class="form-input" 
+=======
               <input
                 v-model="confirmPassword"
                 type="password"
                 class="form-input"
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
                 placeholder="请再次输入新密码"
                 required
               />
@@ -82,12 +104,18 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import config from '@/config' // 导入配置文件
+<<<<<<< HEAD
+=======
 import apiClient from '@/api' // 导入API客户端
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
 
 const router = useRouter()
 const email = ref('')
 const password = ref('')
 const confirmPassword = ref('')
+<<<<<<< HEAD
+const isLoading = ref(false)
+=======
 const code = ref('')
 const isLoading = ref(false)
 const isSendingCode = ref(false)
@@ -115,6 +143,7 @@ const sendCode = async () => {
     isSendingCode.value = false
   }
 }
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
 
 const handleSubmit = async () => {
   if (password.value !== confirmPassword.value) {
@@ -124,6 +153,28 @@ const handleSubmit = async () => {
 
   try {
     isLoading.value = true
+<<<<<<< HEAD
+    const response = await fetch(`${config.baseURL}/api/reset-password-direct`, {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        email: email.value,
+        password: password.value
+      })
+    })
+
+    const data = await response.json()
+    if (data.code === 0) {
+      ElMessage.success('密码重置成功，请使用新密码登录')
+      router.push('/login')
+    } else {
+      ElMessage.error(data.message || '重置失败，请检查邮箱是否正确')
+    }
+  } catch (error) {
+    ElMessage.error('网络错误，请稍后重试')
+=======
     const data = await apiClient.post(config.resetPasswordDirectPath, {
       email: email.value,
       password: password.value,
@@ -141,6 +192,7 @@ const handleSubmit = async () => {
     }
   } catch (error) {
     ElMessage.error('密码重置失败，请稍后再试')
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
   } finally {
     isLoading.value = false
   }
@@ -339,6 +391,8 @@ const handleSubmit = async () => {
   color: #3aa876;
 }
 
+<<<<<<< HEAD
+=======
 .verification-code-group {
   display: flex;
   gap: 0.5rem;
@@ -362,6 +416,7 @@ const handleSubmit = async () => {
   color: #a0aec0;
 }
 
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
 @media (max-width: 1024px) {
   .forget-content {
     grid-template-columns: 1fr;
@@ -389,4 +444,8 @@ const handleSubmit = async () => {
     font-size: 1.75rem;
   }
 }
+<<<<<<< HEAD
 </style>
+=======
+</style>
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845

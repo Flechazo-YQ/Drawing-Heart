@@ -83,7 +83,11 @@
       <div class="policy-section">
         <h2>9. 联系我们</h2>
         <p>如果您对本隐私政策有任何疑问或关切，请通过以下方式联系我们：</p>
+<<<<<<< HEAD
+        <p>电子邮件：support@huixin.edu.cn</p>
+=======
         <p>电子邮件：1241010058@zust.edu.cn</p>
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
       </div>
     </div>
   </div>
@@ -185,4 +189,8 @@ li {
   line-height: 1.6;
   color: #4a4a4a;
 }
+<<<<<<< HEAD
 </style>
+=======
+</style>
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845

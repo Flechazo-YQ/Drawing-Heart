@@ -1,5 +1,14 @@
 <template>
   <div class="register-container">
+<<<<<<< HEAD
+    <div class="register-content">
+      <div class="register-left">
+        <div class="brand-content">
+          <router-link to="/" class="brand-logo">
+            <h1>绘心同学</h1>
+            <p class="brand-subtitle">AI心理绘画治疗平台</p>
+          </router-link>
+=======
     <!-- 统一导航栏 -->
     <nav class="modern-nav">
       <div class="nav-content">
@@ -22,6 +31,7 @@
             <h1>绘心同学</h1>
             <p class="brand-subtitle">AI心理绘画治疗平台</p>
           </div>
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
           <div class="features-grid">
             <div class="feature-item">
               <span class="feature-icon">🎨</span>
@@ -55,6 +65,9 @@
 
             <div class="form-group">
               <label>电子邮箱</label>
+<<<<<<< HEAD
+              <input v-model="formData.email" type="email" class="form-input" placeholder="请输入邮箱地址" required />
+=======
               <input v-model="formData.email" type="email" class="form-input"
                      :class="{ 'error': emailError }"
                      placeholder="请输入邮箱地址"
@@ -72,6 +85,7 @@
                   {{ countdown > 0 ? `${countdown}s` : '发送验证码' }}
                 </button>
               </div>
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
             </div>
 
             <div class="form-group">
@@ -134,9 +148,12 @@ import apiClient from '@/api'
 
 const router = useRouter()
 const isLoading = ref(false)
+<<<<<<< HEAD
+=======
 const isSendingCode = ref(false)
 const countdown = ref(0)
 const emailError = ref('')
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
 
 const formData = reactive({
   username: '',
@@ -144,6 +161,13 @@ const formData = reactive({
   password: '',
   confirmPassword: '',
   agreeToTerms: false,
+<<<<<<< HEAD
+  gender: ''
+})
+
+const handleRegister = async () => {
+  // 表单验证 (保持不变)
+=======
   gender: '',
   code: ''
 })
@@ -305,6 +329,7 @@ const handleRegister = async () => {
     return
   }
 
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
   if (formData.password !== formData.confirmPassword) {
     ElMessage.error('两次输入的密码不一致')
     return
@@ -322,8 +347,12 @@ const handleRegister = async () => {
       username: formData.username,
       password: formData.password,
       email: formData.email,
+<<<<<<< HEAD
+      gender: formData.gender
+=======
       gender: formData.gender,
       code: formData.code
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
     })
 
     console.log('服务器响应：', data)
@@ -348,6 +377,8 @@ const handleRegister = async () => {
 </script>
 
 <style scoped>
+<<<<<<< HEAD
+=======
 /* 统一导航栏样式 */
 .modern-nav {
   position: fixed;
@@ -412,13 +443,17 @@ const handleRegister = async () => {
   font-weight: 600;
 }
 
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
 .register-container {
   min-height: 100vh;
   background-color: #f9fafb;
   display: flex;
   align-items: center;
   justify-content: center;
+<<<<<<< HEAD
+=======
   padding-top: 64px; /* 为导航栏留出空间 */
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
 }
 
 .register-content {
@@ -444,12 +479,19 @@ const handleRegister = async () => {
 }
 
 .brand-logo {
+<<<<<<< HEAD
+  text-decoration: none;
+=======
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 0.5rem;
   margin-bottom: 2rem;
+<<<<<<< HEAD
+=======
   cursor: default; /* 默认光标，不显示可点击状态 */
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
 }
 
 .brand-logo h1 {
@@ -572,6 +614,8 @@ const handleRegister = async () => {
   margin-bottom: 0.6rem;
 }
 
+<<<<<<< HEAD
+=======
 .verification-code-group {
   display: flex;
   gap: 0.5rem;
@@ -595,6 +639,7 @@ const handleRegister = async () => {
   color: #a0aec0;
 }
 
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
 .form-group label {
   display: block;
   margin-bottom: 0.25rem;
@@ -618,6 +663,8 @@ const handleRegister = async () => {
   box-shadow: 0 0 0 3px rgba(66, 185, 131, 0.1);
 }
 
+<<<<<<< HEAD
+=======
 .form-input.error {
   border-color: #ef4444;
   box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.1);
@@ -630,6 +677,7 @@ const handleRegister = async () => {
   margin-bottom: 0;
 }
 
+>>>>>>> 7e7174f50028628ea41bb94a551956f5d3e33845
 .gender-selector {
   display: flex;
   gap: 0.75rem;
