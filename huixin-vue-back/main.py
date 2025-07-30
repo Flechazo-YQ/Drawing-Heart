@@ -1862,22 +1862,32 @@ def handle_request_history(data):
 @socketio.on('user_connect')
 def handle_user_connect(data):
     token = data.get('token')
-    if not token:
-        emit('error', {'message': 'Token is missing'})
-        return
-    
-    user_id = verify_token(token)
-    if not user_id:
-        emit('error', {'message': 'Invalid token'})
-        return
-
-    # 兼容 user_id 可能为字符串或列表
-    if isinstance(user_id, (list, tuple)):
-        user_id_str = str(user_id[0])
-        username = user_id[1] if len(user_id) > 1 else "未知用户"
+    user_id = None
+    username = None
+    # 优先使用前端传递的 userId 和 username
+    if 'userId' in data and 'username' in data:
+        user_id_str = str(data['userId'])
+        username = data['username']
+        # 校验token有效性
+        if token:
+            user_id_check = verify_token(token)
+            if not user_id_check or (isinstance(user_id_check, (list, tuple)) and str(user_id_check[0]) != user_id_str):
+                emit('error', {'message': 'Invalid token'})
+                return
     else:
-        user_id_str = str(user_id)
-        username = "未知用户"
+        if not token:
+            emit('error', {'message': 'Token is missing'})
+            return
+        user_id = verify_token(token)
+        if not user_id:
+            emit('error', {'message': 'Invalid token'})
+            return
+        if isinstance(user_id, (list, tuple)):
+            user_id_str = str(user_id[0])
+            username = user_id[1] if len(user_id) > 1 else "未知用户"
+        else:
+            user_id_str = str(user_id)
+            username = "未知用户"
 
     user_connections[user_id_str] = {
         'sid': request.sid,

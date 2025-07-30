@@ -459,9 +459,12 @@ const initWebSocket = () => {
   // 连接事件
   socket.on('connect', () => {
     console.log('WebSocket连接成功')
-    // 用户连接时发送身份信息
+    // 用户连接时发送身份信息（补充用户ID和用户名）
+    const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}')
     socket.emit('user_connect', {
-      token: localStorage.getItem('token')
+      token: localStorage.getItem('token'),
+      userId: userInfo.id,
+      username: userInfo.username
     })
   })
 
