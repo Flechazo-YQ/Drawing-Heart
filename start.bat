@@ -24,14 +24,14 @@ if errorlevel 1 (
 )
 
 :: 检查 MongoDB 数据目录
-if not exist "huixin-vue-back\data\db" (
+if not exist "huixin-python-back\data\db" (
     echo [配置] 创建 MongoDB 数据目录...
-    mkdir "huixin-vue-back\data\db"
+    mkdir "huixin-python-back\data\db"
 )
 
 :: 检查并安装缺失的 Python 依赖
 echo [检查] Python 依赖包...
-cd huixin-vue-back
+cd huixin-python-back
 pip list > installed_packages.txt
 for /f "tokens=1,2 delims==" %%a in (requirements.txt) do (
     findstr /i /c:"%%a" installed_packages.txt > nul
@@ -70,18 +70,18 @@ if "%ERRORLEVEL%"=="0" (
     echo [信息] MongoDB 已经在运行
 ) else (
     echo [信息] 启动 MongoDB 服务器...
-    start "MongoDB" /B cmd /c "mongod --dbpath huixin-vue-back\data\db"
+    start "MongoDB" /B cmd /c "mongod --dbpath huixin-python-back\data\db"
     timeout /t 5
 )
 
 :: 启动后端服务
 echo [信息] 正在启动后端服务...
-start "Backend" cmd /k "cd huixin-vue-back && python main.py"
+start "Backend" cmd /k "cd huixin-python-back && python main.py"
 timeout /t 5
 
 :: 启动前端服务
 echo [信息] 正在启动前端服务...
-start "Frontend" cmd /k "cd huixin-vue-front && npm run dev"
+start "Frontend" cmd /k "cd huixin-python-front && npm run dev"
 timeout /t 3
 
 echo ====================================
