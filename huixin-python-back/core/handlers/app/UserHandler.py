@@ -33,7 +33,7 @@ class UserHandler:
 
     # 登录处理
     @staticmethod
-    @GlobalState.APP.route('/login', methods=['GET', 'POST'])
+    @GlobalState.APP.route('/api/login', methods=['GET', 'POST'])
     def login():
 
         # 如果是GET请求, 返回登录页面

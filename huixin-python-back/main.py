@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+import core.handlers.app  # 确保导入所有处理器
+
 import os, logging, sys
 
 from core.configs.MongoDBConfig import MongoDBConfig
