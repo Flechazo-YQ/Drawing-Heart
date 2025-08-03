@@ -7,7 +7,7 @@ class AdminTokenHandler:
 
     #生成管理员JWT
     @staticmethod
-    def generateAdminToken(adminUsername):
+    def generateAdminToken(adminUsername: str):
         payload = {
             'admin_username': adminUsername,
             'exp': datetime.datetime.utcnow() + datetime.timedelta(hours=24)
@@ -17,7 +17,7 @@ class AdminTokenHandler:
 
     #验证管理员JWT
     @staticmethod
-    def verifyAdminToken(token):
+    def verifyAdminToken(token: str):
         try:
             payload = jwt.decode(token, TokenState.HAS_SECRET_KEY, algorithms=[TokenState.ALGORITHM])
             adminUsername = payload['admin_username']

@@ -143,3 +143,22 @@ class UserManager:
             )
         except Exception as e:
             logging.error(f"更新用户统计失败: { str(e) }")
+
+    # 更新用户头像
+    def updateUserAvatar(self, userId: str, avatarUrl: str) -> bool:
+        try:
+            result = self.db.users.update_one(
+                { "_id": ObjectId(userId) },
+                {
+                    "$set": {
+                        "avatar": avatarUrl,
+                        "updated_at": datetime.datetime.utcnow()
+                    }
+                }
+            )
+            
+            return result.modified_count > 0
+        except Exception as e:
+            logging.error(f"更新用户头像失败: { str(e) }")
+
+            return False

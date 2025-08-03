@@ -9,7 +9,7 @@ class UserSocketHandler:
 
     @staticmethod
     @SocketState.socketio.on('user_connect')
-    def handleUserConnect(data):
+    def handleUserConnect(data: dict):
         token = data.get('token')
         userId = None
         username = None
@@ -83,7 +83,7 @@ class UserSocketHandler:
 
     @staticmethod
     @SocketState.socketio.on('user_message')
-    def handleUserMessage(data):
+    def handleUserMessage(data: dict):
 
         # 获取用户ID
         sid = flask.request.sid # type: ignore

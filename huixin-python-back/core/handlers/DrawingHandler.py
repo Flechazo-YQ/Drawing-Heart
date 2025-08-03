@@ -18,7 +18,7 @@ class DrawingHandler:
 
     # 文件类型校验
     @staticmethod
-    def allowedFile(filename):
+    def allowedFile(filename: str):
         return '.' in filename and filename.rsplit('.', 1)[1].lower() in GlobalState.ALLOWED_EXTENSIONS
 
     # 将图片文件转换为 data URL
@@ -153,7 +153,7 @@ class DrawingHandler:
 
     # 接入AI分析图片
     @classmethod
-    def analyzeImage(cls, filePath, fileName, userId = None):
+    def analyzeImage(cls, filePath: str, fileName: str, userId: str | None = None):
         logging.info(f"Starting analyze_image function for { fileName } at { filePath }, user_id: { userId }")
 
         try:

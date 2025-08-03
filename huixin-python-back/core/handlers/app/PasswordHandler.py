@@ -30,7 +30,7 @@ class PasswordHandler:
                 }), 404
                     
             # 生成重置密码的token
-            reset_token = UserTokenHandler.generateUserToken([str(user['_id']), user['username']])
+            resetToken = UserTokenHandler.generateUserToken([str(user['_id']), user['username']])
             
             # TODO: 发送重置密码邮件
             # 这里应该实现发送邮件的功能

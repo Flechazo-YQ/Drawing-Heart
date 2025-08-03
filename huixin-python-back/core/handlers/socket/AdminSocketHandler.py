@@ -9,7 +9,7 @@ class AdminSocketHandler:
 
     @staticmethod
     @SocketState.socketio.on('admin_auth')
-    def handleAdminAuth(data):
+    def handleAdminAuth(data: dict):
         token = data.get('token')
 
         if (not token):
@@ -57,7 +57,7 @@ class AdminSocketHandler:
 
     @staticmethod
     @SocketState.socketio.on('request_history')
-    def handleRequestHistory(data):
+    def handleRequestHistory(data: dict):
 
         # 验证是否为管理员
         sid = flask.request.sid # type: ignore
@@ -90,7 +90,7 @@ class AdminSocketHandler:
 
     @staticmethod
     @SocketState.socketio.on('admin_message')
-    def handleAdminMessage(data):
+    def handleAdminMessage(data: dict):
 
         # 验证是否为管理员
         sid = flask.request.sid # type: ignore

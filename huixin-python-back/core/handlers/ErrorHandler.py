@@ -7,7 +7,7 @@ class ErrorHandler:
     # 处理400错误
     @staticmethod
     @GlobalState.APP.errorhandler(400)
-    def badRequest(error):
+    def badRequest(error: Exception):
         return flask.jsonify({
             'status': 'error',
             'message': 'Bad Request - 请求格式不正确',
@@ -17,7 +17,7 @@ class ErrorHandler:
     # 处理404错误
     @staticmethod
     @GlobalState.APP.errorhandler(404)
-    def notFound(error):
+    def notFound(error: Exception):
         return flask.jsonify({
             'status': 'error', 
             'message': 'Not Found - 请求的资源不存在',
@@ -32,7 +32,7 @@ class ErrorHandler:
     # 处理500错误
     @staticmethod
     @GlobalState.APP.errorhandler(500)
-    def internalServerError(error):
+    def internalServerError(error: Exception):
         return flask.jsonify({
             'status': 'error',
             'message': 'Internal Server Error - 服务器内部错误', 

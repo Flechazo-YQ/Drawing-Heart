@@ -25,7 +25,7 @@ class EmailCodeHandler:
 
     # 发送邮件，辅助函数
     @classmethod
-    def sendEmail(cls, sendTo, content, subject='验证码'):
+    def sendEmail(cls, sendTo: str, content: str, subject: str = '验证码'):
         try:
             print(f'准备邮件: 发送到 { sendTo }, 主题 { subject }')
 
@@ -39,13 +39,9 @@ class EmailCodeHandler:
             smtp = smtplib.SMTP_SSL(cls.MAIL_HOST, cls.MAIL_PORT)
 
             print(f'登录邮箱: { cls.SEND_BY }')
-
             smtp.login(cls.SEND_BY, cls.PASSWORD)
-
             print(f'发送邮件: 从 { cls.SEND_BY } 到 { sendTo }')
-            
             smtp.sendmail(cls.SEND_BY, sendTo, message.as_string())
-
             print('关闭SMTP连接')
             smtp.quit()
             print('邮件发送成功')
@@ -55,7 +51,7 @@ class EmailCodeHandler:
 
     # 发送验证码
     @classmethod
-    def sendEmailCode(cls, sendTo):
+    def sendEmailCode(cls, sendTo: str):
         verificateCode = cls.generateCode()
         content = f'【绘心同学】您的验证码是：{ verificateCode }。60秒内有效，请勿向任何人泄露。如非本人操作，请忽略此邮件。'
 

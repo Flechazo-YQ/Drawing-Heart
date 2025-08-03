@@ -1,4 +1,5 @@
 import datetime, jwt
+import logging
 
 from core.states.TokenState import TokenState
 
@@ -6,7 +7,7 @@ class UserTokenHandler:
     
     #生成用户JWT
     @staticmethod
-    def generateUserToken(userId):
+    def generateUserToken(userId: str | list[str]):
         payload = {
             'user_id': userId,
             'exp': datetime.datetime.utcnow() + datetime.timedelta(minutes = TokenState.ACCESS_TOKEN_EXPIRE_MINUTES)
@@ -16,16 +17,27 @@ class UserTokenHandler:
 
     #验证用户JWT
     @classmethod
-    def verifyUserToken(cls, token):
+    def verifyUserToken(cls, token: str):
         try:
-            payload = jwt.decode(token, TokenState.HAS_SECRET_KEY, algorithms = [TokenState.ALGORITHM])
+            if (token.startswith('Bearer ')):
+                token = token[7:]
 
-            return payload['user_id']
+            payload = jwt.decode(token, TokenState.HAS_SECRET_KEY, algorithms = [TokenState.ALGORITHM])
+            userIdData = payload.get('user_id')
+
+            if (isinstance(userIdData, list)):
+                return userIdData
+
+            return [userIdData]
         
         except jwt.ExpiredSignatureError:
-            print("Token has expired")
+            logging.warning(f"令牌已过期")
             return None
         
         except jwt.InvalidTokenError:
-            print("Invalid token")
+            logging.warning(f"无效的令牌")
+            return None
+        
+        except Exception as e:
+            logging.error(f"验证用户令牌时发生错误: { str(e) }")
             return None

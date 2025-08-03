@@ -6,6 +6,7 @@ from flask import Flask
 from typing import Final
 from flask_cors import CORS
 from torchvision import transforms
+from flask import Blueprint
 
 class GlobalState:
     userLatestImages = {} # 存储用户的最新图片URL
@@ -31,6 +32,7 @@ class GlobalState:
     # 保存目录
     UPLOAD_FOLDER: Final[str] = 'uploads'
 
+    # Flask应用实例
     APP: Final[Flask] = Flask(__name__)
     APP.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
 

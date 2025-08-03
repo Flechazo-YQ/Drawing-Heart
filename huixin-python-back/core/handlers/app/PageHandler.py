@@ -64,5 +64,5 @@ class PageHandler:
     # 返回静态文件
     @staticmethod
     @GlobalState.APP.route('/templates/<filename>')
-    def getFile(filename):
+    def getFile(filename: str):
         return flask.send_from_directory('templates', filename)
