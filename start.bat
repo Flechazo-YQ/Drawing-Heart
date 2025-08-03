@@ -81,7 +81,7 @@ timeout /t 5
 
 :: 启动前端服务
 echo [信息] 正在启动前端服务...
-start "Frontend" cmd /k "cd huixin-python-front && npm run dev"
+start "Frontend" cmd /k "cd huixin-vue-front && npm run dev"
 timeout /t 3
 
 echo ====================================
