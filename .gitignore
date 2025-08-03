@@ -4,6 +4,7 @@ frpc.toml
 teststart.py
 
 huixin-vue-front/
+saved_drawings/
 __pycache__/
 
 *.pyc
