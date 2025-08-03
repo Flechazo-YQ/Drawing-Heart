@@ -1,7 +1,6 @@
 import logging, flask, datetime
 
 from core.configs.MongoDBConfig import MongoDBConfig
-from core.states.TokenState import TokenState
 from core.states.GlobalState import GlobalState
 from core.handlers.token.UserTokenHandler import UserTokenHandler
 from core.handlers.EmailCodeHandler import EmailCodeHandler
@@ -127,7 +126,7 @@ class UserHandler:
 
     # 注册处理
     @staticmethod
-    @GlobalState.APP.route('/register', methods=['GET', 'POST'])
+    @GlobalState.APP.route('/api/register', methods=['GET', 'POST'])
     def register():
         if (flask.request.method != 'POST'):
             return flask.render_template('register.html')

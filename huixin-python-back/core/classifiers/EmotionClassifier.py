@@ -55,8 +55,10 @@ class EmotionClassifier:
     def normalize(self, text):
         text = str(text)
         text = re.sub(r'\d+', '<NUM>', text)
+
         for slang, norm in self.slangDict.items():
             text = text.replace(slang, norm)
+            
         return text
 
     def predict(self, text):
