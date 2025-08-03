@@ -1,4 +1,10 @@
-/frpc.exe
-/open_frpc.bat
-/frpc.toml
-/app.log
+frpc.exe
+open_frpc.bat
+frpc.toml
+teststart.py
+
+huixin-vue-front/
+__pycache__/
+
+*.pyc
+*.log
