@@ -8,7 +8,7 @@ class PageHandler:
 
     # 返回主页的HTML内容
     @staticmethod
-    @GlobalState.APP.route('/')
+    @GlobalState.APP.route('/api')
     def index():
         return flask.jsonify({
             'status': 'success',
@@ -27,15 +27,15 @@ class PageHandler:
 
     # 返回绘图页面的HTML内容
     @staticmethod
-    @GlobalState.APP.route('/draw')
+    @GlobalState.APP.route('/api/draw')
     def draw():
         try:
             with open('templates/draw.html', 'r', encoding='utf-8') as file:
-                html_content = file.read()
+                htmlContent = file.read()
 
                 # 返回HTML内容作为响应
-            return Response(html_content, mimetype='text/html')
-        
+            return Response(htmlContent, mimetype='text/html')
+
         except FileNotFoundError:
 
             # 如果文件不存在，返回404错误
@@ -43,13 +43,13 @@ class PageHandler:
         
     # 返回分析页面的HTML内容
     @staticmethod
-    @GlobalState.APP.route('/analyse')
+    @GlobalState.APP.route('/api/analyse')
     def analyse():
         return flask.render_template('index.html')
 
     # 返回隐私页面的HTML内容
     @staticmethod
-    @GlobalState.APP.route('/privacy')
+    @GlobalState.APP.route('/api/privacy')
     def privacy():
 
         # 由于前端已经有Vue路由处理/privacy，我们应该返回前端应用
@@ -57,12 +57,12 @@ class PageHandler:
     
     # 返回聊天页面的HTML内容
     @staticmethod
-    @GlobalState.APP.route('/chat', methods=['GET'])
+    @GlobalState.APP.route('/api/chat', methods=['GET'])
     def chat():
         return flask.render_template('chat.html')
     
     # 返回静态文件
     @staticmethod
-    @GlobalState.APP.route('/templates/<filename>')
+    @GlobalState.APP.route('/api/templates/<filename>')
     def getFile(filename: str):
         return flask.send_from_directory('templates', filename)

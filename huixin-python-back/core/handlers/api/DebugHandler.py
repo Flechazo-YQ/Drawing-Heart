@@ -3,9 +3,9 @@ import flask, logging
 from core.configs.MongoDBConfig import MongoDBConfig
 from core.states.GlobalState import GlobalState
 from core.handlers.token.UserTokenHandler import UserTokenHandler
-from core.handlers.app.chat.UserChatHandler import UserChatHandler
+from core.handlers.api.chat.UserChatHandler import UserChatHandler
 
-class DebugChatHandler:
+class DebugHandler:
         
     #调试API: 检查用户的聊天状态
     @staticmethod
@@ -80,3 +80,17 @@ class DebugChatHandler:
             })
         except Exception as e:
             return flask.jsonify({'error': str(e)}), 500
+
+    # 调试API: 将相对路径转换为绝对URL
+    @staticmethod
+    @GlobalState.APP.route('/api/absolute-url', methods=['POST'])
+    def makeAbsoluteUrl(path: str):
+        if (not path or path.startswith(('http://', 'https://'))):
+            return path
+        
+        if (not path.startswith('/')):
+            path = '/' + path
+
+        # request必须在请求上下文中可用
+        baseUrl = flask.request.host_url.rstrip('/')
+        return f"{ baseUrl }{ path }"

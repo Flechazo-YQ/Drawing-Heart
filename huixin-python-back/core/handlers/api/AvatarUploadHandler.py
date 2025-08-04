@@ -8,7 +8,7 @@ from core.handlers.DrawingHandler import DrawingHandler
 class AvatarUploadHandler:
     
     @staticmethod
-    @GlobalState.APP.route('/uploads/<path:filename>')
+    @GlobalState.APP.route('/api/uploads/<path:filename>')
     def serveUploads(filename: str):
         try:
             pathParts = filename.split('/')

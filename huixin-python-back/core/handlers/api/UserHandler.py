@@ -53,13 +53,19 @@ class UserHandler:
 
         # 如果用户名和邮箱都找不到, 返回错误
         if (not user):
-            return flask.jsonify({'code': 1, 'message': '用户名或邮箱不存在'})
-        
+            return flask.jsonify({
+                'code': 1, 
+                'message': '用户名或邮箱不存在'
+            })
+
         # 验证密码
         storedHash = user.get('password')
 
         if (storedHash is None or not MongoDBConfig.userManager.verifyPasswordByHash(password, storedHash)):
-            return flask.jsonify({'code': 1, 'message': '密码错误'})
+            return flask.jsonify({
+                'code': 1, 
+                'message': '密码错误'
+            })
         
         # 如果密码正确, 生成用户令牌
         token = UserTokenHandler.generateUserToken(str(user['_id']))
@@ -104,6 +110,7 @@ class UserHandler:
 
         # 如果验证码发送成功, 记录验证码和过期时间
         if (code):
+
             # 存储验证码和过期时间（例如, 10分钟后）
             EmailCodeHandler.verificationCodes[email] = {
                 'code': code,
@@ -122,7 +129,6 @@ class UserHandler:
             'code': 1, 
             'message': '验证码发送失败, 请稍后重试'
         }), 500
-
 
     # 注册处理
     @staticmethod
@@ -187,13 +193,13 @@ class UserHandler:
 
     # 忘记密码处理
     @staticmethod
-    @GlobalState.APP.route('/forgot', methods=['GET', 'POST'])
+    @GlobalState.APP.route('/api/forgot', methods=['GET', 'POST'])
     def forgot():
         return flask.render_template('forgot.html')
     
     # 发送重置密码验证码处理
     @staticmethod
-    @GlobalState.APP.route('/reset-password', methods=['POST'])
+    @GlobalState.APP.route('/api/reset-password', methods=['POST'])
     def sendResetCode():
         try:
             data = flask.request.get_json()
@@ -241,7 +247,7 @@ class UserHandler:
 
     # 获取用户名, 并返回JSON格式的响应
     @staticmethod
-    @GlobalState.APP.route('/getusername', methods=['GET'])
+    @GlobalState.APP.route('/api/getusername', methods=['GET'])
     def getUsername():
         token = flask.request.headers.get('Authorization')
 
@@ -274,20 +280,26 @@ class UserHandler:
         token = flask.request.headers.get('Authorization')
 
         if (not token):
-            return flask.jsonify({ 'message': 'Token is missing!' }), 401
+            return flask.jsonify({ 
+                'message': 'Token is missing!' 
+            }), 401
         
         userId = UserTokenHandler.verifyUserToken(token)
 
         if (not userId):
-            return flask.jsonify({ 'message': 'Invalid token!' }), 401
+            return flask.jsonify({ 
+                'message': 'Invalid token!' 
+            }), 401
 
         try:
             user = MongoDBConfig.userManager.getUserById(userId[0])
 
             # 如果用户不存在, 返回404错误
             if (not user):
-                return flask.jsonify({ 'message': 'User not found' }), 404
-            
+                return flask.jsonify({ 
+                    'message': 'User not found' 
+                }), 404
+
             return flask.jsonify({
                 'code': 0,
                 'message': 'success',
@@ -305,8 +317,10 @@ class UserHandler:
         except Exception as e:
             logging.error(f'获取用户信息错误: { str(e) }')
 
-            return flask.jsonify({ 'message': str(e) }), 500
-        
+            return flask.jsonify({
+                'message': str(e)
+            }), 500
+
     #获取用户的绘画分析历史
     @staticmethod
     @GlobalState.APP.route('/api/user/analyses', methods=['GET'])

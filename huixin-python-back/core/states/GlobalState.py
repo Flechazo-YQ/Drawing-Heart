@@ -6,7 +6,6 @@ from flask import Flask
 from typing import Final
 from flask_cors import CORS
 from torchvision import transforms
-from flask import Blueprint
 
 class GlobalState:
     userLatestImages = {} # 存储用户的最新图片URL

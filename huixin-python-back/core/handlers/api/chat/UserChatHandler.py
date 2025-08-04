@@ -2,7 +2,7 @@ import logging, flask, threading
 
 from core.configs.MongoDBConfig import MongoDBConfig
 from core.handlers.token.UserTokenHandler import UserTokenHandler
-from core.handlers.app.chat.StreamChatHandler import StreamChatHandler
+from core.handlers.api.chat.StreamChatHandler import StreamChatHandler
 from core.states.GlobalState import GlobalState
 
 from flask import Response

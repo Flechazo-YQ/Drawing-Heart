@@ -1,7 +1,6 @@
 import jwt, datetime
 
 from core.states.TokenState import TokenState
-from core.states.GlobalState import GlobalState
 
 class AdminTokenHandler:
 
