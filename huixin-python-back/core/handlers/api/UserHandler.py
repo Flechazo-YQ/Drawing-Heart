@@ -4,6 +4,7 @@ from core.configs.MongoDBConfig import MongoDBConfig
 from core.states.GlobalState import GlobalState
 from core.handlers.token.UserTokenHandler import UserTokenHandler
 from core.handlers.EmailCodeHandler import EmailCodeHandler
+from core.handlers.api.DebugHandler import DebugHandler
 
 from typing import Any, Final
 
@@ -299,6 +300,10 @@ class UserHandler:
                 return flask.jsonify({ 
                     'message': 'User not found' 
                 }), 404
+            
+            # 获取相对路径并转换为绝对URL
+            avatarPath = user.get('avatar', '')
+            absoluteAvatarUrl = DebugHandler.makeAbsoluteUrl(avatarPath)
 
             return flask.jsonify({
                 'code': 0,
@@ -309,7 +314,7 @@ class UserHandler:
                     'email': user['email'],
                     'chance': user.get('chance', 10),
                     'is_team': user.get('is_team', ''),
-                    'avatar': user.get('avatar', ''),
+                    'avatar': absoluteAvatarUrl,
                     'gender': user.get('gender', '')
                 }
             })
