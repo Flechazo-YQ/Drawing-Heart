@@ -3,10 +3,11 @@ import re, torch, pandas
 from core.classifiers.SimpleBertClassifier import SimpleBertClassifier
 
 from transformers import BertTokenizer, BertConfig
+from typing import Final
 
 class EmotionClassifier:
-    device = torch.device("cuda" if torch.cuda.is_available() else "cpu")
-    labelMap = { 
+    DEVICE: Final[torch.device] = torch.device("cuda" if (torch.cuda.is_available()) else "cpu")
+    LABEL_MAP: Final[dict[int, str]] = { 
         0: "危险", 
         1: "负面", 
         2: "其他" 
@@ -17,7 +18,7 @@ class EmotionClassifier:
 
         self.tokenizer = BertTokenizer.from_pretrained(modelPath)
         config = BertConfig.from_pretrained(modelPath)
-        self.model = SimpleBertClassifier.from_pretrained(modelPath, config=config).to(self.device) # type: ignore
+        self.model = SimpleBertClassifier.from_pretrained(modelPath, config=config).to(self.DEVICE) # type: ignore
         self.model.eval()
 
     @staticmethod
@@ -64,12 +65,12 @@ class EmotionClassifier:
     def predict(self, text):
         text = self.normalize(text)
         inputs = self.tokenizer(text, return_tensors="pt", truncation=True, padding=True, max_length=128)
-        inputs = { k: v.to(self.device) for k, v in inputs.items() }
+        inputs = { k: v.to(self.DEVICE) for k, v in inputs.items() }
 
         with torch.no_grad():
 
             logits = self.model(**inputs)
             probs = torch.softmax(logits, dim=1).cpu().numpy()[0]
-            predLabel = self.labelMap[probs.argmax()]
+            predLabel = self.LABEL_MAP[probs.argmax()]
 
             return predLabel, probs

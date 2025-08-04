@@ -8,7 +8,7 @@ from core.handlers.token.UserTokenHandler import UserTokenHandler
 class UserSocketHandler:
 
     @staticmethod
-    @SocketState.socketio.on('user_connect')
+    @SocketState.SOCKETIO.on('user_connect')
     def handleUserConnect(data: dict):
         token = data.get('token')
         userId = None
@@ -68,7 +68,7 @@ class UserSocketHandler:
                 recentMessages = adminMessages[-3:] if (len(adminMessages) > 3) else adminMessages
 
                 for msg in recentMessages:
-                    SocketState.socketio.emit(
+                    SocketState.SOCKETIO.emit(
                         'admin_reply', 
                         {
                             'role': 'admin',
@@ -82,7 +82,7 @@ class UserSocketHandler:
         print(f'User { username } connected with SID: { request.sid }') # type: ignore
 
     @staticmethod
-    @SocketState.socketio.on('user_message')
+    @SocketState.SOCKETIO.on('user_message')
     def handleUserMessage(data: dict):
 
         # 获取用户ID
@@ -96,13 +96,13 @@ class UserSocketHandler:
                 break
 
         if (not userIdString):
-            SocketState.socketio.emit('error', {'message': 'User not identified'})
+            SocketState.SOCKETIO.emit('error', {'message': 'User not identified'})
             return
         
         content = data.get('content')
 
         if (not content):
-            SocketState.socketio.emit('error', {'message': 'No message content'})
+            SocketState.SOCKETIO.emit('error', {'message': 'No message content'})
             return
         
         currentTime = datetime.datetime.now().isoformat()
@@ -133,7 +133,7 @@ class UserSocketHandler:
 
             # 如果有管理员在处理，发送消息给管理员
             if (adminId and adminId in GlobalState.activeAdmins):
-                SocketState.socketio.emit('new_message', {
+                SocketState.SOCKETIO.emit('new_message', {
                     'userId': userIdString,
                     'role': 'user',
                     'content': content,
@@ -141,7 +141,7 @@ class UserSocketHandler:
                 }, room = 'admin_room') # type: ignore
             else:
                 # 没有管理员处理，向所有管理员发送提醒
-                SocketState.socketio.emit('dangerous_chat_alert', {
+                SocketState.SOCKETIO.emit('dangerous_chat_alert', {
                     'user': {
                         'userId': userIdString,
                         'username': GlobalState.userConnections[userIdString]['username'],
@@ -187,7 +187,7 @@ class UserSocketHandler:
                 logging.error(f"保存WebSocket用户危险消息失败: { str(e) }")
             
             # 通知所有管理员有新的危险对话
-            SocketState.socketio.emit('dangerous_chat_alert', {
+            SocketState.SOCKETIO.emit('dangerous_chat_alert', {
                 'user': {
                     'userId': userIdString,
                     'username': GlobalState.userConnections[userIdString]['username'],

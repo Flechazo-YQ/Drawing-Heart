@@ -66,7 +66,7 @@ class StreamChatHandler:
         
         # 通知所有在线管理员有新的危险对话
         logging.info(f"🔔 准备通知管理员危险对话, 用户id: { self.userIdString }")
-        SocketState.socketio.emit(
+        SocketState.SOCKETIO.emit(
             'dangerous_chat_alert', 
             {
                 'user': {

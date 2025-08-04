@@ -8,18 +8,18 @@ from core.handlers.token.AdminTokenHandler import AdminTokenHandler
 class AdminSocketHandler:
 
     @staticmethod
-    @SocketState.socketio.on('admin_auth')
+    @SocketState.SOCKETIO.on('admin_auth')
     def handleAdminAuth(data: dict):
         token = data.get('token')
 
         if (not token):
-            SocketState.socketio.emit('auth_response', {'status': 'error', 'message': 'Token is missing'})
+            SocketState.SOCKETIO.emit('auth_response', {'status': 'error', 'message': 'Token is missing'})
             return
 
         adminUsername = AdminTokenHandler.verifyAdminToken(token)
 
         if (not adminUsername):
-            SocketState.socketio.emit('auth_response', {'status': 'error', 'message': 'Invalid token'})
+            SocketState.SOCKETIO.emit('auth_response', {'status': 'error', 'message': 'Invalid token'})
             return
         
         # 保存管理员的会话ID
@@ -33,7 +33,7 @@ class AdminSocketHandler:
         flask_socketio.join_room('admin_room')
 
         # 发送认证成功响应
-        SocketState.socketio.emit('auth_response', {'status': 'success', 'message': 'Authentication successful'})
+        SocketState.SOCKETIO.emit('auth_response', {'status': 'success', 'message': 'Authentication successful'})
 
         # 发送当前所有危险对话列表
         chatList = []
@@ -53,10 +53,10 @@ class AdminSocketHandler:
                 'isActive': chatData['is_active']
             })
 
-        SocketState.socketio.emit('dangerous_chats_list', { 'chats': chatList })
+        SocketState.SOCKETIO.emit('dangerous_chats_list', { 'chats': chatList })
 
     @staticmethod
-    @SocketState.socketio.on('request_history')
+    @SocketState.SOCKETIO.on('request_history')
     def handleRequestHistory(data: dict):
 
         # 验证是否为管理员
@@ -69,17 +69,17 @@ class AdminSocketHandler:
                 break
 
         if (not adminUsername):
-            SocketState.socketio.emit('error', {'message': 'Unauthorized'})
+            SocketState.SOCKETIO.emit('error', {'message': 'Unauthorized'})
             return
         
         userId = data.get('userId')
 
         if (not userId or userId not in GlobalState.dangerousChats):
-            SocketState.socketio.emit('error', {'message': 'User not found'})
+            SocketState.SOCKETIO.emit('error', {'message': 'User not found'})
             return
         
         # 发送历史记录
-        SocketState.socketio.emit('chat_history', {
+        SocketState.SOCKETIO.emit('chat_history', {
             'userId': userId,
             'username': GlobalState.dangerousChats[userId]['username'],
             'messages': GlobalState.dangerousChats[userId]['messages']
@@ -89,7 +89,7 @@ class AdminSocketHandler:
         GlobalState.dangerousChats[userId]['admin_id'] = adminUsername
 
     @staticmethod
-    @SocketState.socketio.on('admin_message')
+    @SocketState.SOCKETIO.on('admin_message')
     def handleAdminMessage(data: dict):
 
         # 验证是否为管理员
@@ -102,7 +102,7 @@ class AdminSocketHandler:
                 break
 
         if (not adminUsername):
-            SocketState.socketio.emit('error', {'message': 'Unauthorized'})
+            SocketState.SOCKETIO.emit('error', {'message': 'Unauthorized'})
             return
         
         userId = data.get('userId')
@@ -110,7 +110,7 @@ class AdminSocketHandler:
         messageId = data.get('messageId')  # 获取消息ID
 
         if (not userId or not content or userId not in GlobalState.dangerousChats):
-            SocketState.socketio.emit('error', {'message': 'Invalid request'})
+            SocketState.SOCKETIO.emit('error', {'message': 'Invalid request'})
             return
         
         currentTime = datetime.datetime.now().isoformat()
@@ -137,7 +137,7 @@ class AdminSocketHandler:
             logging.error(f"保存管理员消息失败: { str(e) }")
         
         # 发送消息给所有管理员，更新聊天状态
-        SocketState.socketio.emit(
+        SocketState.SOCKETIO.emit(
             'new_message', 
             {
                 'userId': userId,
@@ -154,7 +154,7 @@ class AdminSocketHandler:
         if (userId in GlobalState.userConnections):
 
             # 向用户的房间发送消息
-            SocketState.socketio.emit(
+            SocketState.SOCKETIO.emit(
                 'admin_reply', 
                 {
                     'role': 'admin',

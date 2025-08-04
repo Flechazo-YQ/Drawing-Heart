@@ -54,7 +54,7 @@ if (__name__ == '__main__'):
         logging.warning("⚠️ 使用虚拟分类器，危险检测功能不可用")
     
     # 通过SocketIO启动应用
-    SocketState.socketio.run(
+    SocketState.SOCKETIO.run(
         GlobalState.APP, 
         debug=True, host='0.0.0.0', port=5000, allow_unsafe_werkzeug=True, log_output=True
     )
