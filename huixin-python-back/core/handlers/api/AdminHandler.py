@@ -1,5 +1,6 @@
 import flask
 
+from core.configs.BlueprintConfig import BlueprintConfig
 from core.states.GlobalState import GlobalState
 from core.states.TokenState import TokenState
 from core.handlers.token.AdminTokenHandler import AdminTokenHandler
@@ -7,7 +8,7 @@ from core.handlers.token.AdminTokenHandler import AdminTokenHandler
 class AdminHandler:
     
     @staticmethod
-    @GlobalState.APP.route('/api/admin/login', methods=['POST'])
+    @BlueprintConfig.apiRoutes('/admin/login', methods=['POST'])
     def adminLogin():
         data = flask.request.get_json()
         username = data.get('username')

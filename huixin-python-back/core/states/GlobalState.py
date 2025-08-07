@@ -1,11 +1,7 @@
 import os
 
-from core.classifiers.EmotionClassifier import EmotionClassifier
-
 from flask import Flask
-from typing import Final
-from flask_cors import CORS
-from torchvision import transforms
+from typing import Final, Optional
 
 class GlobalState:
     userLatestImages = {} # 存储用户的最新图片URL
@@ -17,42 +13,15 @@ class GlobalState:
     dangerousChats = {}
     activeAdmins = {}
 
+    sidToUser = {} # 存储sid到用户ID的映射
+
     URL: Final[str] = "https://api.siliconflow.cn/v1/chat/completions"
-
-    API_KEY: Final[str] = "2n6cCLk2oHeKUWVC8oVaNOHM"
-    SECRET_KEY: Final[str] = "4sL409ZBtELNDfQZcJRACg6lICmUX6zs"
-
-    # 允许的文件扩展名
-    ALLOWED_EXTENSIONS: Final[set] = {'png', 'jpg', 'jpeg', 'gif'}
-
-    # 保存图片的目录
-    SAVE_DIR: Final[str] = "saved_drawings"
-
-    # 保存目录
-    UPLOAD_FOLDER: Final[str] = 'uploads'
+    ALLOWED_EXTENSIONS: Final[set] = {'png', 'jpg', 'jpeg', 'gif'} # 允许的文件扩展名
+    SAVE_DIR: Final[str] = "saved_drawings" # 保存图片的目录
 
     # Flask应用实例
-    APP: Final[Flask] = Flask(__name__)
-    APP.config['UPLOAD_FOLDER'] = UPLOAD_FOLDER
+    APP: Optional[Flask] = None
 
-    # 情感分析模型
+    # 情感分析模型 - 延迟初始化，避免启动时就加载模型
     BASE_DIR = os.path.abspath(os.path.join(os.path.dirname(__file__), '..', '..'))
-    CLASSIFIER: Final[EmotionClassifier] = EmotionClassifier(
-        modelPath=os.path.join(BASE_DIR, "emotion_model"),
-        slangFile=os.path.join(BASE_DIR, "slang_map.csv")
-    )
-
-    # 配置更详细的CORS设置以支持移动端
-    CORSMOBILE: Final[CORS] = CORS(APP, resources={
-        r"/*": {
-            "origins": "*",
-            "methods": ["GET", "POST", "PUT", "DELETE", "OPTIONS"],
-            "allow_headers": ["Content-Type", "Authorization", "X-Requested-With"],
-            "supports_credentials": True
-        }
-    })
-
-    TRANSFORM: Final[transforms.Compose] = transforms.Compose([
-        transforms.Resize((224, 224)),
-        transforms.ToTensor(),
-    ])
+    CLASSIFIER: Optional[object] = None

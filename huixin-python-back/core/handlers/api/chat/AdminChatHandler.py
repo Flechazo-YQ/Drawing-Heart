@@ -1,5 +1,6 @@
 import flask
 
+from core.configs.BlueprintConfig import BlueprintConfig
 from core.states.GlobalState import GlobalState
 from core.handlers.token.AdminTokenHandler import AdminTokenHandler
 
@@ -7,7 +8,7 @@ class AdminChatHandler:
 
     # 管理员回复接口
     @staticmethod
-    @GlobalState.APP.route('/api/admin/reply', methods=['POST'])
+    @BlueprintConfig.apiRoutes('/admin/reply', methods=['POST'])
     def adminReply():
         # 验证管理员权限
         token = flask.request.headers.get('Authorization')
@@ -46,7 +47,7 @@ class AdminChatHandler:
     
     # 获取危险对话列表
     @staticmethod
-    @GlobalState.APP.route('/api/admin/dangerous-chats', methods=['GET'])
+    @BlueprintConfig.apiRoutes('/admin/chats/dangerous', methods=['GET'])
     def getDangerousChats():
         # 验证管理员权限
         token = flask.request.headers.get('Authorization')
@@ -84,8 +85,8 @@ class AdminChatHandler:
     
     # 获取特定用户的对话历史
     @staticmethod
-    @GlobalState.APP.route('/api/admin/chat-history/<user_id>', methods=['GET'])
-    def getChatHistory(userId):
+    @BlueprintConfig.apiRoutes('/admin/history/<userId>', methods=['GET'])
+    def getChatHistory(userId: str):
         # 验证管理员权限
         token = flask.request.headers.get('Authorization')
 
@@ -99,7 +100,9 @@ class AdminChatHandler:
 
         # 检查用户是否在危险对话列表中
         if (userId not in GlobalState.dangerousChats):
-            return flask.jsonify({'message': 'User not found in dangerous chats!'}), 404
+            return flask.jsonify({
+                'message': 'User not found in dangerous chats!'
+            }), 404
 
         # 返回对话历史
         return flask.jsonify({

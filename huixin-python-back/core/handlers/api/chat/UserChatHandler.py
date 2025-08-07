@@ -1,9 +1,11 @@
-import logging, flask, threading
+import logging, flask, datetime
 
+from core.configs.BlueprintConfig import BlueprintConfig
 from core.configs.MongoDBConfig import MongoDBConfig
 from core.handlers.token.UserTokenHandler import UserTokenHandler
 from core.handlers.api.chat.StreamChatHandler import StreamChatHandler
 from core.states.GlobalState import GlobalState
+from core.states.SocketState import SocketState
 
 from flask import Response
 from typing import Final
@@ -13,7 +15,7 @@ class UserChatHandler:
 
     # 创建新对话
     @staticmethod
-    @GlobalState.APP.route('/api/chats', methods=['POST'])
+    @BlueprintConfig.apiRoutes('/chats', methods=['POST'])
     def createNewChat():
         token = flask.request.headers.get('Authorization')
 
@@ -61,7 +63,7 @@ class UserChatHandler:
         
     # 隐藏对话(软删除)
     @staticmethod
-    @GlobalState.APP.route('/api/chats/<chat_id>', methods=['DELETE'])
+    @BlueprintConfig.apiRoutes('/chats/<chatId>', methods=['DELETE'])
     def hideChat(chatId: str):
         token = flask.request.headers.get('Authorization')
 
@@ -104,9 +106,51 @@ class UserChatHandler:
                 'message': f'删除对话失败: { str(e) }'
             }), 500
         
+    # 删除对话(硬删除)
+    @staticmethod
+    @BlueprintConfig.apiRoutes('/chats/<chatId>/delete', methods=['DELETE'])
+    def deleteChat(chatId: str):
+        token = flask.request.headers.get('Authorization')
+        
+        if (not token):
+            return flask.jsonify({
+                'message': 'Token is missing!'
+            }), 401
+        
+        userInfo = UserTokenHandler.verifyUserToken(token)
+
+        if (not userInfo):
+            return flask.jsonify({
+                'code': 401,
+                'message': 'Invalid token!'
+            }), 401
+
+        userId = str(userInfo[0])
+
+        try:
+            success = MongoDBConfig.chatManager.deleteChat(chatId, userId)
+
+            if (not success):
+                return flask.jsonify({
+                    'code': 404,
+                    'message': '删除失败, 对话不存在或无权限'
+                }), 404
+            
+            return flask.jsonify({
+                'code': 0,
+                'message': '对话删除成功'
+            })
+        except Exception as e:
+            logging.error(f'删除对话错误: { str(e) }')
+
+            return flask.jsonify({
+                'code': 500,
+                'message': f'删除对话失败: { str(e) }'
+            }), 500
+
     # 获取对话的消息历史
     @staticmethod
-    @GlobalState.APP.route('/api/chats/<chat_id>/messages', methods=['GET'])
+    @BlueprintConfig.apiRoutes('/chats/<chatId>/messages', methods=['GET'])
     def getChatMessages(chatId: str):
         token = flask.request.headers.get('Authorization')
 
@@ -228,7 +272,7 @@ class UserChatHandler:
         
     # 加载对话上下文
     @staticmethod
-    @GlobalState.APP.route('/api/chats/<chat_id>/load', methods=['POST'])
+    @BlueprintConfig.apiRoutes('/chats/<chatId>/load', methods=['POST'])
     def loadChatContext(chatId: str):
         token = flask.request.headers.get('Authorization')
 
@@ -292,7 +336,7 @@ class UserChatHandler:
         
     # 切换消息组的折叠状态
     @staticmethod
-    @GlobalState.APP.route('/api/chats/<chat_id>/toggle-group', methods=['POST'])
+    @BlueprintConfig.apiRoutes('/chats/<chatId>/toggle-group', methods=['POST'])
     def toggleMessageGroup(chatId: str):
         token = flask.request.headers.get('Authorization')
 
@@ -338,15 +382,15 @@ class UserChatHandler:
             }), 500
 
     # 处理用户消息
-    @classmethod
-    def processMessage(cls, message):
-        global dangerous
-
+    @staticmethod
+    def processMessage(message):
+        dangerous = 0.0  # 声明局部变量
+        
         try:
             logging.info(f'🔍 开始检测消息危险性: { message[:50] }...')
             
             # 先检查明显的危险关键词
-            hasDangerKeyword = any(keyword in message for keyword in cls.DANGER_KEYWORDS)
+            hasDangerKeyword = any(keyword in message for keyword in UserChatHandler.DANGER_KEYWORDS)
 
             if (hasDangerKeyword):
                 logging.warning(f'🚨 检测到危险关键词: { message }')
@@ -354,91 +398,117 @@ class UserChatHandler:
                 label = '危险'
             else:
                 # 使用模型进行预测
-                label, probs = GlobalState.CLASSIFIER.predict(message)
+                classifier = GlobalState.CLASSIFIER  # 获取分类器实例
+
+                if (not classifier):
+                    logging.error('❌ 分类器未初始化')
+                    return 0.0
+
+                label, probs = classifier.predict(message) # type: ignore
                 # probs是一个数组[危险概率, 负面概率, 其他概率]
                 # 根据模型定义：0: '危险', 1: '负面', 2: '其他'
-                dangerous = probs[0]  # 危险类别的概率
+                dangerous = float(probs[0])  # 确保是 float 类型
             
-            logging.info(f'🎯 危险检测结果: label={ label }, dangerous_prob={ dangerous:.4f }')
+            logging.info(f'🎯 危险检测结果: label={ label }, dangerous_prob={ dangerous:.4f}')
 
             return dangerous
         except Exception as e:
             logging.error(f'❌ 情感分析模型预测失败: { str(e) }')
 
             # 如果模型预测失败, 但包含危险关键词, 仍然标记为危险
-            dangerous = 0.9 if any(keyword in message for keyword in cls.DANGER_KEYWORDS) else 0.0
+            dangerous = 0.9 if any(keyword in message for keyword in UserChatHandler.DANGER_KEYWORDS) else 0.0
 
             return dangerous
         
     # 流式聊天接口(AI对话)
-    @classmethod
-    @GlobalState.APP.route('/api/stream-chat', methods=['POST'])
-    def streamChat(cls):
+    @staticmethod
+    @BlueprintConfig.apiRoutes('/chats/stream', methods=['POST'])
+    def streamChat():
         token = flask.request.headers.get('Authorization')
 
         if (not token):
-            return flask.jsonify({'message': 'Token is missing!'}), 401
+            return flask.jsonify({
+                'message': 'Token is missing!'
+            }), 401
         
-        userId = UserTokenHandler.verifyUserToken(token)
+        userInfo = UserTokenHandler.verifyUserToken(token)
 
-        if (not userId):
-            return flask.jsonify({'message': 'Invalid token!'}), 401
-        
-        user = flask.request.json
+        if (not userInfo):
+            return flask.jsonify({
+                'message': 'Invalid token!'
+            }), 401
+
+        userId = str(userInfo[0])
+        user = MongoDBConfig.userManager.getUserById(userId)
 
         if (not user):
-            return flask.Response('Invalid JSON or missing request body', status=400)
+            logging.error(f"❌ 严重错误: Token有效, 但无法在数据库中找到用户 { userId }")
+            return flask.jsonify({
+                'message': '用户不存在'
+            }), 404
         
-        userMessage = user.get('message', '')
+        userName = user.get('username', '未知用户')
+        data = flask.request.json
 
-        # 检测消息是否危险
-        logging.info(f'📝 开始处理用户消息: { userMessage[:30] }...')
-
-        # 启用危险检测
-        thread = threading.Thread(target=UserChatHandler.processMessage, args=(userMessage,))
-        thread.start()
-        thread.join()  # 等待线程完成
+        if (not data):
+            return flask.jsonify({
+                'message': '请求数据不能为空!'
+            }), 400
         
-        logging.info(f'⚠️ 危险检测完成, dangerous值: { dangerous }')
-        
-        # 获取或创建当前聊天 - 统一使用字符串类型的用户ID
-        # 兼容 userId 可能为字符串或列表
-        if (isinstance(userId, (list, tuple))):
-            userIdString = str(userId[0])
-            username = userId[1] if (len(userId) > 1) else '未知用户'
-        else:
-            userIdString = str(userId)
-            username = '未知用户'
+        userMessage = data.get('message', '')
 
-        currentChatId = GlobalState.userCurrentChats.get(userIdString)
-        userContext = GlobalState.userContexts.get(userIdString, [])
+        logging.info(f'📝 开始处理用户 { userName } ({ userId }) 的消息: { userMessage[:30] }...')
+        
+        dangerousProb = UserChatHandler.processMessage(userMessage)
+
+        logging.info(f'🔍 消息危险性检测结果: { dangerousProb }')
+
+        currentChatId = GlobalState.userCurrentChats.get(userId)
 
         if (not currentChatId):
-            chatType = 'dangerous' if (dangerous > 0.5) else 'normal'
-            currentChatId = MongoDBConfig.chatManager.createChat(userIdString, '新对话', chatType)
-            GlobalState.userCurrentChats[userIdString] = currentChatId
-
-            logging.info(f'为用户 { userIdString } 创建新对话: { currentChatId }')
+            chatType = 'dangerous' if (dangerousProb > 0.5) else 'normal'
+            currentChatId = MongoDBConfig.chatManager.createChat(userInfo[0], '新对话', chatType)
+            
+            GlobalState.userCurrentChats[userId] = currentChatId
+            logging.info(f'为用户 { userName } ({ userId }) 创建新对话: { currentChatId }')
         else:
-            logging.info(f'用户 { userIdString } 使用现有对话: { currentChatId }')
-        
-        streamChatHelper = StreamChatHandler(
-            userId, userIdString, username, userMessage, dangerous, currentChatId, userContext
+            logging.info(f'用户 { userName } ({ userId }) 使用当前对话: { currentChatId }')
+
+        streamHandler = StreamChatHandler(
+            userId=userId,
+            userName=userName,
+            userMessage=userMessage,
+            dangerous=dangerousProb,
+            currentChatId=currentChatId,
+            userContext=GlobalState.userContexts.get(userId, [])
         )
 
-        # 如果消息危险, 处理危险消息
-        if (dangerous > 0.3):
-            return streamChatHelper.handleDangerousMessage()
+        if (dangerousProb > 0.3):
+            logging.warning(f"🚨 检测到高危消息！准备转接人工。用户: { userName }, 对话ID: { currentChatId }")
+
+            transferData = {
+                'userId': userId,
+                'userName': userName,
+                'chatId': currentChatId,
+                'message': userMessage,
+                'dangerProb': dangerousProb,
+                'timestamp': datetime.datetime.utcnow().isoformat()
+            }
+
+            task = {
+                'event': 'human_transfer_request',
+                'data': transferData
+            }
+            SocketState.socketioTaskQueue.put(task)
+            logging.info(f"🔔 已发送人工干预请求给管理员, 用户: { userName }, 对话ID: { currentChatId }")
+            return streamHandler.handleDangerousMessage()
         
-        # 如果消息不危险, 正常处理
-        # 每次对话都重新获取用户在当日或4小时内的最新绘画分析结果
-        streamChatHelper.handleNormalMessage()
+        streamHandler.handleNormalMessage()
 
-        payload = streamChatHelper.generateAIPayload()
+        payload = streamHandler.generateAIPayload()
 
-        # 返回流式响应
         return Response(
-            flask.stream_with_context(streamChatHelper.generateAIMessage(payload)),
+            flask.stream_with_context(streamHandler.generateAIMessage(payload)),
             mimetype='text/event-stream',
             headers={
                 'Cache-Control': 'no-cache',
@@ -448,7 +518,7 @@ class UserChatHandler:
 
     # 清除用户聊天上下文
     @staticmethod
-    @GlobalState.APP.route('/api/clear-chat-context', methods = ['POST'])
+    @BlueprintConfig.apiRoutes('/clear/chats/context', methods=['POST'])
     def clearChatContext():
         token = flask.request.headers.get('Authorization')
 
@@ -492,7 +562,7 @@ class UserChatHandler:
         
     # 清除用户当前活跃聊天, 下次对话将创建新的聊天
     @staticmethod
-    @GlobalState.APP.route('/api/clear-current-chat', methods=['POST'])
+    @BlueprintConfig.apiRoutes('/clear/chats/current', methods=['POST'])
     def clearCurrentChat():
         token = flask.request.headers.get('Authorization')
 
@@ -533,7 +603,7 @@ class UserChatHandler:
         
     # 获取用户的对话列表
     @staticmethod
-    @GlobalState.APP.route('/api/chats', methods=['GET'])
+    @BlueprintConfig.apiRoutes('/chats/list', methods=['GET'])
     def getUserChats():
         token = flask.request.headers.get('Authorization')
 

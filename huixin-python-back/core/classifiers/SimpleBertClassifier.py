@@ -12,8 +12,8 @@ class SimpleBertClassifier(BertPreTrainedModel):
         self.classifier = nn.Linear(config.hidden_size, config.num_labels)
         self.init_weights()
 
-    def forward(self, inputIds, attentionMask=None, tokenTypeIds=None):
-        outputs = self.bert(input_ids=inputIds, attention_mask=attentionMask, token_type_ids=tokenTypeIds)
+    def forward(self, input_ids, attention_mask=None, token_type_ids=None):
+        outputs = self.bert(input_ids=input_ids, attention_mask=attention_mask, token_type_ids=token_type_ids)
         pooled_output = self.dropout(outputs[1])
         logits = self.classifier(pooled_output)
 

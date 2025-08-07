@@ -1,15 +1,15 @@
 import logging, flask
 
+from core.configs.BlueprintConfig import BlueprintConfig
 from core.configs.MongoDBConfig import MongoDBConfig
 from core.handlers.token.UserTokenHandler import UserTokenHandler
-from core.states.GlobalState import GlobalState
 from core.states.TokenState import TokenState
 
 class PasswordHandler:
 
     # 重置密码
     @staticmethod
-    @GlobalState.APP.route('/api/reset-password', methods=['POST'])
+    @BlueprintConfig.apiRoutes('/password/reset', methods=['POST'])
     def resetPassword():
         try:
             data = flask.request.get_json()
@@ -51,7 +51,7 @@ class PasswordHandler:
         
     # 更新密码
     @staticmethod
-    @GlobalState.APP.route('/api/update-password', methods=['POST'])
+    @BlueprintConfig.apiRoutes('/password/update', methods=['POST'])
     def updatePassword():
         try:
             data = flask.request.get_json()
@@ -99,7 +99,7 @@ class PasswordHandler:
         
     # 直接重置密码
     @staticmethod
-    @GlobalState.APP.route('/api/reset-password-direct', methods=['POST'])
+    @BlueprintConfig.apiRoutes('/password/reset/direct', methods=['POST'])
     def resetPasswordDirect():
         try:
             data = flask.request.get_json()

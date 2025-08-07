@@ -1,7 +1,7 @@
 import logging, flask, datetime
 
+from core.configs.BlueprintConfig import BlueprintConfig
 from core.configs.MongoDBConfig import MongoDBConfig
-from core.states.GlobalState import GlobalState
 from core.handlers.token.UserTokenHandler import UserTokenHandler
 from core.handlers.EmailCodeHandler import EmailCodeHandler
 from core.handlers.api.DebugHandler import DebugHandler
@@ -33,7 +33,7 @@ class UserHandler:
 
     # 登录处理
     @staticmethod
-    @GlobalState.APP.route('/api/login', methods=['GET', 'POST'])
+    @BlueprintConfig.apiRoutes('/login', methods=['GET', 'POST'])
     def login():
 
         # 如果是GET请求, 返回登录页面
@@ -89,7 +89,7 @@ class UserHandler:
     
     # 发送验证码处理
     @staticmethod
-    @GlobalState.APP.route('/api/send-code', methods=['POST'])
+    @BlueprintConfig.apiRoutes('/code/send', methods=['POST'])
     def sendVerificationCode():
         data = flask.request.get_json()
         email = data.get('email')
@@ -133,7 +133,7 @@ class UserHandler:
 
     # 注册处理
     @staticmethod
-    @GlobalState.APP.route('/api/register', methods=['GET', 'POST'])
+    @BlueprintConfig.apiRoutes('/register', methods=['GET', 'POST'])
     def register():
         if (flask.request.method != 'POST'):
             return flask.render_template('register.html')
@@ -194,13 +194,13 @@ class UserHandler:
 
     # 忘记密码处理
     @staticmethod
-    @GlobalState.APP.route('/api/forgot', methods=['GET', 'POST'])
+    @BlueprintConfig.apiRoutes('/forgot', methods=['GET', 'POST'])
     def forgot():
         return flask.render_template('forgot.html')
     
     # 发送重置密码验证码处理
     @staticmethod
-    @GlobalState.APP.route('/api/reset-password', methods=['POST'])
+    @BlueprintConfig.apiRoutes('/code/reset', methods=['POST'])
     def sendResetCode():
         try:
             data = flask.request.get_json()
@@ -248,7 +248,7 @@ class UserHandler:
 
     # 获取用户名, 并返回JSON格式的响应
     @staticmethod
-    @GlobalState.APP.route('/api/getusername', methods=['GET'])
+    @BlueprintConfig.apiRoutes('/name', methods=['GET'])
     def getUsername():
         token = flask.request.headers.get('Authorization')
 
@@ -276,7 +276,7 @@ class UserHandler:
         
     # 获取用户详细信息
     @staticmethod
-    @GlobalState.APP.route('/api/user/info', methods=['GET'])
+    @BlueprintConfig.apiRoutes('/info', methods=['GET'])
     def getUserInfo():
         token = flask.request.headers.get('Authorization')
 
@@ -328,8 +328,8 @@ class UserHandler:
 
     #获取用户的绘画分析历史
     @staticmethod
-    @GlobalState.APP.route('/api/user/analyses', methods=['GET'])
-    def getUserAnalyses():
+    @BlueprintConfig.apiRoutes('/analysis', methods=['GET'])
+    def getUserAnalysis():
         token = flask.request.headers.get('Authorization')
 
         if (not token):
@@ -367,7 +367,7 @@ class UserHandler:
         
     # 获取用户当日的绘画分析结果
     @staticmethod
-    @GlobalState.APP.route('/api/user/today-analysis', methods=['GET'])
+    @BlueprintConfig.apiRoutes('/analysis/today', methods=['GET'])
     def getTodayAnalysis():
         token = flask.request.headers.get('Authorization')
 
@@ -403,7 +403,7 @@ class UserHandler:
         
     #获取用户最新的绘画分析结果(可选择时间限制)
     @classmethod
-    @GlobalState.APP.route('/api/user/latest-analysis', methods=['GET'])
+    @BlueprintConfig.apiRoutes('/analysis/latest', methods=['GET'])
     def getLatestAnalysis(cls):
         token = flask.request.headers.get('Authorization')
 

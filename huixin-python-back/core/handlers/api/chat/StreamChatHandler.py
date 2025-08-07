@@ -14,9 +14,8 @@ class StreamChatHandler:
         "Content-Type": "application/json"
     }
 
-    def __init__(self, userId, userIdString, userName, userMessage, dangerous, currentChatId, userContext):
+    def __init__(self, userId, userName, userMessage, dangerous, currentChatId, userContext):
         self.userId = userId
-        self.userIdString = userIdString
         self.userName = userName
         self.userMessage = userMessage
         self.dangerous = dangerous
@@ -29,13 +28,12 @@ class StreamChatHandler:
         MongoDBConfig.chatManager.updateChat(self.currentChatId, {"type": "dangerous"})
 
         logging.warning(f'🚨 检测到危险消息, 需要人工干预: {self.userMessage }')
-        userContext = GlobalState.userContexts.get(self.userIdString, [])
 
-        if (self.userIdString not in GlobalState.dangerousChats):
-            GlobalState.dangerousChats[self.userIdString] = {
+        if (self.userId not in GlobalState.dangerousChats):
+            GlobalState.dangerousChats[self.userId] = {
                 'username': self.userName,
                 'chat_id': self.currentChatId,
-                'messages': userContext.copy() + [
+                'messages': self.userContext.copy() + [
                     { 
                         "role": "user", 
                         "content": self.userMessage 
@@ -46,11 +44,11 @@ class StreamChatHandler:
                 'last_updated': datetime.datetime.now().isoformat()
             }
         else:
-            GlobalState.dangerousChats[self.userIdString]['messages'].append({
+            GlobalState.dangerousChats[self.userId]['messages'].append({
                 "role": "user",
                 "content": self.userMessage
             })
-            GlobalState.dangerousChats[self.userIdString]['last_updated'] = datetime.datetime.now().isoformat()
+            GlobalState.dangerousChats[self.userId]['last_updated'] = datetime.datetime.now().isoformat()
 
         # 保存用户消息到MongoDB
         try:
@@ -65,12 +63,12 @@ class StreamChatHandler:
             logging.error(f"保存危险消息失败: { str(e) }")
         
         # 通知所有在线管理员有新的危险对话
-        logging.info(f"🔔 准备通知管理员危险对话, 用户id: { self.userIdString }")
-        SocketState.SOCKETIO.emit(
+        logging.info(f"🔔 准备通知管理员危险对话, 用户id: { self.userId }")
+        SocketState.socketio.emit(
             'dangerous_chat_alert', 
             {
                 'user': {
-                    'userId': self.userIdString,
+                    'userId': self.userId,
                     'username': self.userName,
                     'lastMessage': self.userMessage
                 }
@@ -80,7 +78,7 @@ class StreamChatHandler:
         logging.info(f"✅ 已发送危险对话通知到管理员房间")
         
         # 添加系统消息到危险对话记录
-        GlobalState.dangerousChats[self.userIdString]['messages'].append({
+        GlobalState.dangerousChats[self.userId]['messages'].append({
             "role": "admin", 
             "content": StreamChatHandler.ADMINMESSAGE,
             "time": datetime.datetime.now().isoformat(),
@@ -199,10 +197,10 @@ class StreamChatHandler:
     def updateContextAndTitle(self, assistantReply):
 
         # 更新上下文
-        if (self.userId not in self.userContext):
-            self.userContext[self.userId] = []
+        if (self.userId not in GlobalState.userContexts):
+            GlobalState.userContexts[self.userId] = []
 
-        self.userContext[self.userId].extend([
+        GlobalState.userContexts[self.userId].extend([
             {
                 "role": "user", 
                 "content": self.userMessage
@@ -213,8 +211,8 @@ class StreamChatHandler:
             }
         ])
 
-        if (len(self.userContext[self.userId]) > 10):
-            self.userContext[self.userId] = self.userContext[self.userId][-10:]
+        if (len(GlobalState.userContexts[self.userId]) > 10):
+            GlobalState.userContexts[self.userId] = GlobalState.userContexts[self.userId][-10:]
             
         # 更新标题
         try:
@@ -230,7 +228,7 @@ class StreamChatHandler:
                 "content": self.systemContent,
                 "role": "system"
             }
-        ] + self.userContext[self.userId] + [
+        ] + self.userContext + [
             {"content": self.userMessage, "role": "user"}
         ]
 

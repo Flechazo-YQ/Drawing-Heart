@@ -1,12 +1,11 @@
-import flask
+import flask, logging
 
-from core.states.GlobalState import GlobalState
+from flask import Flask
 
 class ErrorHandler:
 
     # 处理400错误
     @staticmethod
-    @GlobalState.APP.errorhandler(400)
     def badRequest(error: Exception):
         return flask.jsonify({
             'status': 'error',
@@ -16,7 +15,6 @@ class ErrorHandler:
     
     # 处理404错误
     @staticmethod
-    @GlobalState.APP.errorhandler(404)
     def notFound(error: Exception):
         return flask.jsonify({
             'status': 'error', 
@@ -31,10 +29,19 @@ class ErrorHandler:
     
     # 处理500错误
     @staticmethod
-    @GlobalState.APP.errorhandler(500)
     def internalServerError(error: Exception):
         return flask.jsonify({
             'status': 'error',
             'message': 'Internal Server Error - 服务器内部错误', 
             'code': 500
         }), 500
+    
+    @classmethod
+    def registerErrorHandlers(cls, app: Flask):
+        app.register_error_handler(400, cls.badRequest)
+        app.register_error_handler(404, cls.notFound)
+        app.register_error_handler(500, cls.internalServerError)
+
+        logging.info("✅ 错误处理器已注册")
+
+        

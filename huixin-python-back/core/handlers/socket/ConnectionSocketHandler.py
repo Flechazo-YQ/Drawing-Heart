@@ -6,12 +6,12 @@ from core.states.GlobalState import GlobalState
 class ConnectionSocketHandler:
 
     @staticmethod
-    @SocketState.SOCKETIO.on('connect')
+    @SocketState.socketio.on('connect')
     def handleConnect():
         print('Client connected')
 
     @staticmethod
-    @SocketState.SOCKETIO.on('disconnect')
+    @SocketState.socketio.on('disconnect')
     def handleDisconnect():
         print('Client disconnected')
 

@@ -15,11 +15,6 @@ class DrawingHandler:
         '.webp': 'image/webp',
     }
 
-    # 文件类型校验
-    @staticmethod
-    def allowedFile(filename: str):
-        return '.' in filename and filename.rsplit('.', 1)[1].lower() in GlobalState.ALLOWED_EXTENSIONS
-
     # 将图片文件转换为 data URL
     @classmethod
     def imageToDataUrl(cls, filePath: str):

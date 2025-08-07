@@ -1,14 +1,12 @@
-import flask
-
-from core.states.GlobalState import GlobalState
+import flask, logging
 
 from flask import Response
+from flask import Flask
 
 class AppConfig:
 
     # 全局OPTIONS处理，支持预检请求
     @staticmethod
-    @GlobalState.APP.before_request
     def handlePreflight():
         if (flask.request.method != "OPTIONS"):
             return
@@ -20,3 +18,11 @@ class AppConfig:
         response.headers.add('Access-Control-Allow-Methods', "*")
 
         return response
+    
+    @classmethod
+    def registerAppConfig(cls, app: Flask):
+        app.before_request(cls.handlePreflight)
+
+        logging.info("✅ 全局配置已注册")
+
+        

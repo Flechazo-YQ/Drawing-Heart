@@ -1,72 +1,53 @@
 import logging, os, flask, secrets
 
+from core.configs.BlueprintConfig import BlueprintConfig
 from core.configs.MongoDBConfig import MongoDBConfig
 from core.handlers.token.UserTokenHandler import UserTokenHandler
-from core.states.GlobalState import GlobalState
-from core.handlers.DrawingHandler import DrawingHandler
+from core.handlers.FileHandler import FileHandler
 
 class AvatarUploadHandler:
     
     @staticmethod
-    @GlobalState.APP.route('/api/uploads/<path:filename>')
+    @BlueprintConfig.uploadsRoutes('/<path:filename>')
     def serveUploads(filename: str):
+        
+        
         try:
-            pathParts = filename.split('/')
+            uploadFolder = flask.current_app.config['UPLOAD_FOLDER']
+            logging.info(f"请求文件: { filename }, 使用上传目录: { uploadFolder }")
 
-            if (len(pathParts) > 1):
-                subdir = os.path.join(GlobalState.UPLOAD_FOLDER, os.path.dirname(filename))
-                baseFilename = os.path.basename(filename)
+            # 构建完整路径
+            print(f"原始文件名: { filename }")
+            filename = filename.replace('/', os.sep).replace('\\', os.sep)
+            print(f"标准化后的文件名: { filename }")
+            fullPath = os.path.join(uploadFolder, filename)
+            logging.info(f"尝试提供文件: { fullPath }")
 
-                logging.info(f"提供文件: { subdir }/{ baseFilename }")
+            if (os.path.isfile(fullPath)):
+                response = flask.send_file(fullPath)
 
-                fullPath = os.path.join(subdir, baseFilename)
-
-                if (os.path.exists(fullPath)):
-                    logging.info(f"文件存在: { fullPath }")
-
-                    response = flask.send_from_directory(subdir, baseFilename)
-
-                    response.headers['Access-Control-Allow-Origin'] = '*'
-                    response.headers['Cache-Control'] = 'public, max-age=86400'
-
-                    return response
-                else:
-                    logging.warning(f"文件不存在: { fullPath }")
-
-                    return flask.jsonify({
-                        'error': '文件不存在'
-                    }), 404
-                
-            logging.info(f"提供文件: { GlobalState.UPLOAD_FOLDER }/{ filename }")
-
-            fullPath = os.path.join(GlobalState.UPLOAD_FOLDER, filename)
-
-            if (os.path.exists(fullPath)):
-                logging.info(f"文件存在: { fullPath }")
-
-                response = flask.send_from_directory(GlobalState.UPLOAD_FOLDER, filename)
-
-                response.headers['Access-Control-Allow-Origin'] = '*'
                 response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
                 response.headers['Pragma'] = 'no-cache'
                 response.headers['Expires'] = '0'
+                response.headers['Access-Control-Allow-Origin'] = '*'
 
                 return response
             else:
                 logging.warning(f"文件不存在: { fullPath }")
-
                 return flask.jsonify({
-                    'error': '文件不存在'
+                    'error': 'File not found',
+                    'path': fullPath
                 }), 404
+                
         except Exception as e:
-            logging.error(f"提供文件时出错: { str(e) }")
+            logging.exception(f"提供文件时出错: { str(e) }")
             return flask.jsonify({
-                'error': str(e)
+                'error': f'Server error: { str(e) }'
             }), 500
 
     # 用户头像上传接口
     @staticmethod
-    @GlobalState.APP.route('/api/user/upload-avatar', methods=['POST'])
+    @BlueprintConfig.apiRoutes('/avatar/upload', methods=['POST'])
     def uploadAvatar():
         token = flask.request.headers.get('Authorization')
 
@@ -108,7 +89,7 @@ class AvatarUploadHandler:
                 }), 400
 
             # 检查文件类型
-            if (not DrawingHandler.allowedFile(file.filename)):
+            if (not FileHandler.allowedFile(file.filename)):
                 logging.error(f"头像上传失败: 不支持的文件类型 { file.filename }")
                 return flask.jsonify({
                     'code': 1, 
@@ -175,4 +156,4 @@ class AvatarUploadHandler:
             return flask.jsonify({
                 'code': 1, 
                 'message': f'头像上传失败: { str(e) }'
-            }), 500
+            }), 500   

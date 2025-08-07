@@ -113,9 +113,22 @@ class ChatManager:
         except:
             return False
 
-    # 删除对话（软删除）
+    # 隐藏对话（软删除）
     def hideChat(self, chatId: str) -> bool:
         return self.updateChat(chatId, { "is_active": False })
+
+    # 删除对话（硬删除）
+    def deleteChat(self, chatId: str, userId: str) -> bool:
+        try:
+            result = self.db.chats.delete_one({
+                "_id": ObjectId(chatId),
+                "user_id": ObjectId(userId)
+            })
+
+            return result.deleted_count > 0
+        except Exception as e:
+            logging.error(f"删除对话失败: { str(e) }")
+            return False
 
     # 更新对话标题
     def updateChatTitle(self, chatId: str, title: str) -> bool:

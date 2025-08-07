@@ -5,7 +5,7 @@ from pymongo import MongoClient
 class MongoDBConfig:
 
     @classmethod
-    def initMongoDB(cls, connectionString="mongodb://localhost:27017/", databaseName="huixin_db"):
+    def init(cls, connectionString="mongodb://localhost:27017/", databaseName="huixin_db"):
         from core.managers.UserManager import UserManager
         from core.managers.ChatManager import ChatManager
         from core.managers.MessageManager import MessageManager
