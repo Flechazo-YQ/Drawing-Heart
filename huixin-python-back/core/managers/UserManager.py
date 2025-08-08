@@ -71,11 +71,6 @@ class UserManager:
     # 根据ID获取用户
     def getUserById(self, userId: str) -> Optional[Dict]:
         try:
-            # 验证userId是否为有效的ObjectId字符串
-            if (not ObjectId.is_valid(userId)):
-                logging.warning(f"提供的userId不是有效的ObjectId: { userId }")
-                return None
-
             return self.db.users.find_one({
                 "_id": ObjectId(userId), 
                 "is_active": True

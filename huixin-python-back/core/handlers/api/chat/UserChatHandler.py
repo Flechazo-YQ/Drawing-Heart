@@ -20,12 +20,16 @@ class UserChatHandler:
         token = flask.request.headers.get('Authorization')
 
         if (not token):
-            return flask.jsonify({'message': 'Token is missing!'}), 401
+            return flask.jsonify({
+                'message': 'Token is missing!'
+            }), 401
         
         userId = UserTokenHandler.verifyUserToken(token)
 
         if (not userId):
-            return flask.jsonify({'message': 'Invalid token!'}), 401
+            return flask.jsonify({
+                'message': 'Invalid token!'
+            }), 401
 
         try:
             data = flask.request.get_json()
@@ -33,16 +37,15 @@ class UserChatHandler:
             # 初始标题设为空, 等第一条消息后再更新
             title = data.get('title', '')
             chatType = data.get('type', 'normal')  # 新增：支持传入对话类型
-            chatId = MongoDBConfig.chatManager.createChat(userId[0], title, chatType)
+            chatId = MongoDBConfig.chatManager.createChat(userId, title, chatType)
 
             # 设置为当前活跃聊天 - 统一使用字符串类型用户ID
-            userIdString = str(userId[0])
-            GlobalState.userCurrentChats[userIdString] = chatId
+            GlobalState.userCurrentChats[userId] = chatId
 
             # 清除用户的当前上下文, 开始新对话
-            GlobalState.userContexts[userIdString] = []
+            GlobalState.userContexts[userId] = []
 
-            logging.info(f'用户 { userIdString } 创建新对话: { chatId }')
+            logging.info(f'用户 { userId } 创建新对话: { chatId }')
 
             return flask.jsonify({
                 'code': 0,
@@ -68,18 +71,22 @@ class UserChatHandler:
         token = flask.request.headers.get('Authorization')
 
         if (not token):
-            return flask.jsonify({'message': 'Token is missing!'}), 401
-        
+            return flask.jsonify({
+                'message': 'Token is missing!'
+            }), 401
+
         userId = UserTokenHandler.verifyUserToken(token)
 
         if (not userId):
-            return flask.jsonify({'message': 'Invalid token!'}), 401
+            return flask.jsonify({
+                'message': 'Invalid token!'
+            }), 401
 
         try:
             # 验证对话是否属于当前用户
             chat = MongoDBConfig.chatManager.getChatById(chatId)
 
-            if (not chat or chat['user_id'] != userId[0]):
+            if (not chat or chat['user_id'] != userId):
                 return flask.jsonify({
                     'code': 1,
                     'message': '对话不存在或无权限'
@@ -117,15 +124,13 @@ class UserChatHandler:
                 'message': 'Token is missing!'
             }), 401
         
-        userInfo = UserTokenHandler.verifyUserToken(token)
+        userId = UserTokenHandler.verifyUserToken(token)
 
-        if (not userInfo):
+        if (not userId):
             return flask.jsonify({
                 'code': 401,
                 'message': 'Invalid token!'
             }), 401
-
-        userId = str(userInfo[0])
 
         try:
             success = MongoDBConfig.chatManager.deleteChat(chatId, userId)
@@ -166,7 +171,7 @@ class UserChatHandler:
             # 验证对话是否属于当前用户
             chat = MongoDBConfig.chatManager.getChatById(chatId)
 
-            if (not chat or chat['user_id'] != userId[0]):
+            if (not chat or chat['user_id'] != userId):
                 return flask.jsonify({
                     'code': 1,
                     'message': '对话不存在或无权限'
@@ -288,32 +293,31 @@ class UserChatHandler:
             # 验证对话是否属于当前用户
             chat = MongoDBConfig.chatManager.getChatById(chatId)
 
-            if (not chat or chat['user_id'] != userId[0]):
+            if (not chat or chat['user_id'] != userId):
                 return flask.jsonify({
                     'code': 1,
                     'message': '对话不存在或无权限'
                 }), 404
             
             # 设置为当前活跃聊天 - 统一使用字符串类型用户ID
-            userIdString = str(userId[0])
-            GlobalState.userCurrentChats[userIdString] = chatId
+            GlobalState.userCurrentChats[userId] = chatId
 
             # 获取最近的消息作为上下文
             recentMessages = MongoDBConfig.messageManager.getLatestMessages(chatId, 10)
 
-            logging.info(f'用户 { userIdString } 切换到对话: { chatId }')
+            logging.info(f'用户 { userId } 切换到对话: { chatId }')
 
-            # 更新用户特定的上下文(userIdString已在上面定义)
-            GlobalState.userContexts[userIdString] = []
+            # 更新用户特定的上下文(userId已在上面定义)
+            GlobalState.userContexts[userId] = []
 
             for msg in recentMessages:
                 if (msg['sender'] == 'user'):
-                    GlobalState.userContexts[userIdString].append({
+                    GlobalState.userContexts[userId].append({
                         'role': 'user',
                         'content': msg['content']
                     })
                 elif (msg['sender'] == 'assistant'):
-                    GlobalState.userContexts[userIdString].append({
+                    GlobalState.userContexts[userId].append({
                         'role': 'assistant', 
                         'content': msg['content']
                     })
@@ -323,7 +327,7 @@ class UserChatHandler:
                 'message': '对话上下文加载成功',
                 'data': {
                     'chat': chat,
-                    'context_loaded': len(GlobalState.userContexts[userIdString])
+                    'context_loaded': len(GlobalState.userContexts[userId])
                 }
             })
         
@@ -352,7 +356,7 @@ class UserChatHandler:
             # 验证对话是否属于当前用户
             chat = MongoDBConfig.chatManager.getChatById(chatId)
 
-            if (not chat or chat['user_id'] != userId[0]):
+            if (not chat or chat['user_id'] != userId):
                 return flask.jsonify({
                     'code': 1,
                     'message': '对话不存在或无权限'
@@ -431,14 +435,13 @@ class UserChatHandler:
                 'message': 'Token is missing!'
             }), 401
         
-        userInfo = UserTokenHandler.verifyUserToken(token)
+        userId = UserTokenHandler.verifyUserToken(token)
 
-        if (not userInfo):
+        if (not userId):
             return flask.jsonify({
                 'message': 'Invalid token!'
             }), 401
 
-        userId = str(userInfo[0])
         user = MongoDBConfig.userManager.getUserById(userId)
 
         if (not user):
@@ -467,7 +470,7 @@ class UserChatHandler:
 
         if (not currentChatId):
             chatType = 'dangerous' if (dangerousProb > 0.5) else 'normal'
-            currentChatId = MongoDBConfig.chatManager.createChat(userInfo[0], '新对话', chatType)
+            currentChatId = MongoDBConfig.chatManager.createChat(userId, '新对话', chatType)
             
             GlobalState.userCurrentChats[userId] = currentChatId
             logging.info(f'为用户 { userName } ({ userId }) 创建新对话: { currentChatId }')
@@ -530,20 +533,18 @@ class UserChatHandler:
         if (not userId):
             return flask.jsonify({'message': 'Invalid token!'}), 401
             
-        try:
-            userIdString = str(userId[0])
-            
+        try:            
             # 清除用户特定的上下文
-            if (userIdString in GlobalState.userContexts):
-                GlobalState.userContexts[userIdString] = []
+            if (userId in GlobalState.userContexts):
+                GlobalState.userContexts[userId] = []
 
             # 如果用户在危险对话列表中, 清除其记录
-            if (userIdString in GlobalState.dangerousChats):
-                del GlobalState.dangerousChats[userIdString]
+            if (userId in GlobalState.dangerousChats):
+                del GlobalState.dangerousChats[userId]
 
             # 清除用户的最新图片URL
-            if (userIdString in GlobalState.userLatestImages):
-                del GlobalState.userLatestImages[userIdString]
+            if (userId in GlobalState.userLatestImages):
+                del GlobalState.userLatestImages[userId]
 
             # 注意：不再清除全局text_result, 因为现在使用数据库中的分析结果
             
@@ -574,19 +575,17 @@ class UserChatHandler:
         if (not userId):
             return flask.jsonify({'message': 'Invalid token!'}), 401
 
-        try:
-            userIdString = str(userId[0])
-            
+        try:            
             # 清除用户的当前活跃聊天
-            if (userIdString in GlobalState.userCurrentChats):
-                oldChatId = GlobalState.userCurrentChats[userIdString]
+            if (userId in GlobalState.userCurrentChats):
+                oldChatId = GlobalState.userCurrentChats[userId]
 
-                del GlobalState.userCurrentChats[userIdString]
-                logging.info(f'清除用户 { userIdString } 的当前聊天: { oldChatId }')
+                del GlobalState.userCurrentChats[userId]
+                logging.info(f'清除用户 { userId } 的当前聊天: { oldChatId }')
 
             # 清除用户的上下文
-            if (userIdString in GlobalState.userContexts):
-                GlobalState.userContexts[userIdString] = []
+            if (userId in GlobalState.userContexts):
+                GlobalState.userContexts[userId] = []
 
             return flask.jsonify({
                 'code': 0,
@@ -618,7 +617,7 @@ class UserChatHandler:
         try:
             page = int(flask.request.args.get('page', 1))
             limit = int(flask.request.args.get('limit', 20))
-            chats = MongoDBConfig.chatManager.getUserChats(userId[0], page, limit)
+            chats = MongoDBConfig.chatManager.getUserChats(userId, page, limit)
 
             return flask.jsonify({
                 'code': 0,

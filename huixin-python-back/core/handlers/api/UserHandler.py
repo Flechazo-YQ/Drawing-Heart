@@ -262,7 +262,7 @@ class UserHandler:
 
         try:
             # 从MongoDB获取用户信息
-            user = MongoDBConfig.userManager.getUserById(userId[0])
+            user = MongoDBConfig.userManager.getUserById(userId)
 
             # 如果用户不存在, 返回404错误
             if (not user):
@@ -293,7 +293,7 @@ class UserHandler:
             }), 401
 
         try:
-            user = MongoDBConfig.userManager.getUserById(userId[0])
+            user = MongoDBConfig.userManager.getUserById(userId)
 
             # 如果用户不存在, 返回404错误
             if (not user):
@@ -344,7 +344,7 @@ class UserHandler:
             page = int(flask.request.args.get('page', 1))
             limit = int(flask.request.args.get('limit', 10))
 
-            analyses = MongoDBConfig.drawingAnalysisManager.getUserAnalyses(userId[0], limit, page)
+            analyses = MongoDBConfig.drawingAnalysisManager.getUserAnalyses(userId, limit, page)
 
             return flask.jsonify({
                 'code': 0,
@@ -380,7 +380,7 @@ class UserHandler:
             return flask.jsonify({'message': 'Invalid token!'}), 401
 
         try:
-            todayAnalysis = MongoDBConfig.drawingAnalysisManager.getTodayAnalysis(userId[0])
+            todayAnalysis = MongoDBConfig.drawingAnalysisManager.getTodayAnalysis(userId)
 
             if (not todayAnalysis):
                 return flask.jsonify({
@@ -420,7 +420,7 @@ class UserHandler:
         config = cls.ANALYSIS_TIME_CONFIG.get(timeLimit, cls.ANALYSIS_TIME_CONFIG['none'])
 
         try:
-            latestAnalysis = config['query'](userId[0])
+            latestAnalysis = config['query'](userId)
 
             if (not latestAnalysis):
 

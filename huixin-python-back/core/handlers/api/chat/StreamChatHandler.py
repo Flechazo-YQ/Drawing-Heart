@@ -1,8 +1,8 @@
 import flask, requests, json, logging, datetime
 
 from core.configs.MongoDBConfig import MongoDBConfig
+from core.handlers.socket.SocketQueueHandler import SocketQueueHandler
 from core.states.GlobalState import GlobalState
-from core.states.SocketState import SocketState
 
 from flask import Response
 from typing import Final
@@ -27,7 +27,7 @@ class StreamChatHandler:
         logging.warning(f"🚨 触发危险检测: dangerous={self.dangerous:.4f} > 0.3")
         MongoDBConfig.chatManager.updateChat(self.currentChatId, {"type": "dangerous"})
 
-        logging.warning(f'🚨 检测到危险消息, 需要人工干预: {self.userMessage }')
+        logging.warning(f'🚨 检测到危险消息, 需要人工干预: { self.userMessage }')
 
         if (self.userId not in GlobalState.dangerousChats):
             GlobalState.dangerousChats[self.userId] = {
@@ -64,17 +64,13 @@ class StreamChatHandler:
         
         # 通知所有在线管理员有新的危险对话
         logging.info(f"🔔 准备通知管理员危险对话, 用户id: { self.userId }")
-        SocketState.socketio.emit(
-            'dangerous_chat_alert', 
-            {
-                'user': {
-                    'userId': self.userId,
-                    'username': self.userName,
-                    'lastMessage': self.userMessage
-                }
-            }, 
-            room='admin_room' # type: ignore
-        )
+        SocketQueueHandler.queueEmit('dangerous_chat_alert', {
+            'user': {
+                'userId': self.userId,
+                'username': self.userName,
+                'lastMessage': self.userMessage
+            }
+        }, 'admin_room')
         logging.info(f"✅ 已发送危险对话通知到管理员房间")
         
         # 添加系统消息到危险对话记录
@@ -109,34 +105,39 @@ class StreamChatHandler:
     
     # 处理正常消息
     def handleNormalMessage(self):
-        latestAnalysis = None
-        
         try:
-            logging.info(f"开始获取用户 { self.userId[0] } 的最新分析结果...")
+            logging.info(f"开始获取用户 { self.userId } 的最新分析结果...")
             
             # 首先尝试获取当日的分析结果
-            latestAnalysis = MongoDBConfig.drawingAnalysisManager.getRecentAnalysis(self.userId[0], hours=0)
+            latestAnalysis = MongoDBConfig.drawingAnalysisManager.getRecentAnalysis(self.userId, hours=0)
 
             if (not latestAnalysis):
                 # 如果当日没有分析结果, 尝试获取4小时内的分析结果
-                latestAnalysis = MongoDBConfig.drawingAnalysisManager.getRecentAnalysis(self.userId[0], hours=4)
-                logging.info(f"ℹ️  用户 { self.userId[0] } 在当日或4小时内暂无分析记录")
+                latestAnalysis = MongoDBConfig.drawingAnalysisManager.getRecentAnalysis(self.userId, hours=4)
+                logging.info(f"ℹ️  用户 { self.userId } 在当日或4小时内暂无分析记录")
 
                 # 如果没有符合时间条件的分析结果, 不参考任何分析内容
-                self.systemContent = "你现在是一名心理医师, 你的名字叫绘心同学。请用温暖、专业的语言与用户交流, 用多轮对话的形式, 每次别说太多。如果用户需要心理绘画分析, 请引导他们先完成绘画测试。"
-                logging.info("🔄 AI将不参考任何分析结果进行对话（无符合时间条件的分析）")
+                self.systemContent = "你现在是一名心理医师, 你的名字叫绘心同学。\
+                    请用温暖、专业的语言与用户交流, 用多轮对话的形式, 每次别说太多。\
+                    如果用户需要心理绘画分析, 请引导他们先完成绘画测试。"
+                logging.info("🔄 AI将不参考任何分析结果进行对话(无符合时间条件的分析)")
             else:
                 analysisDate = latestAnalysis['analysis_date']
                 analysisTime = latestAnalysis['created_at']
                 analysisId = latestAnalysis.get('_id', 'unknown')
-                logging.info(f"✅ 成功获取用户 { self.userId[0] } 的分析结果 - ID: { analysisId }, 日期: { analysisDate }, 创建时间: { analysisTime }")
+                logging.info(f"✅ 成功获取用户 { self.userId } 的分析结果 - \
+                    ID: { analysisId }, 日期: { analysisDate }, 创建时间: { analysisTime }"
+                )
 
                 analysisResult = latestAnalysis['analysis_result']
-                self.systemContent = f"你现在是一名心理医师, 你的名字叫绘心同学。用户在{ analysisDate }完成了心理绘画测试, 以下是最新的分析结果：{ analysisResult } \n\n请结合这个分析结果帮助用户, 用通俗易懂的语言与用户交流, 用多轮对话的形式, 每次别说太多。如果用户的问题与绘画分析相关, 请参考分析结果给出建议。"
+                self.systemContent = f"你现在是一名心理医师, 你的名字叫绘心同学。\
+                    用户在{ analysisDate }完成了心理绘画测试, 以下是最新的分析结果：\
+                    { analysisResult } \n\n请结合这个分析结果帮助用户, 用通俗易懂的语言与用户交流, 用多轮对话的形式, 每次别说太多。\
+                    如果用户的问题与绘画分析相关, 请参考分析结果给出建议。"
                 logging.info(f"🎯 AI将基于 { analysisDate } 的分析结果进行对话")
 
         except Exception as e:
-            logging.error(f"❌ 获取用户 { self.userId[0] } 的分析结果失败: { str(e) }")
+            logging.error(f"❌ 获取用户 { self.userId } 的分析结果失败: { str(e) }")
 
     # 返回流式格式的管理员信息
     def generateAdminMessage(self):

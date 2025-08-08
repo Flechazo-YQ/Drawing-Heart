@@ -74,7 +74,7 @@ class PasswordHandler:
                 }), 401
                 
             # 更新密码
-            success = MongoDBConfig.userManager.updateUser(userId[0], {
+            success = MongoDBConfig.userManager.updateUser(userId, {
                 'password': TokenState.sha256Hash(newPassword)
             })
             

@@ -37,4 +37,4 @@ class SocketQueueHandler:
 
             SocketState.socketioTaskQueue.put(task)
         except Exception as e:
-            logging.error(f"❌ 放入emit任务到队列时失败: { str(e) }")
+            logging.error(f"❌ 放入Emit任务到队列时失败: { str(e) }")

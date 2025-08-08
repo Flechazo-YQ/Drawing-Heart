@@ -14,12 +14,16 @@ class AdminChatHandler:
         token = flask.request.headers.get('Authorization')
 
         if (not token):
-            return flask.jsonify({'message': 'Token is missing!'}), 401
+            return flask.jsonify({
+                'message': 'Token is missing!'
+            }), 401
 
-        adminUsername = AdminTokenHandler.verifyAdminToken(token)
+        adminId = AdminTokenHandler.verifyAdminToken(token)
 
-        if (not adminUsername):
-            return flask.jsonify({'message': 'Invalid admin token!'}), 401
+        if (not adminId):
+            return flask.jsonify({
+                'message': 'Invalid admin token!'
+            }), 401
         
         # 获取请求数据
         data = flask.request.get_json()
@@ -27,11 +31,15 @@ class AdminChatHandler:
         adminMessage = data.get('message')
 
         if (not userId or not adminMessage):
-            return flask.jsonify({'message': 'Missing required fields!'}), 400
+            return flask.jsonify({
+                'message': 'Missing required fields!'
+            }), 400
 
         # 检查用户是否在危险对话列表中
         if (userId not in GlobalState.dangerousChats):
-            return flask.jsonify({'message': 'User not found in dangerous chats!'}), 404
+            return flask.jsonify({
+                'message': 'User not found in dangerous chats!'
+            }), 404
 
         # 添加管理员回复到对话记录
         GlobalState.dangerousChats[userId]['messages'].append({
@@ -53,12 +61,16 @@ class AdminChatHandler:
         token = flask.request.headers.get('Authorization')
 
         if (not token):
-            return flask.jsonify({'message': 'Token is missing!'}), 401
+            return flask.jsonify({
+                'message': 'Token is missing!'
+            }), 401
 
-        adminUsername = AdminTokenHandler.verifyAdminToken(token)
+        adminId = AdminTokenHandler.verifyAdminToken(token)
 
-        if (not adminUsername):
-            return flask.jsonify({'message': 'Invalid admin token!'}), 401
+        if (not adminId):
+            return flask.jsonify({
+                'message': 'Invalid admin token!'
+            }), 401
 
         # 准备返回数据
         chatList = []
@@ -91,12 +103,16 @@ class AdminChatHandler:
         token = flask.request.headers.get('Authorization')
 
         if (not token):
-            return flask.jsonify({'message': 'Token is missing!'}), 401
+            return flask.jsonify({
+                'message': 'Token is missing!'
+            }), 401
 
-        adminUsername = AdminTokenHandler.verifyAdminToken(token)
+        adminId = AdminTokenHandler.verifyAdminToken(token)
 
-        if (not adminUsername):
-            return flask.jsonify({'message': 'Invalid admin token!'}), 401
+        if (not adminId):
+            return flask.jsonify({
+                'message': 'Invalid admin token!'
+            }), 401
 
         # 检查用户是否在危险对话列表中
         if (userId not in GlobalState.dangerousChats):

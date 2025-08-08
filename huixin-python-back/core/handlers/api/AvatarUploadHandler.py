@@ -102,11 +102,11 @@ class AvatarUploadHandler:
             os.makedirs(avatarDir, exist_ok=True)
             
             # 获取用户当前的头像信息，以便后续删除
-            user = MongoDBConfig.userManager.getUserById(userId[0])
+            user = MongoDBConfig.userManager.getUserById(userId)
             oldAvatarUrl = user.get('avatar') if (user) else None
             
             # 生成唯一文件名，防止文件名冲突
-            filename = str(userId[0]) + '_' + secrets.token_hex(16) + '.' + file.filename.rsplit('.', 1)[1].lower()
+            filename = userId + '_' + secrets.token_hex(16) + '.' + file.filename.rsplit('.', 1)[1].lower()
             filepath = os.path.join(avatarDir, filename)
 
             # 保存文件
@@ -117,10 +117,10 @@ class AvatarUploadHandler:
             newAvatarUrl = f'/uploads/avatars/{ filename }'
             
             # 更新数据库中的用户头像URL
-            success = MongoDBConfig.userManager.updateUserAvatar(userId[0], newAvatarUrl)
+            success = MongoDBConfig.userManager.updateUserAvatar(userId, newAvatarUrl)
 
             if (not success):
-                logging.error(f"更新用户 { userId[0] } 的头像URL失败")
+                logging.error(f"更新用户 { userId } 的头像URL失败")
                 # 注意：即使数据库更新失败，新文件也已保存，但此处不回滚，以防逻辑复杂化
             
             # 如果数据库更新成功，并且存在旧头像，则删除旧头像文件
@@ -138,7 +138,7 @@ class AvatarUploadHandler:
                 except Exception as e:
                     logging.error(f"删除旧头像文件时出错: { str(e) }")
 
-            logging.info(f"用户 { userId[0] } 头像上传成功: { filename }, URL: { newAvatarUrl }")
+            logging.info(f"用户 { userId } 头像上传成功: { filename }, URL: { newAvatarUrl }")
 
             # 测试文件是否可访问
             fileExists = os.path.exists(filepath)

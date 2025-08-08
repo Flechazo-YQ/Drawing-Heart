@@ -6,22 +6,22 @@ class AdminTokenHandler:
 
     #生成管理员JWT
     @staticmethod
-    def generateAdminToken(adminUsername: str):
+    def generateAdminToken(adminId: str):
         payload = {
-            'admin_username': adminUsername,
+            'admin_id': adminId,
             'exp': datetime.datetime.utcnow() + datetime.timedelta(hours=24)
         }
 
-        return jwt.encode(payload, TokenState.HAS_SECRET_KEY, algorithm = TokenState.ALGORITHM)
+        return jwt.encode(payload, TokenState.SECRET_KEY, algorithm = TokenState.ALGORITHM)
 
     #验证管理员JWT
     @staticmethod
     def verifyAdminToken(token: str):
         try:
-            payload = jwt.decode(token, TokenState.HAS_SECRET_KEY, algorithms=[TokenState.ALGORITHM])
-            adminUsername = payload['admin_username']
+            payload = jwt.decode(token, TokenState.SECRET_KEY, algorithms=[TokenState.ALGORITHM])
+            adminId = payload['admin_id']
 
-            return adminUsername if (adminUsername in TokenState.ADMIN_CREDENTIALS) else None
+            return adminId if (adminId in TokenState.ADMIN_CREDENTIALS) else None
 
         except jwt.ExpiredSignatureError:
             return None

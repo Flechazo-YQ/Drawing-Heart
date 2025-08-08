@@ -4,6 +4,7 @@ from core.configs.MongoDBConfig import MongoDBConfig
 from core.states.SocketState import SocketState
 from core.states.GlobalState import GlobalState
 from core.handlers.token.AdminTokenHandler import AdminTokenHandler
+from core.handlers.socket.SocketQueueHandler import SocketQueueHandler
 
 class AdminSocketHandler:
 
@@ -11,29 +12,39 @@ class AdminSocketHandler:
     @SocketState.socketio.on('admin_auth')
     def handleAdminAuth(data: dict):
         token = data.get('token')
+        sid = flask.request.sid # type: ignore
 
         if (not token):
-            SocketState.socketio.emit('auth_response', {'status': 'error', 'message': 'Token is missing'})
+            SocketQueueHandler.queueEmit('auth_response', {
+                'status': 'error', 
+                'message': 'Token is missing'
+            }, sid=sid)
             return
 
-        adminUsername = AdminTokenHandler.verifyAdminToken(token)
+        adminId = AdminTokenHandler.verifyAdminToken(token)
 
-        if (not adminUsername):
-            SocketState.socketio.emit('auth_response', {'status': 'error', 'message': 'Invalid token'})
+        if (not adminId):
+            SocketQueueHandler.queueEmit('auth_response', {
+                'status': 'error', 
+                'message': 'Invalid token'
+            }, sid=sid)
             return
         
         # 保存管理员的会话ID
-        sid = flask.request.sid # type: ignore
-        GlobalState.activeAdmins[adminUsername] = {
+        GlobalState.activeAdmins[adminId] = {
             'sid': sid,
             'connected_at': datetime.datetime.now().isoformat()
         }
-        
+        GlobalState.sidToAdminId[sid] = adminId
+
         # 将管理员加入管理员房间
         flask_socketio.join_room('admin_room')
 
         # 发送认证成功响应
-        SocketState.socketio.emit('auth_response', {'status': 'success', 'message': 'Authentication successful'})
+        SocketQueueHandler.queueEmit('auth_response', {
+            'status': 'success',
+            'message': 'Authentication successful'
+        }, 'admin_room', sid)
 
         # 发送当前所有危险对话列表
         chatList = []
@@ -53,7 +64,9 @@ class AdminSocketHandler:
                 'isActive': chatData['is_active']
             })
 
-        SocketState.socketio.emit('dangerous_chats_list', { 'chats': chatList })
+        SocketQueueHandler.queueEmit('dangerous_chats_list', { 
+            'chats': chatList 
+        }, 'admin_room', sid)
 
     @staticmethod
     @SocketState.socketio.on('request_history')
@@ -61,32 +74,31 @@ class AdminSocketHandler:
 
         # 验证是否为管理员
         sid = flask.request.sid # type: ignore
-        adminUsername = None
+        adminId = GlobalState.sidToAdminId.get(sid)
 
-        for username, admin_data in GlobalState.activeAdmins.items():
-            if (admin_data.get('sid') == sid):
-                adminUsername = username
-                break
-
-        if (not adminUsername):
-            SocketState.socketio.emit('error', {'message': 'Unauthorized'})
+        if (not adminId):
+            SocketQueueHandler.queueEmit('error', {
+                'message': 'Unauthorized'
+            }, sid=sid)
             return
         
         userId = data.get('userId')
 
         if (not userId or userId not in GlobalState.dangerousChats):
-            SocketState.socketio.emit('error', {'message': 'User not found'})
+            SocketQueueHandler.queueEmit('error', {
+                'message': 'User not found'
+            }, sid=sid)
             return
         
         # 发送历史记录
-        SocketState.socketio.emit('chat_history', {
+        SocketQueueHandler.queueEmit('chat_history', {
             'userId': userId,
             'username': GlobalState.dangerousChats[userId]['username'],
             'messages': GlobalState.dangerousChats[userId]['messages']
-        })
-        
+        }, sid=sid)
+
         # 设置该管理员为当前处理该用户的管理员
-        GlobalState.dangerousChats[userId]['admin_id'] = adminUsername
+        GlobalState.dangerousChats[userId]['admin_id'] = adminId
 
     @staticmethod
     @SocketState.socketio.on('admin_message')
@@ -94,23 +106,22 @@ class AdminSocketHandler:
 
         # 验证是否为管理员
         sid = flask.request.sid # type: ignore
-        adminUsername = None
+        adminId = GlobalState.sidToAdminId.get(sid)
 
-        for username, admin_data in GlobalState.activeAdmins.items():
-            if (admin_data.get('sid') == sid):
-                adminUsername = username
-                break
-
-        if (not adminUsername):
-            SocketState.socketio.emit('error', {'message': 'Unauthorized'})
+        if (not adminId):
+            SocketQueueHandler.queueEmit('error', {
+                'message': 'Unauthorized'
+            }, sid=sid)
             return
-        
+
         userId = data.get('userId')
         content = data.get('content')
         messageId = data.get('messageId')  # 获取消息ID
 
         if (not userId or not content or userId not in GlobalState.dangerousChats):
-            SocketState.socketio.emit('error', {'message': 'Invalid request'})
+            SocketQueueHandler.queueEmit('error', {
+                'message': 'Invalid request'
+            }, sid=sid)
             return
         
         currentTime = datetime.datetime.now().isoformat()
@@ -126,6 +137,7 @@ class AdminSocketHandler:
         # 保存管理员消息到数据库
         try:
             chatId = GlobalState.dangerousChats[userId].get('chat_id')
+
             if (chatId):
                 MongoDBConfig.messageManager.addMessage(
                     chatId = chatId,
@@ -137,33 +149,25 @@ class AdminSocketHandler:
             logging.error(f"保存管理员消息失败: { str(e) }")
         
         # 发送消息给所有管理员，更新聊天状态
-        SocketState.socketio.emit(
-            'new_message', 
-            {
-                'userId': userId,
-                'role': 'admin',
-                'content': content,
-                'sender': adminUsername,
-                'time': currentTime,
-                'messageId': messageId  # 添加消息ID
-            }, 
-            room = 'admin_room' # type: ignore
-        )
+        SocketQueueHandler.queueEmit('new_message', {
+            'userId': userId,
+            'role': 'admin',
+            'content': content,
+            'sender': adminId,
+            'time': currentTime,
+            'messageId': messageId  # 添加消息ID
+        }, 'admin_room', sid) # type: ignore
         
         # 向用户发送消息 - 检查用户是否有活跃的会话
         if (userId in GlobalState.userConnections):
 
             # 向用户的房间发送消息
-            SocketState.socketio.emit(
-                'admin_reply', 
-                {
-                    'role': 'admin',
-                    'content': content,
-                    'time': currentTime,
-                    'messageId': messageId  # 添加消息ID
-                }, 
-                room = f'user_{ userId }' # type: ignore
-            )
+            SocketQueueHandler.queueEmit('admin_reply', {
+                'role': 'admin',
+                'content': content,
+                'time': currentTime,
+                'messageId': messageId  # 添加消息ID
+            }, f'user_{ userId }', sid) # type: ignore
         else:
             # 如果用户不在线，将消息标记为未读，等用户重连时发送
-            print(f"User { userId } is not connected, message will be delivered when they reconnect")
+                print(f"User { userId } is not connected, message will be delivered when they reconnect")

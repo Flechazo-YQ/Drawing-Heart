@@ -30,7 +30,7 @@ class DebugHandler:
             contextLength = len(GlobalState.userContexts.get(userId, []))
 
             # 获取用户的聊天列表
-            userChats = MongoDBConfig.chatManager.getUserChats(userId[0])
+            userChats = MongoDBConfig.chatManager.getUserChats(userId)
 
             return flask.jsonify({
                 'code': 0,

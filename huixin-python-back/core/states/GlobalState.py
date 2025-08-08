@@ -6,18 +6,24 @@ from typing import Final, Optional
 class GlobalState:
     userLatestImages = {} # 存储用户的最新图片URL
     userContexts = {} # 存储每个用户的上下文，避免全局变量混乱
-    userConnections = {} # 存储用户连接
+    userConnections = {
+        # ‘userId’: {
+        #     'sid': flask.request.sid,
+        #     'username': username,
+        #     'connected_at': datetime.datetime.now().isoformat()
+        # }
+    }
     userCurrentChats = {} # 存储用户当前活跃聊天ID
+    sidToUserId = {} # 存储SID到用户ID的映射
+    sidToAdminId = {} # 存储SID到管理员ID的映射
 
     # 存储危险对话
     dangerousChats = {}
     activeAdmins = {}
 
-    sidToUser = {} # 存储sid到用户ID的映射
-
     URL: Final[str] = "https://api.siliconflow.cn/v1/chat/completions"
     ALLOWED_EXTENSIONS: Final[set] = {'png', 'jpg', 'jpeg', 'gif'} # 允许的文件扩展名
-    SAVE_DIR: Final[str] = "saved_drawings" # 保存图片的目录
+    SAVE_DIR: Final[str] = "uploads/saved_drawings" # 保存图片的目录
 
     # Flask应用实例
     APP: Optional[Flask] = None

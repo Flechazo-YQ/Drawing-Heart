@@ -92,7 +92,7 @@ class DrawingSaveHandler:
                 logging.info(f"Image saved successfully: { filePath }")
 
                 # 保存用户最新的图片URL
-                GlobalState.userLatestImages[str(userId[0])] = filePath
+                GlobalState.userLatestImages[userId] = filePath
                 
                 # 如果是分析请求，则进行AI分析
                 shouldAnalyze = data.get('analyze', False)
@@ -100,7 +100,7 @@ class DrawingSaveHandler:
                 if (shouldAnalyze):
                     logging.info(f"Starting analysis for image: { fileName }")
                     try:
-                        return DrawingHandler.analyzeImage(filePath, fileName, userId[0])  # 传递用户ID
+                        return DrawingHandler.analyzeImage(filePath, fileName, userId)  # 传递用户ID
                     except Exception as analysisError:
                         logging.error(f"Analysis failed for { fileName }: { str(analysisError) }")
                         # 即使分析失败，图片已经保存成功，返回文件信息
