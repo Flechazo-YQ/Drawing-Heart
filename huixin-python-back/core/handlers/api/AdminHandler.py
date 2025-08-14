@@ -1,9 +1,9 @@
 import flask
 
 from core.configs.BlueprintConfig import BlueprintConfig
-from core.states.GlobalState import GlobalState
-from core.states.TokenState import TokenState
 from core.handlers.token.AdminTokenHandler import AdminTokenHandler
+from core.states.TokenState import TokenState
+from core.utils.PasswordHelper import PasswordHelper
 
 class AdminHandler:
     
@@ -22,8 +22,8 @@ class AdminHandler:
         
         # 验证管理员凭证
         if (
-            username in TokenState.ADMIN_CREDENTIALS 
-            and TokenState.ADMIN_CREDENTIALS[username] == TokenState.sha256Hash(password)
+            username in TokenState.ADMIN_CREDENTIALS
+            and PasswordHelper.verifyHashPassword(password, TokenState.ADMIN_CREDENTIALS[username])
         ):
             # 生成管理员令牌
             token = AdminTokenHandler.generateAdminToken(username)

@@ -1,4 +1,4 @@
-import flask, datetime, flask_socketio, logging
+import flask, flask_socketio, logging
 
 from core.configs.MongoDBConfig import MongoDBConfig
 from core.states.SocketState import SocketState
@@ -6,179 +6,107 @@ from core.states.GlobalState import GlobalState
 from core.handlers.token.UserTokenHandler import UserTokenHandler
 from core.handlers.socket.SocketQueueHandler import SocketQueueHandler
 
+from typing import Dict
+
 class UserSocketHandler:
 
+    # 处理用户的认证请求
     @staticmethod
-    @SocketState.socketio.on('user_connect')
-    def handleUserConnect(data: dict):
-        token = data.get('token')
+    @SocketState.socketio.on("user_auth")
+    def handleUserAuth(data: Dict):
         sid = flask.request.sid # type: ignore
+        token = data.get("token")
 
-        if (not token):
-            SocketQueueHandler.queueEmit('error', {
-                'message': 'Token is missing'
-            })
+        if (not sid): return
+        if (not token): 
+            SocketQueueHandler.queueEmit("auth_error", {
+                "message": "Token is missing"
+            }, room=sid)
             return
-
+        
         userId = UserTokenHandler.verifyUserToken(token)
 
-        if (not userId):
-            SocketQueueHandler.queueEmit('error', {
-                'message': 'Invalid token'
-            })
+        if (not userId or not MongoDBConfig.userManager.getUserById(userId)):
+            SocketQueueHandler.queueEmit("auth_error", {
+                "message": "Invalid token or user not found"
+            }, room=sid)
             return
 
-        user = MongoDBConfig.userManager.getUserById(userId)
+        SocketState.sidToUserId[sid] = userId
+        SocketState.userIdToSid[userId] = sid
 
-        if (not user):
-            SocketQueueHandler.queueEmit('error', {
-                'message': 'User not found'
-            })
-            return
+        flask_socketio.join_room(sid, room=f"user_{ userId }") # type: ignore
+        SocketQueueHandler.queueEmit("auth_success", {
+            "message": "认证成功, 连接已建立"
+        }, room=sid)
+        logging.info(f"用户{ userId }(SID: { sid })已认证成功并加入房间")
 
-        username = user.get('username', '未知用户')
-
-        GlobalState.userConnections[userId] = {
-            'sid': sid,
-            'username': username,
-            'connected_at': datetime.datetime.now().isoformat()
-        }
-        GlobalState.sidToUserId[sid] = userId
-
-        flask_socketio.join_room(f'user_{ userId }')
-        SocketQueueHandler.queueEmit('connect_response', {
-            'status': 'success', 
-            'message': 'Connection successful'
-        })
-
-        if (userId in GlobalState.dangerousChats):
-            adminMessages = [
-                msg for msg in GlobalState.dangerousChats[userId]['messages']
-                if (
-                    msg.get('role') == 'admin' 
-                    and ((msg.get('messageId') != 'system_risk_alert') or not msg.get('is_system', False))
-                )
-            ]
-            if (adminMessages):
-                recentMessages = adminMessages[-3:] if (len(adminMessages) > 3) else adminMessages
-
-                for msg in recentMessages:
-                    SocketQueueHandler.queueEmit('admin_reply', {
-                        'role': 'admin',
-                        'content': msg.get('content'),
-                        'time': msg.get('time', datetime.datetime.now().isoformat()),
-                        'messageId': msg.get('messageId')
-                    }, f'user_{ userId }') # type: ignore
-
-        logging.info(f'User { username } connected with SID: { request.sid }') # type: ignore
-
+    # 处理用户发送的消息
     @staticmethod
-    @SocketState.socketio.on('user_message')
-    def handleUserMessage(data: dict):
+    @SocketState.socketio.on("user_message")
+    def handleUserMessage(data: Dict):
         sid = flask.request.sid # type: ignore
-        userId = GlobalState.sidToUserId.get(sid)
 
-        if (not userId):
-            SocketQueueHandler.queueEmit('error', {
-                'message': 'User not identified'
-            })
+        if (not sid): return
+
+        userId = SocketState.sidToUserId.get(sid)
+
+        if (not userId): 
+            SocketQueueHandler.queueEmit("message_error", {
+                "message": "User not authenticated"
+            }, room=sid)
             return
         
-        content = data.get('content')
+        chatId = data.get("chatId")
+        content = data.get("content")
 
-        if (not content):
-            SocketQueueHandler.queueEmit('error', {
-                'message': 'No message content'
-            })
+        if (not chatId or not content):
+            SocketQueueHandler.queueEmit("message_error", {
+                "message": "Missing Chat ID and content"
+            }, room=sid)
             return
-        
-        currentTime = datetime.datetime.now().isoformat()
-        
-        # 添加消息到危险对话记录
-        if (userId in GlobalState.dangerousChats):
-            GlobalState.dangerousChats[userId]['messages'].append({
-                'role': 'user',
-                'content': content,
-                'time': currentTime
-            })
-            
-            # 保存用户消息到数据库
-            try:
-                chatId = GlobalState.dangerousChats[userId].get('chat_id')
 
-                if (chatId):
-                    MongoDBConfig.messageManager.addMessage(
-                        chatId=chatId,
-                        messageType="text",
-                        content=content,
-                        sender="user"
-                    )
-            except Exception as e:
-                logging.error(f"保存用户危险对话消息失败: { str(e) }")
-            
-            # 查找处理该用户的管理员
-            adminId = GlobalState.dangerousChats[userId].get('admin_id')
+        # 处理用户消息
+        messageId = MongoDBConfig.messageManager.createMessage(
+            chatId=chatId,
+            type="text",
+            content=content,
+            sender="user"
+        )
 
-            # 如果有管理员在处理，发送消息给管理员
-            if (adminId and adminId in GlobalState.activeAdmins):
-                SocketQueueHandler.queueEmit('new_message', {
-                    'userId': userId,
-                    'role': 'user',
-                    'content': content,
-                    'time': currentTime
-                }, 'admin_room') # type: ignore
-            else:
-                # 没有管理员处理，向所有管理员发送提醒
-                SocketQueueHandler.queueEmit('dangerous_chat_alert', {
-                    'user': {
-                        'userId': userId,
-                        'username': GlobalState.userConnections[userId]['username'],
-                        'lastMessage': content
-                    }
-                }, 'admin_room') # type: ignore
-        else:
-            # 创建新的危险对话记录
-            # 获取用户当前的chat_id，如果没有则创建新的chat - 统一使用字符串类型
-            currentChatId = GlobalState.userCurrentChats.get(userId)
+        if (not messageId):
+            SocketQueueHandler.queueEmit("message_error", {
+                "message": "Failed to create message"
+            }, room=sid)
+            return
 
-            if (not currentChatId):
+        (label, _) = GlobalState.CLASSIFIER.predict(content) if (GlobalState.CLASSIFIER) else (None, None)
 
-                # 为用户创建新的危险对话
-                currentChatId = MongoDBConfig.chatManager.createChat(userId, "危险对话", "dangerous")
-                GlobalState.userCurrentChats[userId] = currentChatId
-            else:
+        if (label != "危险"): return
 
-                # 更新现有对话为危险类型
-                MongoDBConfig.chatManager.updateChat(currentChatId, {"type": "dangerous"})
+        chat = MongoDBConfig.chatManager.getChatById(chatId)
 
-            GlobalState.dangerousChats[userId] = {
-                'username': GlobalState.userConnections[userId]['username'],
-                'chat_id': currentChatId,  # 添加chat_id
-                'messages': [{
-                    'role': 'user',
-                    'content': content,
-                    'time': currentTime
-                }],
-                'is_active': True,
-                'admin_id': None
-            }
-            
-            # 保存用户消息到数据库
-            try:
-                MongoDBConfig.messageManager.addMessage(
-                    chatId=currentChatId,
-                    messageType="text",
-                    content=content,
-                    sender="user"
-                )
-            except Exception as e:
-                logging.error(f"保存WebSocket用户危险消息失败: { str(e) }")
-            
-            # 通知所有管理员有新的危险对话
-            SocketQueueHandler.queueEmit('dangerous_chat_alert', {
-                'user': {
-                    'userId': userId,
-                    'username': GlobalState.userConnections[userId]['username'],
-                    'lastMessage': content
-                }
-            }, 'admin_room') # type: ignore
+        if (not chat): return
+
+        adminId = chat.get("adminId")
+        user = MongoDBConfig.userManager.getUserById(userId)
+        username = user.get("username") if (user) else "未知用户"
+
+        alertData = {
+            "chatId": chatId,
+            "userId": userId,
+            "username": username,
+            "content": content
+        }
+
+        if (not adminId):
+            SocketQueueHandler.queueEmit("danger_alert", alertData, room="admin_room")
+            logging.info(f"用户{ username }({ userId })在对话{ chatId }中发送了危险消息，已通知管理员")
+            return
+
+        adminSid = SocketState.adminIdToSid.get(adminId)
+
+        if (not adminSid): return
+
+        SocketQueueHandler.queueEmit("danger_alert", alertData, room=adminSid)
+        logging.info(f"用户{ username }({ userId })在对话{ chatId }中发送了危险消息，已通知管理员{ adminId }")

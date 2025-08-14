@@ -2,11 +2,13 @@ import os, logging, sys, re
 
 from logging.handlers import TimedRotatingFileHandler
 
+from typing import Final
+
 class LogConfig:
-    LOG_DIR = 'logs'
+    LOG_DIR: Final[str] = 'logs'
 
     class StripAnsiFormatter(logging.Formatter):
-        ANSI_REGEX = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
+        ANSI_REGEX: Final[re.Pattern] = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
 
         def format(self, record):
             formattedMessage = super().format(record)

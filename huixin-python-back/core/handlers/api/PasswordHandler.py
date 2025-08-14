@@ -3,7 +3,7 @@ import logging, flask
 from core.configs.BlueprintConfig import BlueprintConfig
 from core.configs.MongoDBConfig import MongoDBConfig
 from core.handlers.token.UserTokenHandler import UserTokenHandler
-from core.states.TokenState import TokenState
+from core.utils.PasswordHelper import PasswordHelper
 
 class PasswordHandler:
 
@@ -74,10 +74,8 @@ class PasswordHandler:
                 }), 401
                 
             # 更新密码
-            success = MongoDBConfig.userManager.updateUser(userId, {
-                'password': TokenState.sha256Hash(newPassword)
-            })
-            
+            success = MongoDBConfig.userManager.updater.password(userId, PasswordHelper.generateHashPassword(newPassword))
+
             if (not success):
                 return flask.jsonify({
                     'code': 1,
@@ -104,9 +102,9 @@ class PasswordHandler:
         try:
             data = flask.request.get_json()
             email = data.get('email')
-            new_password = data.get('password')
-            
-            if (not all([email, new_password])):
+            newPassword = data.get('password')
+
+            if (not all([email, newPassword])):
                 return flask.jsonify({
                     'code': 1,
                     'message': '请提供邮箱和新密码'
@@ -120,11 +118,11 @@ class PasswordHandler:
                     'code': 1,
                     'message': '该邮箱未注册'
                 }), 404
-                
+
+            userId = str(user['_id'])
+
             # 更新密码
-            success = MongoDBConfig.userManager.updateUser(str(user['_id']), {
-                'password': TokenState.sha256Hash(new_password)
-            })
+            success = MongoDBConfig.userManager.updater.password(userId, PasswordHelper.generateHashPassword(newPassword))
 
             if (not success):
                 return flask.jsonify({

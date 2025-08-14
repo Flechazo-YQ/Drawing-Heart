@@ -1,4 +1,4 @@
-import requests, flask
+import requests, flask, logging
 
 from core.configs.BlueprintConfig import BlueprintConfig
 
@@ -20,7 +20,7 @@ class MapSearchHandler:
         processedIds = set()
         
         # 如果前端没有提供搜索半径，则使用默认的大范围半径
-        searchRadius = radius if radius is not None else cls.SEARCH_RADIUS
+        searchRadius = radius if (radius is not None) else cls.SEARCH_RADIUS
 
         for keyword in cls.SEARCH_KEYWORDS:
             params = {
@@ -37,9 +37,9 @@ class MapSearchHandler:
                 response.raise_for_status()
                 data = response.json()
 
-                if data.get('status') == '1':
+                if (data.get('status') == '1'):
                     for poi in data.get('pois', []):
-                        if poi.get('id') not in processedIds:
+                        if (poi.get('id') not in processedIds):
                             processedPoi = {
                                 'id': poi.get('id'),
                                 'name': poi.get('name'),
@@ -56,7 +56,7 @@ class MapSearchHandler:
                             allPois.append(processedPoi)
                             processedIds.add(poi.get('id'))
             except requests.exceptions.RequestException as e:
-                print(f"请求高德API时出错 (关键字: {keyword}): {e}")
+                logging.error(f"❌ 请求高德API时出错 (关键字: { keyword }): { str(e) }")
                 continue
         
         # 按距离排序
@@ -166,7 +166,7 @@ class MapSearchHandler:
             }), 200
 
         except requests.exceptions.RequestException as e:
-            print(f"请求高德IP定位API时出错: { str(e) }")
+            logging.error(f"❌ 请求高德IP定位API时出错: { str(e) }")
             return flask.jsonify({
                 'error': 'IP定位服务暂时不可用'
             }), 500
@@ -213,7 +213,7 @@ class MapSearchHandler:
                 'message': '获取输入建议失败'
             }), 200
         except requests.exceptions.RequestException as e:
-            print(f"请求高德输入提示API时出错: { str(e) }")
+            logging.error(f"❌ 请求高德输入提示API时出错: { str(e) }")
             return flask.jsonify({'error': '输入提示服务暂时不可用'}), 500
         
     # 前端调用方法, 用于地址解析
@@ -254,7 +254,7 @@ class MapSearchHandler:
                 'message': '地址解析失败，请尝试更详细的地址'
             }), 200
         except requests.exceptions.RequestException as e:
-            print(f"请求高德地址解析API时出错: { str(e) }")
+            logging.error(f"❌ 请求高德地址解析API时出错: { str(e) }")
             return flask.jsonify({
                 'error': '地址解析服务暂时不可用'
             }), 500

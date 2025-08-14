@@ -5,153 +5,129 @@ from core.handlers.socket.SocketQueueHandler import SocketQueueHandler
 from core.states.GlobalState import GlobalState
 
 from flask import Response
-from typing import Final
+from typing import Final, List, Dict
 
 class StreamChatHandler:
-    ADMINMESSAGE: Final[str] = '系统检测到您的内容可能存在风险, 已切换到人工客服模式。请稍等片刻, 管理员正在审核您的对话...'
+    DANGER_KEYWORDS: Final[list[str]] = ["自杀", "自残", "死", "想死", "活不下去", "结束生命", "轻生"]
+    ADMIN_MESSAGE: Final[str] = "系统检测到您的内容可能存在风险, 已切换到人工客服模式。请稍等片刻, 管理员正在审核您的对话..."
     HEADERS: Final[dict[str, str]] = {
         "Authorization": "Bearer sk-bhgbmuxblqtroypztkuonssqqkitngencupdofitajnmvbtv",
         "Content-Type": "application/json"
     }
 
-    def __init__(self, userId, userName, userMessage, dangerous, currentChatId, userContext):
+    def __init__(self, userId: str, chatId: str, userMessage: str):
         self.userId = userId
-        self.userName = userName
+        self.chatId = chatId
         self.userMessage = userMessage
-        self.dangerous = dangerous
-        self.currentChatId = currentChatId
-        self.userContext = userContext
+
+        self.user = MongoDBConfig.userManager.getUserById(self.userId)
+        self.userName = self.user.get("name", "未知用户") if (self.user) else "未知用户"
+        self.dangerLevel = self.__processStreamDanger(userMessage)
+        self.systemContent = ""
+
+    # 处理流程的主入口
+    def processStream(self):
+        return self.__handleDangerousMessage() if (self.dangerLevel > 0.3) else self.__handleNormalMessage()
+
+    # 分析消息危险等级
+    def __processStreamDanger(self, message: str):
+        try:
+            if (any(keyword in message for keyword in self.DANGER_KEYWORDS)):
+                logging.warning(f"⚠️ 检测到危险关键词: { message }")
+                return 0.9
+            
+            (label, probs) = GlobalState.CLASSIFIER.predict(message) if (GlobalState.CLASSIFIER) else (None, None)
+            dangerProb = float(probs[0]) if (probs) else 0.0
+
+            logging.info(f"危险检测结果: label={ label }, dangerous_prob={ dangerProb:.4f }")
+            return dangerProb
+        except Exception as e:
+            logging.error(f"❌ 情感分析模型预测失败: { str(e) }")
+            return 0.9 if (any(keyword in message for keyword in self.DANGER_KEYWORDS)) else 0.0
 
     # 处理危险消息
-    def handleDangerousMessage(self):
-        logging.warning(f"🚨 触发危险检测: dangerous={self.dangerous:.4f} > 0.3")
-        MongoDBConfig.chatManager.updateChat(self.currentChatId, {"type": "dangerous"})
+    def __handleDangerousMessage(self):
+        logging.warning(f"⚠️ 触发危险检测: dangerous={ self.dangerLevel:.4f } > 0.3")
+        MongoDBConfig.chatManager.updater.danger(self.chatId, self.userId)
+        MongoDBConfig.messageManager.createMessage(
+            chatId=self.chatId,
+            type="text",
+            content=self.userMessage,
+            sender="user",
+            dangerLevel=self.dangerLevel
+        )
 
-        logging.warning(f'🚨 检测到危险消息, 需要人工干预: { self.userMessage }')
+        alertData = {
+            "chatId": self.chatId,
+            "userId": self.userId,
+            "userName": self.userName,
+            "message": self.userMessage,
+            "dangerLevel": self.dangerLevel
+        }
 
-        if (self.userId not in GlobalState.dangerousChats):
-            GlobalState.dangerousChats[self.userId] = {
-                'username': self.userName,
-                'chat_id': self.currentChatId,
-                'messages': self.userContext.copy() + [
-                    { 
-                        "role": "user", 
-                        "content": self.userMessage 
-                    }
-                ],
-                'is_active': True,
-                'admin_id': None,
-                'last_updated': datetime.datetime.now().isoformat()
-            }
-        else:
-            GlobalState.dangerousChats[self.userId]['messages'].append({
-                "role": "user",
-                "content": self.userMessage
-            })
-            GlobalState.dangerousChats[self.userId]['last_updated'] = datetime.datetime.now().isoformat()
+        SocketQueueHandler.queueEmit("dangerous_chat_alert", alertData, "admin_room")
+        logging.info(f"✅ 已发送危险对话通知到管理员房间 (ChatID: { self.chatId })")
 
-        # 保存用户消息到MongoDB
-        try:
-            MongoDBConfig.messageManager.addMessage(
-                chatId=self.currentChatId,
-                messageType="text",
-                content=self.userMessage,
-                sender="user",
-                dangerLevel=self.dangerous
-            )
-        except Exception as e:
-            logging.error(f"保存危险消息失败: { str(e) }")
-        
-        # 通知所有在线管理员有新的危险对话
-        logging.info(f"🔔 准备通知管理员危险对话, 用户id: { self.userId }")
-        SocketQueueHandler.queueEmit('dangerous_chat_alert', {
-            'user': {
-                'userId': self.userId,
-                'username': self.userName,
-                'lastMessage': self.userMessage
-            }
-        }, 'admin_room')
-        logging.info(f"✅ 已发送危险对话通知到管理员房间")
-        
-        # 添加系统消息到危险对话记录
-        GlobalState.dangerousChats[self.userId]['messages'].append({
-            "role": "admin", 
-            "content": StreamChatHandler.ADMINMESSAGE,
-            "time": datetime.datetime.now().isoformat(),
-            "is_system": True,
-            "messageId": "system_risk_alert"  # 添加固定messageId用于前端去重
-        })
-        
-        # 保存系统消息到MongoDB
-        try:
-            MongoDBConfig.messageManager.addMessage(
-                chatId=self.currentChatId,
-                messageType="text",
-                content=StreamChatHandler.ADMINMESSAGE,
-                sender="system",
-                dangerLevel=self.dangerous
-            )
-        except Exception as e:
-            logging.error(f"保存系统消息失败: { str(e) }")
+        MongoDBConfig.messageManager.createMessage(
+            chatId=self.chatId,
+            type="text",
+            content=self.ADMIN_MESSAGE,
+            sender="system"
+        )
+
+        def generateStream():
+            for char in self.ADMIN_MESSAGE:
+                yield f"data: { json.dumps({ 'content': char }) }\n\n"
+
+            yield "data: [DONE]\n\n"
 
         return Response(
-            flask.stream_with_context(self.generateAdminMessage()),
-            mimetype='text/event-stream',
-            headers={
-                'Cache-Control': 'no-cache',
-                'Connection': 'keep-alive'
-            }
+            flask.stream_with_context(generateStream()),
+            mimetype="text/event-stream"
         )
-    
+
     # 处理正常消息
-    def handleNormalMessage(self):
+    def __handleNormalMessage(self):
+        self.__prepareSystemContent()
+
+        context = MongoDBConfig.messageManager.getLatestMessages(self.chatId)
+        payload = self.__generateAIPayload(context)
+
+        return Response(
+            flask.stream_with_context(self.__generateAIMessage(payload)),
+            mimetype="text/event-stream"
+        )
+
+    # 准备AI需要的系统提示词
+    def __prepareSystemContent(self):
         try:
-            logging.info(f"开始获取用户 { self.userId } 的最新分析结果...")
-            
-            # 首先尝试获取当日的分析结果
-            latestAnalysis = MongoDBConfig.drawingAnalysisManager.getRecentAnalysis(self.userId, hours=0)
+            latestAnalysis = MongoDBConfig.drawingManager.getRecentAnalysis(self.userId, hours=4)
 
             if (not latestAnalysis):
-                # 如果当日没有分析结果, 尝试获取4小时内的分析结果
-                latestAnalysis = MongoDBConfig.drawingAnalysisManager.getRecentAnalysis(self.userId, hours=4)
-                logging.info(f"ℹ️  用户 { self.userId } 在当日或4小时内暂无分析记录")
-
-                # 如果没有符合时间条件的分析结果, 不参考任何分析内容
                 self.systemContent = "你现在是一名心理医师, 你的名字叫绘心同学。\
                     请用温暖、专业的语言与用户交流, 用多轮对话的形式, 每次别说太多。\
                     如果用户需要心理绘画分析, 请引导他们先完成绘画测试。"
-                logging.info("🔄 AI将不参考任何分析结果进行对话(无符合时间条件的分析)")
             else:
-                analysisDate = latestAnalysis['analysis_date']
-                analysisTime = latestAnalysis['created_at']
-                analysisId = latestAnalysis.get('_id', 'unknown')
-                logging.info(f"✅ 成功获取用户 { self.userId } 的分析结果 - \
-                    ID: { analysisId }, 日期: { analysisDate }, 创建时间: { analysisTime }"
-                )
-
-                analysisResult = latestAnalysis['analysis_result']
+                analysisDate = latestAnalysis["timeNode"]["createdAt"].strftime("%Y-%m-%d")
+                analysisResult = latestAnalysis["analysis"]["resultText"]
                 self.systemContent = f"你现在是一名心理医师, 你的名字叫绘心同学。\
-                    用户在{ analysisDate }完成了心理绘画测试, 以下是最新的分析结果：\
-                    { analysisResult } \n\n请结合这个分析结果帮助用户, 用通俗易懂的语言与用户交流, 用多轮对话的形式, 每次别说太多。\
+                    用户在{ analysisDate }完成了心理绘画测试, 以下是最新的分析结果：{ analysisResult } \n\n\
+                    请结合这个分析结果帮助用户, 用通俗易懂的语言与用户交流, 用多轮对话的形式, 每次别说太多。\
                     如果用户的问题与绘画分析相关, 请参考分析结果给出建议。"
-                logging.info(f"🎯 AI将基于 { analysisDate } 的分析结果进行对话")
-
         except Exception as e:
-            logging.error(f"❌ 获取用户 { self.userId } 的分析结果失败: { str(e) }")
-
-    # 返回流式格式的管理员信息
-    def generateAdminMessage(self):
-        for char in self.ADMINMESSAGE:
-            yield char
+            logging.error(f"❌ 准备系统内容失败: { str(e) }")
+            self.systemContent = "你现在是一名心理医师, 你的名字叫绘心同学。\
+                请用温暖、专业的语言与用户交流, 用多轮对话的形式, 每次别说太多。\
+                如果用户需要心理绘画分析, 请引导他们先完成绘画测试。"
 
     # 返回流式格式的AI信息
-    def generateAIMessage(self, payload):
-        assistantReply = ''
+    def __generateAIMessage(self, payload):
+        assistantReply = ""
 
         try:
-            MongoDBConfig.messageManager.addMessage(
-                chatId=self.currentChatId,
-                messageType="text",
+            MongoDBConfig.messageManager.createMessage(
+                chatId=self.chatId,
+                type="text",
                 content=self.userMessage,
                 sender="user"
             )
@@ -160,7 +136,7 @@ class StreamChatHandler:
             with requests.post(GlobalState.URL, json=payload, headers=self.HEADERS, stream=True) as response:
                 response.raise_for_status()
 
-                response.encoding = 'utf-8'
+                response.encoding = "utf-8"
 
                 for line in response.iter_lines(decode_unicode=True):
                     if (not line or not line.startswith("data: ")): continue
@@ -170,80 +146,41 @@ class StreamChatHandler:
                     if (data == "[DONE]"): break
 
                     try:
-                        jsonData = json.loads(data)
-                        content = jsonData.get('choices', [{}])[0].get('delta', {}).get('content', '')
+                        content = json.loads(data).get("choices", [{}])[0].get("delta", {}).get("content", "")
                         assistantReply += content
 
-                        if (content):
-                            yield content
+                        if (content): yield content
                     except (json.JSONDecodeError, Exception) as e:
-                        print(f"Failed to parse JSON: { line }, Error: { str(e) }")
+                        logging.error(f"❌ Failed to parse JSON: { line }, Error: { str(e) }")
 
             # 保存助手消息
             if (assistantReply):
-                MongoDBConfig.messageManager.addMessage(
-                    chatId=self.currentChatId,
-                    messageType="text",
+                MongoDBConfig.messageManager.createMessage(
+                    chatId=self.chatId,
+                    type="text",
                     content=assistantReply,
                     sender="assistant"
                 )
-
-            self.updateContextAndTitle(assistantReply)
         except Exception as e:
             logging.error(f"聊天处理错误: { str(e) }")
             yield f"data: Error: { str(e) }\n\n"
             yield "data: [DONE]\n\n"
 
-    # 更新上下文和标题
-    def updateContextAndTitle(self, assistantReply):
-
-        # 更新上下文
-        if (self.userId not in GlobalState.userContexts):
-            GlobalState.userContexts[self.userId] = []
-
-        GlobalState.userContexts[self.userId].extend([
-            {
-                "role": "user", 
-                "content": self.userMessage
-            },
-            {
-                "role": "assistant", 
-                "content": assistantReply
-            }
-        ])
-
-        if (len(GlobalState.userContexts[self.userId]) > 10):
-            GlobalState.userContexts[self.userId] = GlobalState.userContexts[self.userId][-10:]
-            
-        # 更新标题
-        try:
-            newTitle = self.userMessage[:20] + "..." if (len(self.userMessage) > 20) else self.userMessage
-            MongoDBConfig.chatManager.updateChatTitle(self.currentChatId, newTitle)
-        except Exception as e:
-            logging.error(f"更新对话标题失败: { str(e) }")
-
     # 生成AI提示消息
-    def generateAIPayload(self):
-        messages = [
-            {
-                "content": self.systemContent,
-                "role": "system"
-            }
-        ] + self.userContext + [
-            {"content": self.userMessage, "role": "user"}
-        ]
+    def __generateAIPayload(self, context: List[Dict]):
+        formattedContext = [{ "role": msg["sender"], "content": msg["content"] } for msg in context]
+        messages = [{
+            "role": "system", 
+            "content": self.systemContent
+        }] + formattedContext + [{
+            "role": "user", 
+            "content": self.userMessage
+        }]
 
-        payload = {
+        return {
             "model": "Pro/deepseek-ai/DeepSeek-V3",
             "stream": True,
             "max_tokens": 512,
             "temperature": 0.7,
-            "top_p": 0.7,
-            "top_k": 50,
-            "frequency_penalty": 0.5,
-            "n": 1,
-            "stop": [],
             "messages": messages
         }
-
-        return payload

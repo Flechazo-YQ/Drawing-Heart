@@ -1,14 +1,12 @@
 import logging, time
 
-from regex import E
-
 from core.states.SocketState import SocketState
 
 class SocketQueueHandler:
     
     @staticmethod
     def socketioBackgroundThread():
-        logging.info("Socket.IO后台线程已启动")
+        logging.info("✅ Socket.IO后台线程已启动")
 
         while(True):
             try:
@@ -22,7 +20,7 @@ class SocketQueueHandler:
 
                 SocketState.socketioTaskQueue.task_done()
             except Exception as e:
-                logging.error(f"Socket.IO后台线程错误: { str(e) }")
+                logging.error(f"❌ Socket.IO后台线程错误: { str(e) }")
                 time.sleep(1)
 
     @staticmethod

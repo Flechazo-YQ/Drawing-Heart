@@ -17,9 +17,9 @@ class AvatarUploadHandler:
             logging.info(f"请求文件: { filename }, 使用上传目录: { uploadFolder }")
 
             # 构建完整路径
-            print(f"原始文件名: { filename }")
+            logging.info(f"原始文件名: { filename }")
             filename = filename.replace('/', os.sep).replace('\\', os.sep)
-            print(f"标准化后的文件名: { filename }")
+            logging.info(f"标准化后的文件名: { filename }")
             fullPath = os.path.join(uploadFolder, filename)
             logging.info(f"尝试提供文件: { fullPath }")
 
@@ -117,7 +117,7 @@ class AvatarUploadHandler:
             newAvatarUrl = f'/uploads/avatars/{ filename }'
             
             # 更新数据库中的用户头像URL
-            success = MongoDBConfig.userManager.updateUserAvatar(userId, newAvatarUrl)
+            success = MongoDBConfig.userManager.updater.avatar(userId, newAvatarUrl)
 
             if (not success):
                 logging.error(f"更新用户 { userId } 的头像URL失败")

@@ -1,11 +1,11 @@
 import logging
 
-from flask import Flask
-from flask import Blueprint
+from flask import Flask, Blueprint
+from typing import Dict
 
 class BlueprintConfig:
     routesToRegister = []
-    blueprints: dict[str, Blueprint] = {}
+    blueprints: Dict[str, Blueprint] = {}
 
     @classmethod
     def getOrCreateBlueprint(cls, name: str, importName: str, **kwargs) -> Blueprint:
@@ -31,11 +31,11 @@ class BlueprintConfig:
     
     @classmethod
     def registerRoutes(cls, app: Flask):
-        for blueprintName, importName, rule, func, options in cls.routesToRegister:
+        for (blueprintName, importName, rule, func, options) in cls.routesToRegister:
             match (blueprintName):
-                case 'api':
+                case ('api'):
                     prefix = '/api'
-                case 'uploads':
+                case ('uploads'):
                     prefix = '/uploads'
                 case _:
                     prefix = None

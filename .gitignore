@@ -3,13 +3,13 @@ open_frpc.bat
 frpc.toml
 readme.txt
 start.bat
-test.txt
 
 huixin-vue-front/
 saved_drawings/
 __pycache__/
 emotion_model/
 uploads/
+test/
 
 *.pyc
 *.log

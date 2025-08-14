@@ -160,7 +160,7 @@ class DrawingHandler:
                 # 保存分析结果到数据库
                 if (userId):
                     try:
-                        analysisId = MongoDBConfig.drawingAnalysisManager.saveAnalysis(
+                        analysisId = MongoDBConfig.drawingManager.saveAnalysis(
                             userId=userId,
                             imagePath=filePath,
                             analysisResult=analysisResult,

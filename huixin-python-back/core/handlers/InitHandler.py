@@ -1,4 +1,4 @@
-import os, sys, logging
+import os, logging
 
 from core.classifiers.EmotionClassifier import EmotionClassifier
 from core.classifiers.DummyClassifier import DummyClassifier
@@ -9,6 +9,7 @@ from core.configs.LogConfig import LogConfig
 from core.handlers.ErrorHandler import ErrorHandler
 from core.handlers.FileHandler import FileHandler
 from core.handlers.socket.SocketQueueHandler import SocketQueueHandler
+from core.states.DirectoryState import DirectoryState
 from core.states.GlobalState import GlobalState
 from core.states.SocketState import SocketState
 
@@ -31,7 +32,7 @@ class InitHandler:
     @staticmethod
     def configureApp():
         if (not GlobalState.APP):
-            raise RuntimeError("❌ Flask App尚未创建。请先调用create_flask_app。")
+            raise RuntimeError("❌ Flask App尚未创建。请先调用initFlaskApp。")
 
         CORS(GlobalState.APP, supports_credentials=True, resources={
             r"/*": {
@@ -67,8 +68,8 @@ class InitHandler:
         if (GlobalState.CLASSIFIER is None):
             try:
                 GlobalState.CLASSIFIER = EmotionClassifier(
-                    modelPath=os.path.join(GlobalState.BASE_DIR, "emotion_model"),
-                    slangFile=os.path.join(GlobalState.BASE_DIR, "slang_map.csv")
+                    modelPath=os.path.join(DirectoryState.BASE_DIR, "emotion_model"),
+                    slangFile=os.path.join(DirectoryState.BASE_DIR, "slang_map.csv")
                 )
                 logging.info("✅ 情感分析模型初始化成功")
             except Exception as e:
@@ -83,8 +84,8 @@ class InitHandler:
     # 创建保存目录
     @staticmethod
     def initDrawingSaveDir():
-        os.makedirs(GlobalState.SAVE_DIR, exist_ok=True)
-        logging.info(f"✅ 绘画保存目录 '{ GlobalState.SAVE_DIR }' 已创建或已存在。")
+        os.makedirs(DirectoryState.SAVE_DIR, exist_ok=True)
+        logging.info(f"✅ 绘画保存目录 '{ DirectoryState.SAVE_DIR }' 已创建或已存在。")
 
     # 初始化SocketIO并启动后台任务
     @staticmethod
