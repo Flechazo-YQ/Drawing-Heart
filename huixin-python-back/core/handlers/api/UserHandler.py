@@ -32,7 +32,7 @@ class UserHandler:
                     "message": "该邮箱已被注册"
                 }), 400
 
-            code = MongoDBConfig.verificationCodeManager.createCode(email, "registry")
+            code = MongoDBConfig.codeManager.createCode(email, "registry")
 
             if (not code or not EmailCodeHandler.sendEmailCode(email)):
                 logging.error(f"❌ 向 { email } 发送验证码失败")
@@ -66,7 +66,7 @@ class UserHandler:
                     "message": "该邮箱未注册"
                 }), 400
 
-            code = MongoDBConfig.verificationCodeManager.createCode(email, "resetPassword")
+            code = MongoDBConfig.codeManager.createCode(email, "resetPassword")
 
             if (not code or not EmailCodeHandler.sendEmailCode(email)):
                 logging.error(f"❌ 向 { email } 发送验证码失败")
@@ -157,7 +157,7 @@ class UserHandler:
                     "data": todayAnalysis
                 })
             except Exception as e:
-                logging.error(f"获取当日分析结果错误: { str(e) }")
+                logging.error(f"❌ 获取当日分析结果错误: { str(e) }")
                 
                 return flask.jsonify({
                     "code": 1,
@@ -239,11 +239,8 @@ class UserHandler:
         
         # 注册处理
         @staticmethod
-        @BlueprintConfig.apiRoutes("/register", methods=["GET", "POST"])
+        @BlueprintConfig.apiRoutes("/register", methods=["POST"])
         def register():
-            if (flask.request.method != "POST"):
-                return flask.render_template("register.html")
-
             data = flask.request.get_json()
             username = data.get("username")
             password = data.get("password")
@@ -257,7 +254,7 @@ class UserHandler:
                     "message": "所有字段均为必填项"
                 }), 400
 
-            if (not MongoDBConfig.verificationCodeManager.verifyCode(email, code, "register")):
+            if (not MongoDBConfig.codeManager.verifyCode(email, code, "register")):
                 return flask.jsonify({
                     "code": 1, 
                     "message": "验证码错误或已过期"
@@ -288,12 +285,6 @@ class UserHandler:
                 "message": "注册成功"
             }), 201
 
-        # 忘记密码处理
-        @staticmethod
-        @BlueprintConfig.apiRoutes("/forgot", methods=["GET", "POST"])
-        def forgot():
-            return flask.render_template("forgot.html")
-        
     class Profile:
 
         # 获取用户名, 并返回JSON格式的响应
@@ -314,7 +305,6 @@ class UserHandler:
         def getUserInfo():
             try:
                 user = flask.g.user
-                logging.info(f"获取用户信息: { user }")
                 profile = user.get("profile", {})
                 avatarUrl = UrlHelper.getAbsoluteUrl(profile.get("avatar", ""))
                 profile["avatar"] = avatarUrl

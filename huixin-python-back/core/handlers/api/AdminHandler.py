@@ -1,40 +1,66 @@
-import flask
+import flask, logging
 
 from core.configs.BlueprintConfig import BlueprintConfig
+from core.configs.MongoDBConfig import MongoDBConfig
 from core.handlers.token.AdminTokenHandler import AdminTokenHandler
-from core.states.TokenState import TokenState
-from core.utils.PasswordHelper import PasswordHelper
 
 class AdminHandler:
     
+    # 处理管理员登录
     @staticmethod
-    @BlueprintConfig.apiRoutes('/admin/login', methods=['POST'])
+    @BlueprintConfig.apiRoutes("/admin/login", methods=["POST"])
     def adminLogin():
         data = flask.request.get_json()
-        username = data.get('username')
-        password = data.get('password')
+        username = data.get("username")
+        password = data.get("password")
         
         if (not username or not password):
             return flask.jsonify({
-                'code': 1,
-                'message': '请提供用户名和密码'
+                "code": 1,
+                "message": "请提供用户名和密码"
             }), 400
-        
+
+        admin = MongoDBConfig.adminManager.verifyCredentials(username, password)
+
         # 验证管理员凭证
-        if (
-            username in TokenState.ADMIN_CREDENTIALS
-            and PasswordHelper.verifyHashPassword(password, TokenState.ADMIN_CREDENTIALS[username])
-        ):
-            # 生成管理员令牌
+        if (admin):
             token = AdminTokenHandler.generateAdminToken(username)
 
             return flask.jsonify({
-                'code': 0,
-                'message': '登录成功',
-                'token': token
+                "code": 0,
+                "message": "登录成功",
+                "token": token
             }), 200
         
         return flask.jsonify({
-            'code': 1,
-            'message': '用户名或密码错误'
+            "code": 1,
+            "message": "用户名或密码错误"
         }), 401
+    
+    # 获取管理员信息
+    @staticmethod
+    @BlueprintConfig.apiRoutes("/admin/info", methods=["GET", "POST"])
+    @AdminTokenHandler.adminTokenRequired
+    def getAdminInfo():
+        try:
+            admin = flask.g.admin
+            adminInfo = {
+                "name": admin.get("name"),
+                "role": admin.get("role"),
+                "lastLogin": admin.get("timeNode", {}).get("lastLoginAt"),
+                "stats": admin.get("stats", {}),
+                "_id": str(admin.get("_id"))
+            }
+            
+            return flask.jsonify({
+                "code": 0,
+                "message": "获取管理员信息成功",
+                "data": adminInfo
+            }), 200
+            
+        except Exception as e:
+            logging.error(f"❌ 获取管理员信息失败: { str(e) }")
+            return flask.jsonify({
+                "code": 500,
+                "message": f"获取管理员信息失败: { str(e) }"
+            }), 500

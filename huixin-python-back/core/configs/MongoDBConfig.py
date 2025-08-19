@@ -1,6 +1,7 @@
 import logging
 
 from pymongo import MongoClient
+from torch import unique
 
 class MongoDBConfig:
 
@@ -11,7 +12,7 @@ class MongoDBConfig:
         from core.managers.MessageManager import MessageManager
         from core.managers.DrawingManager import DrawingManager
         from core.managers.AdminManager import AdminManager
-        from core.managers.VerificationCodeManager import VerificationCodeManager
+        from core.managers.CodeManager import CodeManager
 
         cls.mongoDb = cls.MongoDB(connectionString, databaseName)
         cls.userManager = UserManager(cls.mongoDb)
@@ -19,7 +20,7 @@ class MongoDBConfig:
         cls.messageManager = MessageManager(cls.mongoDb)
         cls.drawingManager = DrawingManager(cls.mongoDb)
         cls.adminManager = AdminManager(cls.mongoDb)
-        cls.verificationCodeManager = VerificationCodeManager(cls.mongoDb)
+        cls.codeManager = CodeManager(cls.mongoDb)
 
         logging.info("✅ MongoDB初始化完成")
         return cls.mongoDb
@@ -45,7 +46,7 @@ class MongoDBConfig:
             self.messages = self.db.messages
             self.drawings = self.db.drawings
             self.admins = self.db.admins
-            self.verificationCodeManager = self.db.verificationCodeManager
+            self.codes = self.db.codes
 
             # 创建索引
             self.createIndexes()
@@ -53,6 +54,9 @@ class MongoDBConfig:
         # 创建索引以优化查询性能
         def createIndexes(self):
             try:
+                # 管理员集合索引
+                self.admins.create_index("name", unique=True)
+
                 # 用户集合索引
                 self.users.create_index("email", unique=True)
                 self.users.create_index("name")
@@ -61,6 +65,7 @@ class MongoDBConfig:
                 self.chats.create_index("userId")
                 self.chats.create_index("timeNode.createdAt")
                 self.chats.create_index([("userId", 1), ("timeNode.createdAt", -1)])
+
                 # 为消息数组中的字段创建索引
                 self.chats.create_index("messages.timestamp")
                 self.chats.create_index("messages.sender")

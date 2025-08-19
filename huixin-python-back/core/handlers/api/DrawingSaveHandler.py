@@ -2,6 +2,7 @@ import os, logging, flask, time
 
 from core.configs.BlueprintConfig import BlueprintConfig
 from core.handlers.token.UserTokenHandler import UserTokenHandler
+from core.handlers.DrawingHandler import DrawingHandler
 from core.states.DirectoryState import DirectoryState
 from core.utils.ImageHelper import ImageHelper
 
@@ -22,15 +23,15 @@ class DrawingSaveHandler:
                     "message": "无效的请求数据"
                 }), 400
 
-            imageDataBase64 = data.get("imageDataBase64")
+            image = data.get("image")
 
-            if (not imageDataBase64):
+            if (not image):
                 return flask.jsonify({
                     "code": 1,
                     "message": "无效的图像数据"
                 }), 400
-            
-            imageBytes = ImageHelper.decodeBase64Image(imageDataBase64)
+
+            imageBytes = ImageHelper.decodeBase64Image(image)
 
             if (not imageBytes or len(imageBytes) < 100):
                 return flask.jsonify({
@@ -52,16 +53,18 @@ class DrawingSaveHandler:
 
             logging.info(f"绘画已保存: { filePath }")
 
+            if (data.get("analyze")):
+                return DrawingHandler.analyzeImage(filePath, fileName, userId)
+
             return flask.jsonify({
                 "code": 0,
                 "message": "绘画保存成功",
-                "data": {
-                    "filePath": filePath
-                }
+                "filePath": filePath,
+                "fileName": fileName
             }), 200
 
         except Exception as e:
-            logging.error(f"Error saving drawing: {e}")
+            logging.error(f"❌ 绘画保存失败: { str(e) }")
             return flask.jsonify({
                 "code": 1,
                 "message": "绘画保存失败"

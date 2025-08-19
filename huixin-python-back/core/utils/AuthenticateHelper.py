@@ -10,12 +10,14 @@ class AuthenticateHelper:
     def adminAuthenticated(func):
 
         @functools.wraps(func)
-        def decoratedFunction(*args, **kwargs):
+        def wrapper(*args, **kwargs):
+            sid = flask.request.sid # type: ignore
+
             if ("adminId" not in flask.session):
                 logging.warning("⚠️ 管理员未认证，拒绝访问")
                 SocketQueueHandler.queueEmit('error', {
                     'message': 'Unauthorized'
-                }, sid=flask.request.sid) # type: ignore
+                }, sid=sid) # type: ignore
                 return None
 
             admin = MongoDBConfig.adminManager.getAdminById(flask.session["adminId"])
@@ -24,18 +26,20 @@ class AuthenticateHelper:
                 logging.error(f"❌ 管理员未找到: { flask.session['adminId'] }")
                 SocketQueueHandler.queueEmit('error', {
                     'message': 'Unauthorized'
-                }, sid=flask.request.sid) # type: ignore
+                }, sid=sid) # type: ignore
                 return None
+            
+            flask.g.admin = admin
 
-            return func(admin=admin, *args, **kwargs)
-        return decoratedFunction
+            return func(*args, **kwargs)
+        return wrapper
 
     # Socket.IO事件装饰器: 验证用户是否已在会话中认证
     @staticmethod
     def userAuthenticated(func):
 
         @functools.wraps(func)
-        def decoratedFunction(*args, **kwargs):
+        def wrapper(*args, **kwargs):
             if ("userId" not in flask.session):
                 logging.warning("⚠️ 用户未认证，拒绝访问")
                 SocketQueueHandler.queueEmit('error', {
@@ -52,5 +56,7 @@ class AuthenticateHelper:
                 }, sid=flask.request.sid) # type: ignore
                 return None
 
-            return func(user=user, *args, **kwargs)
-        return decoratedFunction
+            flask.g.user = user
+            
+            return func(*args, **kwargs)
+        return wrapper
