@@ -6,10 +6,11 @@ from typing import TYPE_CHECKING
 if (TYPE_CHECKING):
     from core.configs.MongoDBConfig import MongoDBConfig
 
-class VerificationCodeManager:
+class CodeManager:
     def __init__(self, db: "MongoDBConfig.MongoDB"):
         self.db = db
 
+    # 创建验证码
     def createCode(self, email: str, purpose: str, ttlMinutes: int = 10):
         try:
             code = ""
@@ -30,12 +31,13 @@ class VerificationCodeManager:
                 }
             }
 
-            self.db.verificationCodeManager.update_one(emailFilter, updateQuery, upsert=True)
+            self.db.codes.update_one(emailFilter, updateQuery, upsert=True)
             return code
         except Exception as e:
             logging.error(f"❌ 创建验证码失败: { str(e) }")
             return None
-        
+
+    # 验证验证码
     def verifyCode(self, email: str, code: str, purpose: str) -> bool:
         try:
             updateQuery = {
@@ -46,7 +48,7 @@ class VerificationCodeManager:
                     "$gt": datetime.now(timezone.utc)
                 }
             }
-            result = self.db.verificationCodeManager.find_one_and_delete(updateQuery)
+            result = self.db.codes.find_one_and_delete(updateQuery)
 
             if (not result):
                 logging.warning(f"⚠️ 验证码 { code } for { email } ({ purpose }) 验证失败或已过期。")

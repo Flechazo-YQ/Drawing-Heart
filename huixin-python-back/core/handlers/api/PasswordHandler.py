@@ -42,7 +42,7 @@ class PasswordHandler:
             }), 200
                 
         except Exception as e:
-            logging.error(f"重置密码错误: { str(e) }")
+            logging.error(f"❌ 重置密码错误: { str(e) }")
 
             return flask.jsonify({
                 'code': 1,
@@ -88,7 +88,7 @@ class PasswordHandler:
             }), 200
                 
         except Exception as e:
-            logging.error(f"更新密码错误: { str(e) }")
+            logging.error(f"❌ 更新密码错误: { str(e) }")
 
             return flask.jsonify({
                 'code': 1,
@@ -136,7 +136,7 @@ class PasswordHandler:
             }), 200
                 
         except Exception as e:
-            logging.error(f"重置密码错误: { str(e) }")
+            logging.error(f"❌ 重置密码错误: { str(e) }")
 
             return flask.jsonify({
                 'code': 1,

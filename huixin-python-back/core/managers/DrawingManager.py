@@ -29,7 +29,7 @@ class DrawingManager:
 
                 return result.modified_count > 0
             except Exception as e:
-                logging.error(f"更新绘画分析结果失败: { str(e) }")
+                logging.error(f"❌ 更新绘画分析结果失败: { str(e) }")
                 return False
             
         def addTag(self, analysisId: str, tag: str) -> bool:
@@ -49,7 +49,7 @@ class DrawingManager:
 
                 return result.modified_count > 0
             except Exception as e:
-                logging.error(f"添加标签失败: { str(e) }")
+                logging.error(f"❌ 添加标签失败: { str(e) }")
                 return False
 
         def removeTag(self, analysisId: str, tag: str) -> bool:
@@ -69,7 +69,7 @@ class DrawingManager:
 
                 return result.modified_count > 0
             except Exception as e:
-                logging.error(f"删除标签失败: { str(e) }")
+                logging.error(f"❌ 删除标签失败: { str(e) }")
                 return False
             
         def indicators(self, analysisId: str, **newIndicators) -> bool:
@@ -95,7 +95,7 @@ class DrawingManager:
 
                 return result.modified_count > 0
             except Exception as e:
-                logging.error(f"更新情感指标失败: { str(e) }")
+                logging.error(f"❌ 更新情感指标失败: { str(e) }")
                 return False
 
     class Formatter:
@@ -180,7 +180,7 @@ class DrawingManager:
             
             return self.formatter.doc(analysis) if (analysis) else None
         except Exception as e:
-            logging.error(f"获取当日分析结果失败: { str(e) }")
+            logging.error(f"❌ 获取当日分析结果失败: { str(e) }")
 
             return None
     
@@ -196,7 +196,7 @@ class DrawingManager:
 
             return self.formatter.doc(analysis) if (analysis) else None
         except Exception as e:
-            logging.error(f"获取最新分析结果失败: { str(e) }")
+            logging.error(f"❌ 获取最新分析结果失败: { str(e) }")
             return None
 
     # 获取用户在指定小时内的最新绘画分析结果
@@ -216,7 +216,7 @@ class DrawingManager:
 
             return self.formatter.doc(analysis) if (analysis) else None
         except Exception as e:
-            logging.error(f"获取近期分析结果失败: { str(e) }")
+            logging.error(f"❌ 获取近期分析结果失败: { str(e) }")
             return None
 
     # 获取用户的历史分析结果
@@ -235,7 +235,7 @@ class DrawingManager:
 
             return (self.formatter.list(analyses), total)
         except Exception as e:
-            logging.error(f"获取用户分析历史失败: { str(e) }")
+            logging.error(f"❌ 获取用户分析历史失败: { str(e) }")
             return ([], 0)
 
     # 获取用户指定日期范围内的分析结果
@@ -256,5 +256,5 @@ class DrawingManager:
 
             return (self.formatter.list(analyses), total)
         except Exception as e:
-            logging.error(f"获取日期范围分析结果失败: { str(e) }")
+            logging.error(f"❌ 获取日期范围分析结果失败: { str(e) }")
             return ([], 0)

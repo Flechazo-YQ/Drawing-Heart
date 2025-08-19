@@ -28,10 +28,9 @@ class UserManager:
                 }
                 result = self.db.users.update_one(idFilter, updateQuery)
 
-                logging.info(f"更新用户密码成功: id={ userId }")
                 return result.modified_count > 0
             except Exception as e:
-                logging.error(f"更新用户密码失败: { str(e) }")
+                logging.error(f"❌ 更新用户密码失败: { str(e) }")
                 return False
 
         # 更新用户头像
@@ -48,10 +47,9 @@ class UserManager:
                 }
                 result = self.db.users.update_one(idFilter, updateQuery)
 
-                logging.info(f"更新用户头像成功: id={ userId }")
                 return result.modified_count > 0
             except Exception as e:
-                logging.error(f"更新用户头像失败: { str(e) }")
+                logging.error(f"❌ 更新用户头像失败: { str(e) }")
                 return False
             
         # 更新用户统计数据
@@ -81,10 +79,9 @@ class UserManager:
 
                 self.db.users.update_one(idFilter, updateQuery)
 
-                logging.info(f"更新用户统计成功: id={ userId }, chats={ chats }, messages={ messages }")
                 return True
             except Exception as e:
-                logging.error(f"更新用户统计失败: { str(e) }")
+                logging.error(f"❌ 更新用户统计失败: { str(e) }")
                 return False
 
     def __init__(self, db: "MongoDBConfig.MongoDB"):
@@ -160,6 +157,6 @@ class UserManager:
                 "account.isActive": True
             })
         except Exception as e:
-            logging.error(f"根据ID获取用户时发生错误 (userId: { userId }): { str(e) }")
+            logging.error(f"❌ 根据ID获取用户时发生错误 (userId: { userId }): { str(e) }")
 
             return None

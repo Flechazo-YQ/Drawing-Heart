@@ -11,12 +11,12 @@ class SocketQueueHandler:
         while(True):
             try:
                 task = SocketState.socketioTaskQueue.get()
-                event = task.get('event')
-                data = task.get('data')
+                event = task.get("event")
+                data = task.get("data")
+                config = task.get("config", {})
 
                 if (event and data):
-                    SocketState.socketio.emit(event, data)
-                    logging.info(f"后台任务: 已发送Socket.IO事件 '{ event }'")
+                    SocketState.socketio.emit(event, data, **config)
 
                 SocketState.socketioTaskQueue.task_done()
             except Exception as e:
@@ -26,11 +26,13 @@ class SocketQueueHandler:
     @staticmethod
     def queueEmit(event: str, data: dict, room: str | None = None, sid: str | None = None):
         try:
+            config = {}
+            config["room"] = room if (room) else sid if (sid) else None
+
             task = {
-                'event': event,
-                'data': data,
-                'room': room,
-                'sid': sid
+                "event": event,
+                "data": data,
+                "config": config
             }
 
             SocketState.socketioTaskQueue.put(task)

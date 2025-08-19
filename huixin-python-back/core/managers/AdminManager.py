@@ -19,14 +19,14 @@ class AdminManager:
             return admin
 
         def list(self, admins: List[Dict]) -> List[Dict]:
-            return [self.doc(admin) for admin in admins]
+            return [self.doc(admin) for (admin) in admins]
 
     def __init__(self, db: "MongoDBConfig.MongoDB"):
         self.db = db
         self.formatter = self.Formatter()
 
     # 创建管理员
-    def createAdmin(self, name: str, password: str, role: str):
+    def createAdmin(self, name: str, password: str, **kwargs):
         try:
             idFilter = {
                 "name": name
@@ -39,7 +39,7 @@ class AdminManager:
             adminData = {
                 "name": name,
                 "password": PasswordHelper.generateHashPassword(password),
-                "role": role,
+                "role": kwargs.get("role", "normal"),
                 "stats": {
                     "isActive": True
                 },
@@ -51,6 +51,7 @@ class AdminManager:
             }
             result = self.db.admins.insert_one(adminData)
 
+            logging.info(f"✅ 创建管理员成功: { name }")
             return str(result.inserted_id)
         except Exception as e:
             logging.error(f"❌ 创建管理员失败: { name }, 错误: { str(e) }")
@@ -62,7 +63,7 @@ class AdminManager:
             idFilter = {
                 "name": name,
                 "stats.isActive": True
-            },
+            }
             updateQuery = {
                 "$set": {
                     "timeNode.lastLoginAt": datetime.now(timezone.utc)
@@ -75,11 +76,23 @@ class AdminManager:
                     "_id": admin["_id"]
                 }
                 self.db.admins.update_one(idFilter, updateQuery)
-                logging.info(f"✅ 管理员登录成功: { name }")
 
                 return self.formatter.doc(admin)
         except Exception as e:
             logging.error(f"❌ 管理员登录失败: { name }, 错误: { str(e) }")
+
+    # 根据昵称获取管理员信息
+    def getAdminByName(self, name: str):
+        try:
+            nameFilter = {
+                "name": name
+            }
+            admin = self.db.admins.find_one(nameFilter)
+
+            return self.formatter.doc(admin) if (admin) else None
+        except Exception as e:
+            logging.error(f"❌ 获取管理员失败: { name }, 错误: { str(e) }")
+            return None
 
     # 根据ID获取管理员信息
     def getAdminById(self, adminId: str):

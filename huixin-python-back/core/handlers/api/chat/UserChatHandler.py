@@ -22,7 +22,6 @@ class UserChatHandler:
             if (not chatId):
                 raise Exception("无法创建对话")
 
-            logging.info(f"用户 { userId } 创建了新对话: { chatId }")
             return flask.jsonify({
                 "code": 0,
                 "message": "创建对话成功",
@@ -40,7 +39,7 @@ class UserChatHandler:
 
     # 隐藏对话
     @staticmethod
-    @BlueprintConfig.apiRoutes("/chats/<chatId>/hide", methods=["POST"])
+    @BlueprintConfig.apiRoutes("/chats/<chatId>/hide", methods=["DELETE"])
     @UserTokenHandler.userTokenRequired
     def hideChat(chatId: str):
         try:
@@ -67,7 +66,7 @@ class UserChatHandler:
 
     # 获取对话的消息历史
     @staticmethod
-    @BlueprintConfig.apiRoutes("/chats/<chatId>/messages", methods=["GET"])
+    @BlueprintConfig.apiRoutes("/chats/<chatId>/messages", methods=["GET", "POST"])
     @UserTokenHandler.userTokenRequired
     def getChatMessages(chatId: str):
         try:
@@ -83,7 +82,7 @@ class UserChatHandler:
             
             page = int(flask.request.args.get("page", 1))
             limit = int(flask.request.args.get("limit", 50))
-            (messages, total) = MongoDBConfig.messageManager.getMessagesList(chatId, page, limit)
+            messages = MongoDBConfig.messageManager.getMessagesList(chatId, page, limit)
 
             return flask.jsonify({
                 "code": 0,
@@ -92,8 +91,7 @@ class UserChatHandler:
                     "chat": chat,
                     "messages": messages,
                     "page": page,
-                    "limit": limit,
-                    "totalMessages": total
+                    "limit": limit
                 }
             }), 200
         except Exception as e:
@@ -109,26 +107,25 @@ class UserChatHandler:
     @UserTokenHandler.userTokenRequired
     def streamChat():
         user = flask.g.user
-        data = flask.request.json
+        data = flask.request.get_json()
 
-        if (not data or "message" not in data):
+        if (not data):
             return flask.jsonify({
                 "code": 400,
                 "message": "请求数据不能为空!"
             }), 400
         
+        
         userMessage = data.get("message", "")
         userId = str(user["_id"])
         chatId = data.get("chatId")
-
+        
         try:
             if (not chatId):
                 chatId = MongoDBConfig.chatManager.createChat(userId, "新对话")
-
+                
                 if (not chatId):
                     raise Exception("无法创建对话")
-                
-                logging.info(f"用户 { userId } 创建了新对话: { chatId }")
 
             handler = StreamChatHandler(
                 userId=userId, 
@@ -148,7 +145,7 @@ class UserChatHandler:
     @staticmethod
     @BlueprintConfig.apiRoutes("/chats/list", methods=["GET"])
     @UserTokenHandler.userTokenRequired
-    def getUserChats():
+    def getUserChatsList():
         try:
             user = flask.g.user
             userId = str(user["_id"])
@@ -171,3 +168,4 @@ class UserChatHandler:
                 "code": 500,
                 "message": f"获取用户对话列表失败: { str(e) }"
             }), 500
+

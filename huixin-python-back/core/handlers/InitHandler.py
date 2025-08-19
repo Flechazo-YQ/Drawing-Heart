@@ -96,7 +96,7 @@ class InitHandler:
         SocketState.socketio.init_app(
             GlobalState.APP,
             cors_allowed_origins = "*",
-            async_mode = 'threading',
+            async_mode = "gevent",
             logger = True,
             engineio_logger = True
         )

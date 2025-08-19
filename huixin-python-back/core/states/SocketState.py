@@ -1,10 +1,9 @@
-import queue
-
+from queue import Queue
 from flask_socketio import SocketIO
 
 class SocketState:
     socketio = SocketIO()
-    socketioTaskQueue = queue.Queue()
+    socketioTaskQueue = Queue()
 
     sidToUserId = {}
     userIdToSid = {}
