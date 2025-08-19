@@ -28,7 +28,7 @@ class AdminSocketHandler:
                 "chats": formattedChats
             }, room="admin_room")
         except Exception as e:
-            logging.error(f"❌ 获取未签名危险对话失败: {str(e)}")
+            logging.error(f"❌ 获取未签名危险对话失败: { str(e) }")
 
     # 处理管理员认证
     @staticmethod
@@ -117,6 +117,7 @@ class AdminSocketHandler:
 
             SocketQueueHandler.queueEmit("new_message", {
                 "userId": chat["userId"],
+                "chatId": chatId,
                 "role": "admin",
                 "content": content,
                 "time": str(newMessage.get("createdAt", ""))
