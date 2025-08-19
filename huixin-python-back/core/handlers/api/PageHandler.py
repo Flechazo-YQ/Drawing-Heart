@@ -8,7 +8,7 @@ class PageHandler:
 
     # 返回根路径的API状态信息
     @staticmethod
-    @BlueprintConfig.apiRoutes('/root')
+    @BlueprintConfig.pageRoutes('/root')
     def root():
         return flask.jsonify({
             'status': 'success',
@@ -27,7 +27,7 @@ class PageHandler:
 
     # 返回主页的HTML内容
     @staticmethod
-    @BlueprintConfig.apiRoutes('')
+    @BlueprintConfig.pageRoutes('')
     def index():
         return flask.jsonify({
             'status': 'success',
@@ -44,9 +44,21 @@ class PageHandler:
             }
         })
 
+    # 返回注册页面的HTML内容
+    @staticmethod
+    @BlueprintConfig.pageRoutes('/register', methods=['GET'])
+    def register():
+        return flask.render_template("register.html")
+
+    # 返回找回密码页面的HTML内容
+    @staticmethod
+    @BlueprintConfig.pageRoutes("/forgot", methods=["GET"])
+    def forgot():
+        return flask.render_template("forgot.html")
+
     # 返回绘图页面的HTML内容
     @staticmethod
-    @BlueprintConfig.apiRoutes('/draw')
+    @BlueprintConfig.pageRoutes('/draw')
     def draw():
         try:
             with open('templates/draw.html', 'r', encoding='utf-8') as file:
@@ -62,13 +74,13 @@ class PageHandler:
         
     # 返回分析页面的HTML内容
     @staticmethod
-    @BlueprintConfig.apiRoutes('/analyse')
+    @BlueprintConfig.pageRoutes('/analyse')
     def analyse():
         return flask.render_template('index.html')
 
     # 返回隐私页面的HTML内容
     @staticmethod
-    @BlueprintConfig.apiRoutes('/privacy')
+    @BlueprintConfig.pageRoutes('/privacy')
     def privacy():
 
         # 由于前端已经有Vue路由处理/privacy，我们应该返回前端应用
@@ -76,12 +88,12 @@ class PageHandler:
     
     # 返回聊天页面的HTML内容
     @staticmethod
-    @BlueprintConfig.apiRoutes('/chat', methods=['GET'])
+    @BlueprintConfig.pageRoutes('/chat', methods=['GET'])
     def chat():
         return flask.render_template('chat.html')
     
     # 返回静态文件
     @staticmethod
-    @BlueprintConfig.apiRoutes('/templates/<filename>')
+    @BlueprintConfig.pageRoutes('/templates/<filename>')
     def getFile(filename: str):
         return flask.send_from_directory('templates', filename)

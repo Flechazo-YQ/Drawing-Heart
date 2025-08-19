@@ -1,12 +1,11 @@
 import datetime, logging
 
 from datetime import timezone, datetime
-from typing import List, Dict, Optional, Tuple, TYPE_CHECKING
+from typing import List, Dict, Optional, TYPE_CHECKING
 from bson import ObjectId
 
 if (TYPE_CHECKING):
     from core.configs.MongoDBConfig import MongoDBConfig
-    from core.managers.UserManager import UserManager
 
 class ChatManager:
     class Updater:
@@ -29,7 +28,7 @@ class ChatManager:
                 
                 return result.modified_count > 0
             except Exception as e:
-                logging.error(f"更新对话标题失败: { str(e) }")
+                logging.error(f"❌ 更新对话标题失败: { str(e) }")
                 return False
             
         # 更新危险状态
@@ -37,7 +36,7 @@ class ChatManager:
             try:
                 idFilter = {
                     "_id": ObjectId(chatId),
-                    "userId": ObjectId(userId)
+                    "userId": userId
                 }
                 updateQuery = {
                     "$set": {
@@ -49,7 +48,7 @@ class ChatManager:
 
                 return result.modified_count > 0
             except Exception as e:
-                logging.error(f"更新危险状态失败: { str(e) }")
+                logging.error(f"❌ 更新危险状态失败: { str(e) }")
                 return False
 
         # 更新管理员
@@ -60,7 +59,7 @@ class ChatManager:
                 }
                 updateQuery = {
                     "$set": {
-                        "adminId": ObjectId(adminId)
+                        "adminId": adminId
                     }
                 }
 
@@ -68,7 +67,7 @@ class ChatManager:
 
                 return result.modified_count > 0
             except Exception as e:
-                logging.error(f"更新管理员失败: { str(e) }")
+                logging.error(f"❌ 更新管理员失败: { str(e) }")
                 return False
 
         # 隐藏对话
@@ -76,7 +75,7 @@ class ChatManager:
             try:
                 idFilter = {
                     "_id": ObjectId(chatId),
-                    "userId": ObjectId(userId)
+                    "userId": userId
                 }
                 updateQuery = {
                     "$set": {
@@ -88,7 +87,7 @@ class ChatManager:
 
                 return result.modified_count > 0
             except Exception as e:
-                logging.error(f"删除对话失败: { str(e) }")
+                logging.error(f"❌ 删除对话失败: { str(e) }")
                 return False
             
     class Formatter:
@@ -111,10 +110,12 @@ class ChatManager:
     # 创建新对话, 返回对话ID
     # chatType: "normal" 普通对话, "dangerous" 危险对话
     def createChat(self, userId: str, title: str = "新对话", chatType: str = "normal") -> str:
+        from core.configs.MongoDBConfig import MongoDBConfig
+
         chatData = {
             
             # 核心关系与索引字段
-            "userId": ObjectId(userId),
+            "userId": userId,
             "adminId": None,
             "isActive": True,
 
@@ -143,37 +144,28 @@ class ChatManager:
         chatId = str(result.inserted_id)
         
         # 更新用户统计
-        UserManager(self.db).updater.stats(userId, chats=1)
+        MongoDBConfig.userManager.updater.stats(userId, chats=1)
 
         return chatId
 
     # 获取用户的对话列表
-    def getUserChats(self, userId: str, page: int = 1, limit: int = 20) -> Tuple[List[Dict], int]:
+    def getUserChats(self, userId: str, page: int = 1, limit: int = 20) -> List[Dict]:
         try:
             idFilter = {
-                "userId": ObjectId(userId),
+                "userId": userId,
                 "isActive": True
-            }
-            projection = {
-                "_id": 1,
-                "userId": 1,
-                "title": 1,
-                "lastMessage": 1,
-                "timeNode.updatedAt": 1,
-                "type": 1
             }
             sort = [("timeNode.updatedAt", -1)]
             skip = (page - 1) * limit
-            total = self.db.chats.count_documents(idFilter)
-            chats = list(self.db.chats.find(idFilter, projection)
+            chats = list(self.db.chats.find(idFilter)
                 .sort(sort)
                 .skip(skip)
                 .limit(limit))
 
-            return (self.formatter.list(chats), total)
+            return self.formatter.list(chats)
         except Exception as e:
             logging.error(f"❌ 获取对话列表失败: { str(e) }")
-            return ([], 0)
+            return []
 
     # 根据ID获取对话
     def getChatById(self, chatId: str) -> Optional[Dict]:
@@ -190,7 +182,7 @@ class ChatManager:
             return None
 
     # 获取所有未被分配的危险对话列表
-    def getUnsignedDangerousChats(self, limit: int = 50) -> Tuple[List[Dict], int]:
+    def getUnsignedDangerousChats(self, limit: int = 50) -> List[Dict]:
         try:
             idFilter = {
                 "type": "dangerous",
@@ -198,12 +190,13 @@ class ChatManager:
                 "isActive": True
             }
             sort = [("timeNode.updatedAt", -1)]
-            total = self.db.chats.count_documents(idFilter)
             chats = list(self.db.chats.find(idFilter)
                 .sort(sort)
                 .limit(limit))
 
-            return (self.formatter.list(chats), total)
+            return self.formatter.list(chats)
         except Exception as e:
             logging.error(f"❌ 获取未分配的危险对话失败: { str(e) }")
-            return ([], 0)
+            return []
+
+

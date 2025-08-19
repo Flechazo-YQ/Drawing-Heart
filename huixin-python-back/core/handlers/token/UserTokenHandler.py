@@ -67,23 +67,27 @@ class UserTokenHandler:
     def userTokenRequired(func):
 
         @functools.wraps(func)
-        def decoratedFunction(*args, **kwargs):
+        def wrapper(*args, **kwargs):
             token = flask.request.headers.get('Authorization')
+            
+            if (not token):
+                if (args and isinstance(args[0], dict) and 'token' in args[0]):
+                    token = args[0]['token']
             
             if (not token):
                 return flask.jsonify({
                     'message': 'Token is missing!'
                 }), 401
-            
-            userId = UserTokenHandler.verifyUserToken(token)
 
+            userId = UserTokenHandler.verifyUserToken(token)
+            
             if (not userId):
                 return flask.jsonify({
                     'message': 'Invalid token!'
                 }), 401
 
             user = MongoDBConfig.userManager.getUserById(userId)
-
+            
             if (not user):
                 return flask.jsonify({
                     'message': 'User not found!'
@@ -92,4 +96,4 @@ class UserTokenHandler:
             flask.g.user = FormatHelper.json(user)
 
             return func(*args, **kwargs)
-        return decoratedFunction
+        return wrapper

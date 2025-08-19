@@ -17,17 +17,24 @@ class BlueprintConfig:
     
     @classmethod
     def apiRoutes(cls, rule: str, **options):
-        def decorator(func):
+        def wrapper(func):
             cls.routesToRegister.append(('api', func.__module__, rule, func, options))
             return func
-        return decorator
+        return wrapper
     
     @classmethod
     def uploadsRoutes(cls, rule: str, **options):
-        def decorator(func):
+        def wrapper(func):
             cls.routesToRegister.append(('uploads', func.__module__, rule, func, options))
             return func
-        return decorator
+        return wrapper
+    
+    @classmethod
+    def pageRoutes(cls, rule: str, **options):
+        def wrapper(func):
+            cls.routesToRegister.append(('page', func.__module__, rule, func, options))
+            return func
+        return wrapper
     
     @classmethod
     def registerRoutes(cls, app: Flask):
@@ -37,6 +44,8 @@ class BlueprintConfig:
                     prefix = '/api'
                 case ('uploads'):
                     prefix = '/uploads'
+                case ('page'):
+                    prefix = '/page'
                 case _:
                     prefix = None
 

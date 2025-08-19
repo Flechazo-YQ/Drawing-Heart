@@ -25,9 +25,10 @@ class LogConfig:
 
                     try:
                         if (os.path.isfile(filePath) or os.path.islink(filePath)):
-                            os.unlink(filePath)
+                            with open(filePath, "w") as f:
+                                pass
                     except Exception as e:
-                        logging.error(f"❌ 无法删除旧日志文件 { filePath }: { str(e) }")
+                        logging.error(f"❌ 无法清空旧日志文件 { filePath }: { str(e) }")
 
             fileLogFormatter = cls.StripAnsiFormatter(
                 '%(asctime)s - %(levelname)s - [%(filename)s:%(lineno)d] - %(message)s'

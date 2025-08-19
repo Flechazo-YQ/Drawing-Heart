@@ -1,4 +1,4 @@
-import flask, requests, json, logging, datetime
+import flask, requests, json, logging
 
 from core.configs.MongoDBConfig import MongoDBConfig
 from core.handlers.socket.SocketQueueHandler import SocketQueueHandler
@@ -37,9 +37,10 @@ class StreamChatHandler:
                 return 0.9
             
             (label, probs) = GlobalState.CLASSIFIER.predict(message) if (GlobalState.CLASSIFIER) else (None, None)
-            dangerProb = float(probs[0]) if (probs) else 0.0
+            
+            dangerProb = float(probs[0]) if (probs is not None and hasattr(probs, '__len__')) else 0.0
 
-            logging.info(f"危险检测结果: label={ label }, dangerous_prob={ dangerProb:.4f }")
+            logging.warning(f"危险检测结果: { label }, 危险等级: {dangerProb:.4f}")
             return dangerProb
         except Exception as e:
             logging.error(f"❌ 情感分析模型预测失败: { str(e) }")
@@ -47,7 +48,7 @@ class StreamChatHandler:
 
     # 处理危险消息
     def __handleDangerousMessage(self):
-        logging.warning(f"⚠️ 触发危险检测: dangerous={ self.dangerLevel:.4f } > 0.3")
+        logging.warning(f"⚠️ 触发危险检测: dangerous = {self.dangerLevel:.4f} > 0.3")
         MongoDBConfig.chatManager.updater.danger(self.chatId, self.userId)
         MongoDBConfig.messageManager.createMessage(
             chatId=self.chatId,
@@ -56,7 +57,6 @@ class StreamChatHandler:
             sender="user",
             dangerLevel=self.dangerLevel
         )
-
         alertData = {
             "chatId": self.chatId,
             "userId": self.userId,
@@ -131,7 +131,7 @@ class StreamChatHandler:
                 content=self.userMessage,
                 sender="user"
             )
-            
+
             # 发起AI请求
             with requests.post(GlobalState.URL, json=payload, headers=self.HEADERS, stream=True) as response:
                 response.raise_for_status()
@@ -149,7 +149,8 @@ class StreamChatHandler:
                         content = json.loads(data).get("choices", [{}])[0].get("delta", {}).get("content", "")
                         assistantReply += content
 
-                        if (content): yield content
+                        if (content): 
+                            yield f"data: { json.dumps({'content': content}) }\n\n"
                     except (json.JSONDecodeError, Exception) as e:
                         logging.error(f"❌ Failed to parse JSON: { line }, Error: { str(e) }")
 
@@ -161,9 +162,10 @@ class StreamChatHandler:
                     content=assistantReply,
                     sender="assistant"
                 )
+            yield "data: [DONE]\n\n"
         except Exception as e:
-            logging.error(f"聊天处理错误: { str(e) }")
-            yield f"data: Error: { str(e) }\n\n"
+            logging.error(f"❌ 聊天处理错误: { str(e) }")
+            yield f"data: { json.dumps({'error': str(e)}) }\n\n"
             yield "data: [DONE]\n\n"
 
     # 生成AI提示消息
