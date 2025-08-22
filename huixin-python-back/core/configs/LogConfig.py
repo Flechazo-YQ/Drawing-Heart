@@ -1,14 +1,15 @@
 import os, logging, sys, re
 
 from logging.handlers import TimedRotatingFileHandler
-
+from logging import Formatter, StreamHandler, FileHandler
 from typing import Final
+from re import Pattern
 
 class LogConfig:
     LOG_DIR: Final[str] = 'logs'
 
-    class StripAnsiFormatter(logging.Formatter):
-        ANSI_REGEX: Final[re.Pattern] = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
+    class StripAnsiFormatter(Formatter):
+        ANSI_REGEX: Final[Pattern] = re.compile(r'\x1B(?:[@-Z\\-_]|\[[0-?]*[ -/]*[@-~])')
 
         def format(self, record):
             formattedMessage = super().format(record)
@@ -33,7 +34,7 @@ class LogConfig:
             fileLogFormatter = cls.StripAnsiFormatter(
                 '%(asctime)s - %(levelname)s - [%(filename)s:%(lineno)d] - %(message)s'
             )
-            consoleLogFormatter = logging.Formatter(
+            consoleLogFormatter = Formatter(
                 '%(asctime)s - %(levelname)s - [%(filename)s:%(lineno)d] - %(message)s'
             )
             rootLogger = logging.getLogger()
@@ -45,7 +46,7 @@ class LogConfig:
                 rootLogger.handlers.clear()
 
             # 控制台日志记录
-            consoleHandler = logging.StreamHandler()
+            consoleHandler = StreamHandler()
 
             consoleHandler.setFormatter(consoleLogFormatter)
             rootLogger.addHandler(consoleHandler)
@@ -95,8 +96,8 @@ class LogConfig:
                 level=logging.INFO,
                 format='%(asctime)s - %(levelname)s - %(message)s',
                 handlers=[
-                    logging.FileHandler('app.log', encoding='utf-8'),
-                    logging.StreamHandler(sys.stdout)
+                    FileHandler('app.log', encoding='utf-8'),
+                    StreamHandler(sys.stdout)
                 ]
             )
             logging.error(f"❌ 初始化自定义日志系统失败: { str(e) }")

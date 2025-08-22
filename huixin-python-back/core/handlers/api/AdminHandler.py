@@ -3,12 +3,13 @@ import flask, logging
 from core.configs.BlueprintConfig import BlueprintConfig
 from core.configs.MongoDBConfig import MongoDBConfig
 from core.handlers.token.AdminTokenHandler import AdminTokenHandler
+from core.states.RouteState import RouteState
 
 class AdminHandler:
     
     # 处理管理员登录
     @staticmethod
-    @BlueprintConfig.apiRoutes("/admin/login", methods=["POST"])
+    @BlueprintConfig.apiRoutes(RouteState.Api.ADMIN_LOGIN['route'], methods=RouteState.Api.ADMIN_LOGIN['method'])
     def adminLogin():
         data = flask.request.get_json()
         username = data.get("username")
@@ -39,7 +40,7 @@ class AdminHandler:
     
     # 获取管理员信息
     @staticmethod
-    @BlueprintConfig.apiRoutes("/admin/info", methods=["GET", "POST"])
+    @BlueprintConfig.apiRoutes(RouteState.Api.ADMIN_INFO['route'], methods=RouteState.Api.ADMIN_INFO['method'])
     @AdminTokenHandler.adminTokenRequired
     def getAdminInfo():
         try:

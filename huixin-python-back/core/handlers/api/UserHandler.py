@@ -4,8 +4,10 @@ from core.configs.BlueprintConfig import BlueprintConfig
 from core.configs.MongoDBConfig import MongoDBConfig
 from core.handlers.EmailCodeHandler import EmailCodeHandler
 from core.handlers.token.UserTokenHandler import UserTokenHandler
+from core.states.RouteState import RouteState
 from core.utils.PasswordHelper import PasswordHelper
 from core.utils.UrlHelper import UrlHelper
+from core.utils.TypedDictionaryHelper import TypedDictionaryHelper
 
 from typing import Any, Final, Dict, Callable
 
@@ -14,7 +16,7 @@ class UserHandler:
 
         # 发送注册验证码处理
         @staticmethod
-        @BlueprintConfig.apiRoutes("/code/register", methods=["POST"])
+        @BlueprintConfig.apiRoutes(RouteState.Api.SEND_REGISTER_CODE['route'], methods=RouteState.Api.SEND_REGISTER_CODE['method'])
         def sendRegisterCode():
             data = flask.request.get_json()
             email = data.get("email")
@@ -49,7 +51,7 @@ class UserHandler:
 
         # 发送重置密码验证码处理
         @staticmethod
-        @BlueprintConfig.apiRoutes("/code/reset", methods=["POST"])
+        @BlueprintConfig.apiRoutes(RouteState.Api.SEND_RESET_CODE['route'], methods=RouteState.Api.SEND_RESET_CODE['method'])
         def sendResetPasswordCode():
             data = flask.request.get_json()
             email = data.get("email")
@@ -83,12 +85,12 @@ class UserHandler:
 
     class Analysis:
         ANALYSIS_QUERY = Callable[[str], Any]
-        ANALYSIS_TIME_CONFIG: Final[Dict[str, Dict[str, ANALYSIS_QUERY | str]]] = {
+        ANALYSIS_TIME_CONFIG: Final[TypedDictionaryHelper.AnalysisTimeConfig] = {
             "today": {
                 "query": lambda userId: MongoDBConfig.drawingManager.getRecentAnalysis(userId, hours=0),
                 "desc": "今日"
             },
-            "4hours": {
+            "_4hours": {
                 "query": lambda userId: MongoDBConfig.drawingManager.getRecentAnalysis(userId, hours=4),
                 "desc": "4小时内"
             },
@@ -107,7 +109,7 @@ class UserHandler:
 
         #获取用户的绘画分析历史
         @staticmethod
-        @BlueprintConfig.apiRoutes("/analyses", methods=["GET"])
+        @BlueprintConfig.apiRoutes(RouteState.Api.ANALYSES_HISTORY['route'], methods=RouteState.Api.ANALYSES_HISTORY['method'])
         @UserTokenHandler.userTokenRequired
         def getHistory():
             try:
@@ -138,7 +140,7 @@ class UserHandler:
 
         # 获取用户当日的绘画分析结果
         @staticmethod
-        @BlueprintConfig.apiRoutes("/analyses/today", methods=["GET"])
+        @BlueprintConfig.apiRoutes(RouteState.Api.ANALYSES_TODAY['route'], methods=RouteState.Api.ANALYSES_TODAY['method'])
         @UserTokenHandler.userTokenRequired
         def getToday():
             try:
@@ -166,7 +168,7 @@ class UserHandler:
             
         #获取用户最新的绘画分析结果(可选择时间限制)
         @staticmethod
-        @BlueprintConfig.apiRoutes("/analyses/latest", methods=["GET"])
+        @BlueprintConfig.apiRoutes(RouteState.Api.ANALYSES_LATEST['route'], methods=RouteState.Api.ANALYSES_LATEST['method'])
         @UserTokenHandler.userTokenRequired
         def getLatest():
             try:
@@ -197,7 +199,7 @@ class UserHandler:
         
         # 登录处理
         @staticmethod
-        @BlueprintConfig.apiRoutes("/login", methods=["POST"])
+        @BlueprintConfig.apiRoutes(RouteState.Api.USER_LOGIN['route'], methods=RouteState.Api.USER_LOGIN['method'])
         def login():
             data = flask.request.get_json()
             username = data.get("username")
@@ -239,7 +241,7 @@ class UserHandler:
         
         # 注册处理
         @staticmethod
-        @BlueprintConfig.apiRoutes("/register", methods=["POST"])
+        @BlueprintConfig.apiRoutes(RouteState.Api.USER_REGISTER['route'], methods=RouteState.Api.USER_REGISTER['method'])
         def register():
             data = flask.request.get_json()
             username = data.get("username")
@@ -289,7 +291,7 @@ class UserHandler:
 
         # 获取用户名, 并返回JSON格式的响应
         @staticmethod
-        @BlueprintConfig.apiRoutes("/name", methods=["GET"])
+        @BlueprintConfig.apiRoutes(RouteState.Api.PROFILE_NAME['route'], methods=RouteState.Api.PROFILE_NAME['method'])
         @UserTokenHandler.userTokenRequired
         def getUsername():
             user = flask.g.user
@@ -300,7 +302,7 @@ class UserHandler:
 
         # 获取用户详细信息
         @staticmethod
-        @BlueprintConfig.apiRoutes("/info", methods=["GET"])
+        @BlueprintConfig.apiRoutes(RouteState.Api.PROFILE_INFO['route'], methods=RouteState.Api.PROFILE_INFO['method'])
         @UserTokenHandler.userTokenRequired
         def getUserInfo():
             try:

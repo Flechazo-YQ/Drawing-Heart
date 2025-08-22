@@ -1,5 +1,7 @@
 import datetime, logging
 
+from core.utils.FormatHelper import FormatHelper
+
 from datetime import datetime, timezone, timedelta
 from typing import Dict, List, Optional, Tuple, TYPE_CHECKING
 from bson import ObjectId
@@ -76,7 +78,7 @@ class DrawingManager:
             try:
                 updateFields = {}
 
-                for key, value in newIndicators.items():
+                for (key, value) in newIndicators.items():
                     if (key in self.ALLOWED_INDICATORS):
                         updateFields[f"analysis.indicators.{ key }"] = value
 
@@ -98,33 +100,18 @@ class DrawingManager:
                 logging.error(f"❌ 更新情感指标失败: { str(e) }")
                 return False
 
-    class Formatter:
-
-        # 格式化绘画分析文档, 将ObjectId转换为字符串
-        def doc(self, analysis: Dict) -> Dict:
-            if (analysis):
-                analysis["_id"] = str(analysis["_id"])
-                analysis["userId"] = str(analysis["userId"])
-
-            return analysis
-        
-        # 格式化一个分析文档列表
-        def list(self, analyses: List[Dict]) -> List[Dict]:
-            return [self.doc(analysis) for analysis in analyses]
-
     def __init__(self, db: "MongoDBConfig.MongoDB"):
         self.db = db
         self.updater = self.Updater(db)
-        self.formatter = self.Formatter()
 
     # 保存绘画分析结果, 返回分析记录ID
     def saveAnalysis(self, userId: str, imagePath: str, analysisResult: str, **kwargs) -> str:
         analysisData = {
 
             # 核心关系与索引字段
-            "userId": ObjectId(userId),
+            "userId": userId,
 
-            # 核心内容字段
+            # 图片路径
             "imagePath": imagePath,
 
             # 状态与时间戳
@@ -159,9 +146,9 @@ class DrawingManager:
             }
         }
 
-        result = self.db.drawings.insert_one(analysisData)
+        self.db.drawings.insert_one(analysisData)
 
-        return str(result.inserted_id)
+        return FormatHelper.jsonOrList(analysisData)
 
     # 获取用户当日的绘画分析结果
     def getTodayAnalysis(self, userId: str) -> Optional[Dict]:
@@ -177,11 +164,10 @@ class DrawingManager:
             }
             sort = [("timeNode.createdAt", -1)]
             analysis = self.db.drawings.find_one(idFilter, sort=sort)  # 获取当日最新的分析结果
-            
-            return self.formatter.doc(analysis) if (analysis) else None
+
+            return FormatHelper.jsonOrList(analysis) if (analysis) else None
         except Exception as e:
             logging.error(f"❌ 获取当日分析结果失败: { str(e) }")
-
             return None
     
     # 获取用户最新的绘画分析结果(不限日期)
@@ -194,7 +180,7 @@ class DrawingManager:
             sort = [("timeNode.createdAt", -1)]
             analysis = self.db.drawings.find_one(idFilter, sort=sort)  # 按创建时间降序，获取最新的分析结果
 
-            return self.formatter.doc(analysis) if (analysis) else None
+            return FormatHelper.jsonOrList(analysis) if (analysis) else None
         except Exception as e:
             logging.error(f"❌ 获取最新分析结果失败: { str(e) }")
             return None
@@ -214,7 +200,7 @@ class DrawingManager:
             sort = [("timeNode.createdAt", -1)]
             analysis = self.db.drawings.find_one(idFilter, sort=sort)
 
-            return self.formatter.doc(analysis) if (analysis) else None
+            return FormatHelper.jsonOrList(analysis) if (analysis) else None
         except Exception as e:
             logging.error(f"❌ 获取近期分析结果失败: { str(e) }")
             return None
@@ -233,7 +219,7 @@ class DrawingManager:
                 .skip(skip)
                 .limit(limit))
 
-            return (self.formatter.list(analyses), total)
+            return (FormatHelper.jsonOrList(analyses), total)
         except Exception as e:
             logging.error(f"❌ 获取用户分析历史失败: { str(e) }")
             return ([], 0)
@@ -254,7 +240,7 @@ class DrawingManager:
             total = self.db.drawings.count_documents(idFilter)
             analyses = list(self.db.drawings.find(idFilter).sort(sort))
 
-            return (self.formatter.list(analyses), total)
+            return (FormatHelper.jsonOrList(analyses), total)
         except Exception as e:
             logging.error(f"❌ 获取日期范围分析结果失败: { str(e) }")
             return ([], 0)

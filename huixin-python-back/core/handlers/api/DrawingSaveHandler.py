@@ -4,13 +4,14 @@ from core.configs.BlueprintConfig import BlueprintConfig
 from core.handlers.token.UserTokenHandler import UserTokenHandler
 from core.handlers.DrawingHandler import DrawingHandler
 from core.states.DirectoryState import DirectoryState
+from core.states.RouteState import RouteState
 from core.utils.ImageHelper import ImageHelper
 
 class DrawingSaveHandler:
     
     # 保存绘画并可选进行分析
     @staticmethod
-    @BlueprintConfig.apiRoutes('/save', methods=['POST'])
+    @BlueprintConfig.apiRoutes(RouteState.Api.SAVE_DRAWINGS['route'], methods=RouteState.Api.SAVE_DRAWINGS['method'])
     @UserTokenHandler.userTokenRequired
     def saveDrawing():
         try:
@@ -41,7 +42,7 @@ class DrawingSaveHandler:
 
             userId = str(user["_id"])
             timestamp = int(time.time() * 1000)
-            userDir = os.path.join(DirectoryState.SAVE_DIR, userId)
+            userDir = os.path.join(DirectoryState.SAVED_DRAWINGS_DIR, userId)
 
             os.makedirs(userDir, exist_ok=True)
 

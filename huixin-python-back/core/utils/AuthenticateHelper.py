@@ -40,11 +40,13 @@ class AuthenticateHelper:
 
         @functools.wraps(func)
         def wrapper(*args, **kwargs):
+            sid = flask.request.sid # type: ignore
+
             if ("userId" not in flask.session):
                 logging.warning("⚠️ 用户未认证，拒绝访问")
                 SocketQueueHandler.queueEmit('error', {
                     'message': 'Unauthorized'
-                }, sid=flask.request.sid) # type: ignore
+                }, sid=sid)
                 return None
 
             user = MongoDBConfig.userManager.getUserById(flask.session["userId"])
@@ -53,7 +55,7 @@ class AuthenticateHelper:
                 logging.error(f"❌ 用户未找到: { flask.session['userId'] }")
                 SocketQueueHandler.queueEmit('error', {
                     'message': 'Unauthorized'
-                }, sid=flask.request.sid) # type: ignore
+                }, sid=sid)
                 return None
 
             flask.g.user = user

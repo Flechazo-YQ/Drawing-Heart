@@ -1,54 +1,40 @@
 import flask, logging, flask_socketio
 
 from core.configs.MongoDBConfig import MongoDBConfig
-from core.states.SocketState import SocketState
 from core.handlers.token.AdminTokenHandler import AdminTokenHandler
 from core.handlers.socket.SocketQueueHandler import SocketQueueHandler
+from core.states.SocketState import SocketState
 from core.utils.AuthenticateHelper import AuthenticateHelper
-from core.utils.FormatHelper import FormatHelper
+from core.utils.BroadcastHelper import BroadcastHelper
+from core.utils.TypedDictionaryHelper import TypedDictionaryHelper
 
 from typing import Dict
 
 class AdminSocketHandler:
 
-    # 广播危险需要干预的对话
-    @staticmethod
-    def __broadcastInterventionList():
-        try:
-            chats = MongoDBConfig.chatManager.getUnsignedDangerousChats()
-            formattedChats = FormatHelper.json(chats)
-
-            for (chat) in formattedChats:
-                userId = chat.get("userId")
-                user = MongoDBConfig.userManager.getUserById(userId)
-                username = user.get("name") if (user is not None) else "未知用户"
-                chat["username"] = username
-
-            SocketQueueHandler.queueEmit("dangerous_chats_list", {
-                "chats": formattedChats
-            }, room="admin_room")
-        except Exception as e:
-            logging.error(f"❌ 获取未签名危险对话失败: { str(e) }")
-
     # 处理管理员认证
     @staticmethod
-    @SocketState.socketio.on("admin_auth")
+    @SocketState.socketio.on(SocketState.ADMIN_AUTH)
     @AdminTokenHandler.adminTokenRequired
     def handleAdminAuth(data: Dict):
-        admin = flask.g.admin
         sid = flask.request.sid # type: ignore
+        admin = flask.g.admin
         adminId = str(admin["_id"])
-        flask.session["adminId"] = adminId
-        SocketState.sidToAdminId[sid] = adminId
-        SocketState.adminIdToSid[adminId] = sid
+
+        AdminSocketHandler.__sessionStore(adminId)
+        AdminSocketHandler.__sidAndAdminIdStore(adminId, sid)
 
         flask_socketio.join_room("admin_room", sid=sid) # type: ignore
-        AdminSocketHandler.__broadcastInterventionList()
+
+        # 广播危险对话列表
+        BroadcastHelper.signedDangerousChats()
+        BroadcastHelper.unsignDangerousChats()
+
         logging.info(f"🔒 管理员登录: { adminId }")
 
     # 管理员请求某个对话的全部历史记录
     @staticmethod
-    @SocketState.socketio.on("request_history")
+    @SocketState.socketio.on(SocketState.ADMIN_REQUEST_HISTORY)
     @AuthenticateHelper.adminAuthenticated
     def handleRequestHistory(data: Dict):
         admin = flask.g.admin
@@ -58,75 +44,144 @@ class AdminSocketHandler:
         if (not chatId): return
 
         try:
-            messages = MongoDBConfig.messageManager.getAllMessages(chatId)
-            chatInfo = MongoDBConfig.chatManager.getChatById(chatId)
-            response = {
+            messages = MongoDBConfig.messageManager.getMessagesList(chatId)
+            requestHistoryResponseData: TypedDictionaryHelper.RequestHistoryResponseData = {
                 "chatId": chatId,
-                "messages": messages,
-                "chatInfo": chatInfo
+                "messages": messages
             }
-
+            
             MongoDBConfig.chatManager.updater.admin(chatId, str(admin["_id"]))
-            SocketQueueHandler.queueEmit("request_history_response", response, sid=sid) # type: ignore
-            AdminSocketHandler.__broadcastInterventionList()
+            SocketQueueHandler.queueEmit(
+                SocketState.REQUEST_HISTORY_RESPONSE["event"],
+                requestHistoryResponseData,
+                sid=sid
+            )
+
+            # 广播危险对话列表
+            BroadcastHelper.signedDangerousChats()
+            BroadcastHelper.unsignDangerousChats()
         except Exception as e:
             logging.error(f"❌ 获取对话{ chatId }历史失败: { str(e) }")
 
     # 处理管理员发送的消息
     @staticmethod
-    @SocketState.socketio.on("admin_message")
+    @SocketState.socketio.on(SocketState.ADMIN_MESSAGE)
     @AuthenticateHelper.adminAuthenticated
     def handleAdminMessage(data: Dict):
-        admin = flask.g.admin
-        adminName = admin["name"]
         sid = flask.request.sid # type: ignore
+
+        admin = flask.g.admin
+        adminId = str(admin["_id"])
+
         chatId = data.get("chatId")
         content = data.get("content")
 
         if (not chatId or not content):
-            SocketQueueHandler.queueEmit("admin_message_response", {
+            AdminMessageResponseData: TypedDictionaryHelper.AdminMessageResponseData = {
                 "status": "error",
-                "message": "Chat ID and content are required"
-            }, sid=sid) # type: ignore
+                "message": "缺少对话ID或内容"
+            }
+            SocketQueueHandler.queueEmit(
+                SocketState.ADMIN_MESSAGE_RESPONSE["event"],
+                AdminMessageResponseData,
+                sid=sid
+            )
+            return
+        
+        chat = MongoDBConfig.chatManager.getChatById(chatId)
+
+        newMessage = MongoDBConfig.messageManager.createMessage(
+            chatId=chatId,
+            type="text",
+            content=content,
+            sender="admin"
+        )
+
+        logging.info(newMessage.get("timestamp", "")) if (newMessage) else logging.error("创建新消息失败")
+
+        if (not newMessage):
+            raise Exception("创建新消息失败")
+        
+        adminMessageResponseData: TypedDictionaryHelper.AdminMessageResponseData = {
+            "status": "success",
+            "message": "消息发送成功"
+        }
+
+        SocketQueueHandler.queueEmit(
+            SocketState.ADMIN_MESSAGE_RESPONSE["event"], 
+            adminMessageResponseData, 
+            sid=sid
+        )
+
+        if (not chat):
+            adminMessageResponseData: TypedDictionaryHelper.AdminMessageResponseData = {
+                "status": "error",
+                "message": "未找到对话"
+            }
+            
+            SocketQueueHandler.queueEmit(
+                SocketState.ADMIN_MESSAGE_RESPONSE["event"], 
+                adminMessageResponseData, 
+                sid=sid
+            )
             return
 
-        try:
-            newMessage = MongoDBConfig.messageManager.createMessage(
-                chatId=chatId,
-                type="text",
-                content=content,
-                sender="admin"
+        adminReplyData: TypedDictionaryHelper.AdminReplyData = {
+            "chatId": chatId,
+            "content": content,
+            "timestamp": str(newMessage.get("timestamp", ""))
+        }
+
+        SocketQueueHandler.queueEmit(
+            SocketState.ADMIN_REPLY["event"], 
+            adminReplyData, 
+            room="user_" + chat["userId"]
+        )
+
+        MongoDBConfig.chatManager.updater.admin(chatId, adminId)
+
+        # 发送新消息定义
+        newMessageData: TypedDictionaryHelper.NewMessageData = {
+            "userId": chat["userId"],
+            "chatId": chatId,
+            "role": "admin",
+            "content": content,
+            "timestamp": str(newMessage.get("timestamp", ""))
+        }
+
+        # 发送给用户
+        SocketQueueHandler.queueEmit(
+            SocketState.NEW_MESSAGE["event"], 
+            newMessageData, 
+            room="user_" + chat["userId"]
+        )
+
+        # 发送给管理员
+        SocketQueueHandler.queueEmit(
+            SocketState.NEW_MESSAGE["event"], 
+            newMessageData, 
+            sid=sid
+        )
+
+        if (chat and "userId" in chat):
+            adminMessageResponseData: TypedDictionaryHelper.AdminMessageResponseData = {
+                "status": "success",
+                "message": "消息发送成功"
+            }
+            
+            SocketQueueHandler.queueEmit(
+                SocketState.ADMIN_MESSAGE_RESPONSE["event"],
+                adminMessageResponseData,
+                room="user_" + chat["userId"]
             )
 
-            if (not newMessage):
-                raise Exception("Failed to create message")
+    # 存储管理员id到session
+    @staticmethod
+    def __sessionStore(adminId: str):
+        flask.session["adminId"] = adminId
 
-            SocketQueueHandler.queueEmit("admin_message_response", {
-                "status": "success",
-                "message": "Message sent successfully"
-            }, sid=sid) # type: ignore
-
-            chat = MongoDBConfig.chatManager.getChatById(chatId)
-
-            if (not chat):
-                SocketQueueHandler.queueEmit("admin_message_response", {
-                    "status": "error",
-                    "message": "Chat not found"
-                }, sid=sid) # type: ignore
-                return
-
-            SocketQueueHandler.queueEmit("new_message", {
-                "userId": chat["userId"],
-                "chatId": chatId,
-                "role": "admin",
-                "content": content,
-                "time": str(newMessage.get("createdAt", ""))
-            }, room="user_" + chat["userId"])
-
-            if (chat and "userId" in chat):
-                SocketQueueHandler.queueEmit("admin_message_response", {
-                    "status": "success",
-                    "message": "Message sent successfully"
-                }, room="user_" + chat["userId"]) # type: ignore
-        except Exception as e:
-            logging.error(f"❌ 发送管理员{ adminName }消息到对话{ chatId }失败: { str(e) }")
+    # 存储管理员sid及id间的映射
+    @staticmethod
+    def __sidAndAdminIdStore(adminId: str, sid: str):
+        SocketState.adminIdToSid[adminId] = sid
+        SocketState.sidToAdminId[sid] = adminId

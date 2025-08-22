@@ -6,7 +6,7 @@ class ConnectionSocketHandler:
 
     # 处理客户端断开连接
     @staticmethod
-    @SocketState.socketio.on('disconnect')
+    @SocketState.socketio.on(SocketState.DISCONNECT)
     def disconnect():
         sid = flask.request.sid # type: ignore
 

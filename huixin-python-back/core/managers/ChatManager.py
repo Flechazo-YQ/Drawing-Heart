@@ -1,7 +1,9 @@
 import datetime, logging
 
+from core.utils.FormatHelper import FormatHelper
+
 from datetime import timezone, datetime
-from typing import List, Dict, Optional, TYPE_CHECKING
+from typing import List, Dict, Optional, Any, TYPE_CHECKING
 from bson import ObjectId
 
 if (TYPE_CHECKING):
@@ -79,7 +81,7 @@ class ChatManager:
                 }
                 updateQuery = {
                     "$set": {
-                        "isActive": False,
+                        "stats.isActive": False,
                         "timeNode.updatedAt": datetime.now(timezone.utc)
                     }
                 }
@@ -89,27 +91,14 @@ class ChatManager:
             except Exception as e:
                 logging.error(f"❌ 删除对话失败: { str(e) }")
                 return False
-            
-    class Formatter:
-        def doc(self, chat: Dict) -> Dict:
-            if (chat):
-                chat["_id"] = str(chat["_id"])
-                chat["userId"] = str(chat["userId"])
-                chat["adminId"] = str(chat["adminId"]) if (chat.get("adminId")) else None
-
-            return chat
-
-        def list(self, chats:List[Dict]) -> List[Dict]:
-            return [self.doc(chat) for chat in chats]
 
     def __init__(self, db: "MongoDBConfig.MongoDB"):
         self.db = db
         self.updater = self.Updater(db)
-        self.formatter = self.Formatter()
 
     # 创建新对话, 返回对话ID
     # chatType: "normal" 普通对话, "dangerous" 危险对话
-    def createChat(self, userId: str, title: str = "新对话", chatType: str = "normal") -> str:
+    def createChat(self, userId: str, title: str = "新对话", chatType: str = "normal") -> Dict[str, Any]:
         from core.configs.MongoDBConfig import MongoDBConfig
 
         chatData = {
@@ -117,7 +106,6 @@ class ChatManager:
             # 核心关系与索引字段
             "userId": userId,
             "adminId": None,
-            "isActive": True,
 
             # 核心内容与分类字段
             "title": title,
@@ -134,26 +122,26 @@ class ChatManager:
 
             # 统计与分析数据
             "stats": {
+                "isActive": True,
                 "emotionAnalysis": [],  # 情感分析结果
                 "dangerLevel": 0,  # 危险等级
                 "messageCount": 0,  # 消息数量
             }
         }
         
-        result = self.db.chats.insert_one(chatData)
-        chatId = str(result.inserted_id)
+        self.db.chats.insert_one(chatData)
         
         # 更新用户统计
         MongoDBConfig.userManager.updater.stats(userId, chats=1)
 
-        return chatId
+        return FormatHelper.jsonOrList(chatData)
 
     # 获取用户的对话列表
     def getUserChats(self, userId: str, page: int = 1, limit: int = 20) -> List[Dict]:
         try:
             idFilter = {
                 "userId": userId,
-                "isActive": True
+                "stats.isActive": True
             }
             sort = [("timeNode.updatedAt", -1)]
             skip = (page - 1) * limit
@@ -162,7 +150,7 @@ class ChatManager:
                 .skip(skip)
                 .limit(limit))
 
-            return self.formatter.list(chats)
+            return FormatHelper.jsonOrList(chats)
         except Exception as e:
             logging.error(f"❌ 获取对话列表失败: { str(e) }")
             return []
@@ -172,11 +160,11 @@ class ChatManager:
         try:
             idFilter = {
                 "_id": ObjectId(chatId),
-                "isActive": True
+                "stats.isActive": True
             }
             chat = self.db.chats.find_one(idFilter)
 
-            return self.formatter.doc(chat) if (chat) else None
+            return FormatHelper.jsonOrList(chat) if (chat) else None
         except Exception as e:
             logging.error(f"❌ 获取对话失败: { str(e) }")
             return None
@@ -187,16 +175,34 @@ class ChatManager:
             idFilter = {
                 "type": "dangerous",
                 "adminId": None,
-                "isActive": True
+                "stats.isActive": True
             }
             sort = [("timeNode.updatedAt", -1)]
             chats = list(self.db.chats.find(idFilter)
                 .sort(sort)
                 .limit(limit))
 
-            return self.formatter.list(chats)
+            return FormatHelper.jsonOrList(chats)
         except Exception as e:
             logging.error(f"❌ 获取未分配的危险对话失败: { str(e) }")
+            return []
+        
+    # 获取所有已被分配的危险对话列表
+    def getSignedDangerousChats(self, limit: int = 50) -> List[Dict]:
+        try:
+            idFilter = {
+                "type": "dangerous",
+                "adminId": { "$ne": None },
+                "stats.isActive": True
+            }
+            sort = [("timeNode.updatedAt", -1)]
+            chats = list(self.db.chats.find(idFilter)
+                .sort(sort)
+                .limit(limit))
+
+            return FormatHelper.jsonOrList(chats)
+        except Exception as e:
+            logging.error(f"❌ 获取已分配的危险对话失败: { str(e) }")
             return []
 
 

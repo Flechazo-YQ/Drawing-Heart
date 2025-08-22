@@ -4,12 +4,13 @@ from core.configs.BlueprintConfig import BlueprintConfig
 from core.configs.MongoDBConfig import MongoDBConfig
 from core.handlers.token.UserTokenHandler import UserTokenHandler
 from core.handlers.api.chat.StreamChatHandler import StreamChatHandler
+from core.states.RouteState import RouteState
 
 class UserChatHandler:
 
     # 创建新对话
     @staticmethod
-    @BlueprintConfig.apiRoutes("/chats", methods=["POST"])
+    @BlueprintConfig.apiRoutes(RouteState.Api.NEW_CHAT['route'], methods=RouteState.Api.NEW_CHAT['method'])
     @UserTokenHandler.userTokenRequired
     def createNewChat():
         try:
@@ -39,7 +40,7 @@ class UserChatHandler:
 
     # 隐藏对话
     @staticmethod
-    @BlueprintConfig.apiRoutes("/chats/<chatId>/hide", methods=["DELETE"])
+    @BlueprintConfig.apiRoutes(RouteState.Api.HIDE_CHAT['route'], methods=RouteState.Api.HIDE_CHAT['method'])
     @UserTokenHandler.userTokenRequired
     def hideChat(chatId: str):
         try:
@@ -66,7 +67,7 @@ class UserChatHandler:
 
     # 获取对话的消息历史
     @staticmethod
-    @BlueprintConfig.apiRoutes("/chats/<chatId>/messages", methods=["GET", "POST"])
+    @BlueprintConfig.apiRoutes(RouteState.Api.CHAT_MESSAGES['route'], methods=RouteState.Api.CHAT_MESSAGES['method'])
     @UserTokenHandler.userTokenRequired
     def getChatMessages(chatId: str):
         try:
@@ -103,7 +104,7 @@ class UserChatHandler:
       
     # 流式聊天接口(AI对话)
     @staticmethod
-    @BlueprintConfig.apiRoutes("/chats/stream", methods=["POST"])
+    @BlueprintConfig.apiRoutes(RouteState.Api.CHAT_STREAM['route'], methods=RouteState.Api.CHAT_STREAM['method'])
     @UserTokenHandler.userTokenRequired
     def streamChat():
         user = flask.g.user
@@ -119,13 +120,18 @@ class UserChatHandler:
         userMessage = data.get("message", "")
         userId = str(user["_id"])
         chatId = data.get("chatId")
-        
+
+        if (isinstance(chatId, dict)):
+            chatId = chatId.get("id")
+
         try:
             if (not chatId):
-                chatId = MongoDBConfig.chatManager.createChat(userId, "新对话")
-                
-                if (not chatId):
+                chat = MongoDBConfig.chatManager.createChat(userId, "新对话")
+
+                if (not chat):
                     raise Exception("无法创建对话")
+
+                chatId = str(chat["_id"])
 
             handler = StreamChatHandler(
                 userId=userId, 
@@ -143,7 +149,7 @@ class UserChatHandler:
         
     # 获取用户的对话列表
     @staticmethod
-    @BlueprintConfig.apiRoutes("/chats/list", methods=["GET"])
+    @BlueprintConfig.apiRoutes(RouteState.Api.CHAT_LIST['route'], methods=RouteState.Api.CHAT_LIST['method'])
     @UserTokenHandler.userTokenRequired
     def getUserChatsList():
         try:

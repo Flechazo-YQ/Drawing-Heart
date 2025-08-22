@@ -1,6 +1,7 @@
 import requests, flask, logging
 
 from core.configs.BlueprintConfig import BlueprintConfig
+from core.states.RouteState import RouteState
 
 from typing import Final
 
@@ -64,7 +65,7 @@ class MapSearchHandler:
     
     # 前端调用方法, 直接搜索心理机构
     @staticmethod
-    @BlueprintConfig.apiRoutes('/map/search', methods=['POST'])
+    @BlueprintConfig.apiRoutes(RouteState.Api.MAP_SEARCH['route'], methods=RouteState.Api.MAP_SEARCH['method'])
     def mapSearch():
         requestData = flask.request.get_json()
         latitude = requestData.get('latitude')
@@ -115,8 +116,8 @@ class MapSearchHandler:
         return photoUrls
     
     @staticmethod
-    @BlueprintConfig.apiRoutes('/map/location', methods=['GET'])
-    def locationByIp():
+    @BlueprintConfig.apiRoutes(RouteState.Api.MAP_LOCATION['route'], methods=RouteState.Api.MAP_LOCATION['method'])
+    def getLocationByIp():
     
         # 获取客户端IP，优先从 X-Forwarded-For 获取，适用于反向代理
         if ('X-Forwarded-For' in flask.request.headers):
@@ -173,7 +174,7 @@ class MapSearchHandler:
         
     # 前端调用方法, 处理地址输入时的智能提示
     @staticmethod
-    @BlueprintConfig.apiRoutes('/map/autocomplete', methods=['POST'])
+    @BlueprintConfig.apiRoutes(RouteState.Api.MAP_AUTOCOMPLETE['route'], methods=RouteState.Api.MAP_AUTOCOMPLETE['method'])
     def geocodeAutocomplete():
         requestData = flask.request.get_json()
         keywords = requestData.get('keywords')
@@ -218,7 +219,7 @@ class MapSearchHandler:
         
     # 前端调用方法, 用于地址解析
     @staticmethod
-    @BlueprintConfig.apiRoutes('/map/geocode', methods=['POST'])
+    @BlueprintConfig.apiRoutes(RouteState.Api.MAP_GEOCODE['route'], methods=RouteState.Api.MAP_GEOCODE['method'])
     def geocodeAddress():
         requestData = flask.request.get_json()
         address = requestData.get('address')

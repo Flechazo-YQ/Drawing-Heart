@@ -9,20 +9,20 @@ class FormatHelper:
     }
 
     @classmethod
-    def json(cls, data: Any) -> Any:
+    def jsonOrList(cls, data: Any) -> Any:
         if (data is None): return None
 
         handler = cls.TYPE_HANDLE_CONFIG.get(type(data))
 
         if (handler): return handler(data)
-        if (isinstance(data, dict)): return { key: cls.json(value) for key, value in data.items() }
-        if (isinstance(data, list)): return [cls.json(item) for item in data]
+        if (isinstance(data, dict)): return { key: cls.jsonOrList(value) for key, value in data.items() }
+        if (isinstance(data, list)): return [cls.jsonOrList(item) for item in data]
 
         return data
 
     @classmethod
     def __formatValue(cls, value: Any) -> Any:
-        if (isinstance(value, Dict)): return cls.json(value)
+        if (isinstance(value, Dict)): return cls.jsonOrList(value)
         if (isinstance(value, list)): return [cls.__formatValue(v) for v in value]
 
         handler = cls.TYPE_HANDLE_CONFIG.get(type(value))

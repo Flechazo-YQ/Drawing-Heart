@@ -2,6 +2,8 @@ import logging, time
 
 from core.states.SocketState import SocketState
 
+from typing import Any
+
 class SocketQueueHandler:
     
     @staticmethod
@@ -24,7 +26,7 @@ class SocketQueueHandler:
                 time.sleep(1)
 
     @staticmethod
-    def queueEmit(event: str, data: dict, room: str | None = None, sid: str | None = None):
+    def queueEmit(event: str, data: Any, room: str | None = None, sid: str | None = None):
         try:
             config = {}
             config["room"] = room if (room) else sid if (sid) else None

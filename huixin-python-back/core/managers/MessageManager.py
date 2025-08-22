@@ -56,7 +56,7 @@ class MessageManager:
 
     # 添加消息到对话
     # type: text, image, drawing, system
-    # sender: user, assistant, system
+    # sender: user, assistant, system, admin
     def createMessage(self, chatId: str, type: str, content: str, sender: str = "user", **kwargs):
         try:
             idFilter = {
@@ -104,7 +104,9 @@ class MessageManager:
                     "tokensUsed": kwargs.get("tokensUsed")
                 }
             }
-            result = self.db.messages.insert_one(messageData)
+
+            self.db.messages.insert_one(messageData)
+            
             updateQuery = {
                 "$set": {
                     "lastMessage": content,
@@ -117,7 +119,8 @@ class MessageManager:
             }
 
             self.db.chats.update_one(idFilter, updateQuery)
-            return messageData
+
+            return FormatHelper.jsonOrList(messageData)
         except Exception as e:
             logging.error(f"❌ 添加消息失败: { str(e) }")
             return None
@@ -130,14 +133,12 @@ class MessageManager:
                 "chatId": chatId,
                 "stats.isVisible": True
             }
-            messages = FormatHelper.json(list(
-                self.db.messages.find(idFilter)
-                    .sort("timestamp", 1)
-                    .skip(skipCount)
-                    .limit(limit)
-            ))
-            
-            return messages
+            messages = list(self.db.messages.find(idFilter)
+                .sort("timestamp", 1)
+                .skip(skipCount)
+                .limit(limit))
+
+            return FormatHelper.jsonOrList(messages)
         except Exception as e:
             logging.error(f"❌ 获取消息列表失败: { str(e) }")
             return []
@@ -149,76 +150,14 @@ class MessageManager:
                 "chatId": chatId,
                 "stats.isVisible": True
             }
-            messages = FormatHelper.json(list(
-                self.db.messages.find(idFilter)
-                    .sort("timestamp", -1)
-                    .limit(count)
-            ))
+            messages = list(self.db.messages.find(idFilter)
+                .sort("timestamp", -1)
+                .limit(count))
 
-            return messages[::-1]
+            return FormatHelper.jsonOrList(messages)[::-1]
         except Exception as e:
             logging.error(f"❌ 获取最新消息失败: { str(e) }")
             return []
+        
 
-    # 获取完整的对话数据(包含所有消息)
-    def getAllMessages(self, chatId: str) -> Optional[Dict]:
-        try:
-            idFilter = {
-                "chatId": chatId
-            }
-            pipeline = [
-                { 
-                    "$match": idFilter
-                },
-                
-                # 使用 $lookup 连接 messages 集合
-                {
-                    "$lookup": {
-                        "from": "messages",
-                        "localField": "_id",
-                        "foreignField": "chatId",
-                        "as": "messages" # 动态创建 messages 字段
-                    }
-                },
-
-                # 在数据库层面处理 messages 数组
-                {
-                    "$addFields": {
-                        "messages": {
-                            "$filter": { # 过滤数组
-                                "input": "$messages",
-                                "as": "msg",
-                                "cond": { 
-                                    "$eq": [ 
-                                        "$$msg.stats.isVisible", 
-                                        True 
-                                    ] 
-                                }
-                            }
-                        }
-                    }
-                },
-
-                # 在数据库层面排序 messages 数组
-                {
-                    "$addFields": {
-                        "messages": {
-                            "$sortArray": { # 对数组内元素排序 (MongoDB 5.2+)
-                                "input": "$messages",
-                                "sortBy": { 
-                                    "timestamp": 1
-                                }
-                            }
-                        }
-                    }
-                }
-            ]
-            result = list(self.db.chats.aggregate(pipeline))
-
-            if (not result): 
-                return None
-
-            return result[0]
-        except Exception as e:
-            logging.error(f"❌ 获取完整对话失败: { str(e) }")
-            return None
+        

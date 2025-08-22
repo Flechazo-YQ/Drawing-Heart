@@ -22,12 +22,22 @@ class StreamChatHandler:
 
         self.user = MongoDBConfig.userManager.getUserById(self.userId)
         self.userName = self.user.get("name", "未知用户") if (self.user) else "未知用户"
+
+        self.chat = MongoDBConfig.chatManager.getChatById(self.chatId)
+        self.chatType = self.chat.get("type") if (self.chat) else "normal"
+
         self.dangerLevel = self.__processStreamDanger(userMessage)
         self.systemContent = ""
 
     # 处理流程的主入口
     def processStream(self):
-        return self.__handleDangerousMessage() if (self.dangerLevel > 0.3) else self.__handleNormalMessage()
+        chatType = self.chatType
+        dangerLevel = self.dangerLevel
+
+        if (chatType == "dangerous" or dangerLevel > 0.3):
+            return self.__handleDangerousMessage()
+
+        return self.__handleNormalMessage()
 
     # 分析消息危险等级
     def __processStreamDanger(self, message: str):
@@ -48,8 +58,20 @@ class StreamChatHandler:
 
     # 处理危险消息
     def __handleDangerousMessage(self):
+        if (self.chatType == "dangerous"):
+            return Response(status=204)
+
+        # 首次发送危险消息处理
+        def generateStream():
+            for (char) in self.ADMIN_MESSAGE:
+                yield f"data: { json.dumps({ 'content': char }) }\n\n"
+
+            yield "data: [DONE]\n\n"
+
         logging.warning(f"⚠️ 触发危险检测: dangerous = {self.dangerLevel:.4f} > 0.3")
+
         MongoDBConfig.chatManager.updater.danger(self.chatId, self.userId)
+
         MongoDBConfig.messageManager.createMessage(
             chatId=self.chatId,
             type="text",
@@ -57,15 +79,13 @@ class StreamChatHandler:
             sender="user",
             dangerLevel=self.dangerLevel
         )
-        alertData = {
-            "chatId": self.chatId,
-            "userId": self.userId,
-            "userName": self.userName,
-            "message": self.userMessage,
-            "dangerLevel": self.dangerLevel
-        }
 
-        SocketQueueHandler.queueEmit("dangerous_chat_alert", alertData, "admin_room")
+        chats = MongoDBConfig.chatManager.getUnsignedDangerousChats()
+
+        SocketQueueHandler.queueEmit("dangerous_chats_list", {
+            "chats": chats
+        }, room="admin_room")
+
         logging.info(f"✅ 已发送危险对话通知到管理员房间 (ChatID: { self.chatId })")
 
         MongoDBConfig.messageManager.createMessage(
@@ -75,11 +95,7 @@ class StreamChatHandler:
             sender="system"
         )
 
-        def generateStream():
-            for char in self.ADMIN_MESSAGE:
-                yield f"data: { json.dumps({ 'content': char }) }\n\n"
-
-            yield "data: [DONE]\n\n"
+        self.chatType = "dangerous"
 
         return Response(
             flask.stream_with_context(generateStream()),

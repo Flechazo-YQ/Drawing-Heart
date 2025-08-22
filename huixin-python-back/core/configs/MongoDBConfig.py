@@ -1,7 +1,6 @@
 import logging
 
 from pymongo import MongoClient
-from torch import unique
 
 class MongoDBConfig:
 
@@ -49,10 +48,10 @@ class MongoDBConfig:
             self.codes = self.db.codes
 
             # 创建索引
-            self.createIndexes()
+            self.__createIndexes()
 
         # 创建索引以优化查询性能
-        def createIndexes(self):
+        def __createIndexes(self):
             try:
                 # 管理员集合索引
                 self.admins.create_index("name", unique=True)
@@ -63,13 +62,15 @@ class MongoDBConfig:
                 
                 # 对话集合索引
                 self.chats.create_index("userId")
+                self.chats.create_index("adminId")
                 self.chats.create_index("timeNode.createdAt")
                 self.chats.create_index([("userId", 1), ("timeNode.createdAt", -1)])
 
-                # 为消息数组中的字段创建索引
-                self.chats.create_index("messages.timestamp")
-                self.chats.create_index("messages.sender")
-                
+                # 消息集合索引
+                self.messages.create_index("chatId")
+                self.messages.create_index("timestamp")
+                self.messages.create_index("sender")
+
                 # 绘画分析结果集合索引
                 self.drawings.create_index("userId")
                 self.drawings.create_index("analysisDate")

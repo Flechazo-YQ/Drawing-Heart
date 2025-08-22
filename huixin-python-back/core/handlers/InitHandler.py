@@ -84,8 +84,8 @@ class InitHandler:
     # 创建保存目录
     @staticmethod
     def initDrawingSaveDir():
-        os.makedirs(DirectoryState.SAVE_DIR, exist_ok=True)
-        logging.info(f"✅ 绘画保存目录 '{ DirectoryState.SAVE_DIR }' 已创建或已存在。")
+        os.makedirs(DirectoryState.SAVED_DRAWINGS_DIR, exist_ok=True)
+        logging.info(f"✅ 绘画保存目录 '{ DirectoryState.SAVED_DRAWINGS_DIR }' 已创建或已存在。")
 
     # 初始化SocketIO并启动后台任务
     @staticmethod

@@ -1,6 +1,7 @@
 import datetime, logging
 
 from core.utils.PasswordHelper import PasswordHelper
+from core.utils.FormatHelper import FormatHelper
 
 from datetime import timezone, datetime
 from typing import Dict, Optional, TYPE_CHECKING
@@ -104,28 +105,25 @@ class UserManager:
                 "belongGroup": kwargs.get("belongGroup", ""), # 所属分组
             },
 
-            # 账户状态与资源
-            "account": {
+            # 统计数据
+            "stats": {
                 "isActive": True, # 登录状态
                 "chance": kwargs.get("chance", 10), # 默认机会次数
+                "totalChats": 0, # 总聊天次数
+                "totalDrawings": 0 # 总绘画次数
             },
 
             # 时间戳
             "timeNode": {
                 "createdAt": datetime.now(timezone.utc), # 创建时间
                 "updatedAt": datetime.now(timezone.utc) # 更新时间
-            },
-
-            # 统计数据
-            "stats": {
-                "totalChats": 0, # 总聊天次数
-                "totalDrawings": 0 # 总绘画次数
             }
         }
-        result = self.db.users.insert_one(userData)
-
-        return str(result.inserted_id)
         
+        self.db.users.insert_one(userData)
+
+        return FormatHelper.jsonOrList(userData)
+
     # 验证用户密码
     def verifyPassword(self, name: str, email: str, password: str) -> bool:        
         user = self.getUserByUsername(name) or self.getUserByEmail(email)
@@ -137,25 +135,28 @@ class UserManager:
 
     # 根据邮箱获取用户
     def getUserByEmail(self, email: str) -> Optional[Dict]:
-        return self.db.users.find_one({
+        user = self.db.users.find_one({
             "email": email, 
-            "account.isActive": True
         })
-    
+
+        return FormatHelper.jsonOrList(user)
+
     # 根据用户名获取用户
     def getUserByUsername(self, name: str) -> Optional[Dict]:
-        return self.db.users.find_one({
+        user = self.db.users.find_one({
             "name": name, 
-            "account.isActive": True
         })
+        
+        return FormatHelper.jsonOrList(user)
 
     # 根据ID获取用户
     def getUserById(self, userId: str) -> Optional[Dict]:
         try:
-            return self.db.users.find_one({
+            user = self.db.users.find_one({
                 "_id": ObjectId(userId), 
-                "account.isActive": True
             })
+
+            return FormatHelper.jsonOrList(user)
         except Exception as e:
             logging.error(f"❌ 根据ID获取用户时发生错误 (userId: { userId }): { str(e) }")
 

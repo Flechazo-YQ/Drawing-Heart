@@ -4,11 +4,13 @@ from core.configs.BlueprintConfig import BlueprintConfig
 from core.configs.MongoDBConfig import MongoDBConfig
 from core.handlers.token.UserTokenHandler import UserTokenHandler
 from core.handlers.FileHandler import FileHandler
+from core.states.DirectoryState import DirectoryState
+from core.states.RouteState import RouteState
 
 class AvatarUploadHandler:
     
     @staticmethod
-    @BlueprintConfig.uploadsRoutes('/<path:filename>')
+    @BlueprintConfig.uploadsRoutes(RouteState.Uploads.SERVE_UPLOADS['route'])
     def serveUploads(filename: str):
         try:
             uploadFolder = flask.current_app.config['UPLOAD_FOLDER']
@@ -41,7 +43,7 @@ class AvatarUploadHandler:
 
     # 用户头像上传接口
     @staticmethod
-    @BlueprintConfig.apiRoutes('/avatar/upload', methods=['POST'])
+    @BlueprintConfig.apiRoutes(RouteState.Api.UPLOAD_AVATAR['route'], methods=RouteState.Api.UPLOAD_AVATAR['method'])
     def uploadAvatar():
         token = flask.request.headers.get('Authorization')
 
@@ -75,7 +77,7 @@ class AvatarUploadHandler:
             file = flask.request.files['avatar']
 
             # 检查文件名是否为空
-            if (file.filename == None):
+            if (file.filename is None):
                 logging.error("❌ 头像上传失败: 文件名为空")
                 return flask.jsonify({
                     'code': 1, 
@@ -107,7 +109,7 @@ class AvatarUploadHandler:
             file.save(filepath)
             
             # 构建新头像的相对URL路径
-            newAvatarUrl = f'/uploads/avatars/{ filename }'
+            newAvatarUrl = DirectoryState.AVATAR_DIR + filename
             
             # 更新数据库中的用户头像URL
             success = MongoDBConfig.userManager.updater.avatar(userId, newAvatarUrl)
@@ -117,7 +119,7 @@ class AvatarUploadHandler:
                 # 注意：即使数据库更新失败，新文件也已保存，但此处不回滚，以防逻辑复杂化
             
             # 如果数据库更新成功，并且存在旧头像，则删除旧头像文件
-            if (success and oldAvatarUrl and oldAvatarUrl.startswith('/uploads/avatars/')):
+            if (success and oldAvatarUrl and oldAvatarUrl.startswith(DirectoryState.AVATAR_DIR)):
                 try:
                     # 从相对URL构建旧头像的绝对路径
                     oldAvatarFilename = os.path.basename(oldAvatarUrl)

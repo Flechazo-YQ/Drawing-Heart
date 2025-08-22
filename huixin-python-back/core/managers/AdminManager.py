@@ -1,29 +1,18 @@
 import logging
 
 from core.utils.PasswordHelper import PasswordHelper
+from core.utils.FormatHelper import FormatHelper
 
 from datetime import datetime, timezone
 from bson import ObjectId
-from typing import Dict, List, TYPE_CHECKING
+from typing import TYPE_CHECKING
 
 if (TYPE_CHECKING):
     from core.configs.MongoDBConfig import MongoDBConfig
 
 class AdminManager:
-    class Formatter:
-        def doc(self, admin: Dict) -> Dict:
-            if (admin):
-                admin["_id"] = str(admin["_id"])
-                admin.pop("password", None)
-
-            return admin
-
-        def list(self, admins: List[Dict]) -> List[Dict]:
-            return [self.doc(admin) for (admin) in admins]
-
     def __init__(self, db: "MongoDBConfig.MongoDB"):
         self.db = db
-        self.formatter = self.Formatter()
 
     # 创建管理员
     def createAdmin(self, name: str, password: str, **kwargs):
@@ -49,10 +38,10 @@ class AdminManager:
                     "lastLoginAt": None
                 }
             }
-            result = self.db.admins.insert_one(adminData)
 
-            logging.info(f"✅ 创建管理员成功: { name }")
-            return str(result.inserted_id)
+            self.db.admins.insert_one(adminData)
+
+            return FormatHelper.jsonOrList(adminData)
         except Exception as e:
             logging.error(f"❌ 创建管理员失败: { name }, 错误: { str(e) }")
             return None
@@ -77,7 +66,7 @@ class AdminManager:
                 }
                 self.db.admins.update_one(idFilter, updateQuery)
 
-                return self.formatter.doc(admin)
+                return FormatHelper.jsonOrList(admin)
         except Exception as e:
             logging.error(f"❌ 管理员登录失败: { name }, 错误: { str(e) }")
 
@@ -89,7 +78,7 @@ class AdminManager:
             }
             admin = self.db.admins.find_one(nameFilter)
 
-            return self.formatter.doc(admin) if (admin) else None
+            return FormatHelper.jsonOrList(admin) if (admin) else None
         except Exception as e:
             logging.error(f"❌ 获取管理员失败: { name }, 错误: { str(e) }")
             return None
@@ -102,7 +91,7 @@ class AdminManager:
             }
             admin = self.db.admins.find_one(idFilter)
 
-            return self.formatter.doc(admin) if (admin) else None
+            return FormatHelper.jsonOrList(admin) if (admin) else None
         except Exception as e:
             logging.error(f"❌ 获取管理员失败: { adminId }, 错误: { str(e) }")
             return None
@@ -115,7 +104,7 @@ class AdminManager:
             }
             admins = list(self.db.admins.find(idFilter))
 
-            return self.formatter.list(admins)
+            return FormatHelper.jsonOrList(admins)
         except Exception as e:
             logging.error(f"❌ 获取所有管理员列表失败: { str(e) }")
             return []

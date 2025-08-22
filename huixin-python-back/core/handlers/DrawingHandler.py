@@ -92,18 +92,19 @@ class DrawingHandler:
             try:
                 response = client.chat.completions.create(
                     model = "doubao-1-5-vision-pro-32k-250115",
-                    messages = [{
-                        "role": "user",
-                        "content": [
-                            {
-                                "type": "image_url",
-                                "image_url": { 
-                                    "url": dataUrl 
-                                }
-                            },
-                            {
-                                "type": "text", 
-                                "text": """
+                    messages = [ # type: ignore
+                        {
+                            "role": "user",
+                            "content": [
+                                {
+                                    "type": "image_url",
+                                    "image_url": {
+                                        "url": dataUrl
+                                    }
+                                },
+                                {
+                                    "type": "text",
+                                    "text": """
                                         你是一个专业的心理分析师, 请根据绘画静态数据：
                                         房、树、人的高清图像（需包含笔触细节）或以下结构化描述：
                                         尺寸/布局：各元素在纸上的位置、比例（如房屋占纸面50%、人物位于右下角）。
@@ -128,10 +129,11 @@ class DrawingHandler:
                                         综合分析结果, 给出用户当前的心理状态评估和建议。
                                         
                                         若图片不是房树人相关绘画, 请温和地引导用户重新绘画房树人作品。
-                                        """
-                            }
-                        ]
-                    }],
+                                    """
+                                }
+                            ]
+                        }
+                    ],
                     max_tokens=4000,
                     temperature=0.7
                 )
@@ -154,10 +156,6 @@ class DrawingHandler:
                         "message": "AI分析返回空内容, 请稍后重试"
                     }), 500
 
-                # 更新全局变量
-                global textResult
-                textResult = analysisResult
-
                 # 保存分析结果到数据库
                 if (userId):
                     try:
@@ -167,7 +165,7 @@ class DrawingHandler:
                             analysisResult=analysisResult,
                             imageSize=f"{ len(open(filePath, 'rb').read()) } bytes",
                             analysisType="house_tree_person",
-                            ai_model="doubao-1-5-vision-pro-32k",
+                            aiModel="doubao-1-5-vision-pro-32k",
                         )
                         logging.info(f"分析结果已保存到数据库, ID: { analysisId }")
 

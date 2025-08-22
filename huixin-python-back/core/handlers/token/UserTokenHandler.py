@@ -2,7 +2,6 @@ import datetime, jwt, logging, sys, subprocess, importlib, flask, functools
 
 from core.configs.MongoDBConfig import MongoDBConfig
 from core.states.TokenState import TokenState
-from core.utils.FormatHelper import FormatHelper
 
 from datetime import datetime, timedelta, timezone
 from typing import List
@@ -93,7 +92,7 @@ class UserTokenHandler:
                     'message': 'User not found!'
                 }), 404
 
-            flask.g.user = FormatHelper.json(user)
+            flask.g.user = user
 
             return func(*args, **kwargs)
         return wrapper
