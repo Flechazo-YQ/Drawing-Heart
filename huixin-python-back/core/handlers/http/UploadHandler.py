@@ -26,7 +26,7 @@ class UploadHandler:
 
                 return response
             
-            logging.warning(f"⚠️ 文件不存在: { fullPath }")
+            logging.warning(f'⚠️ 文件不存在: { fullPath }')
             
             return flask.jsonify({
                 'error': 'File not found',
@@ -34,7 +34,7 @@ class UploadHandler:
             }), 404
                 
         except Exception as e:
-            logging.error(f"❌ 提供文件时出错: { str(e) }")
+            logging.error(f'❌ 提供文件时出错: { str(e) }')
             return flask.jsonify({
                 'error': f'Server error: { str(e) }'
             }), 500

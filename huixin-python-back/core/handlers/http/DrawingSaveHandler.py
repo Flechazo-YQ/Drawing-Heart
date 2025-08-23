@@ -20,53 +20,53 @@ class DrawingSaveHandler:
 
             if (not data):
                 return flask.jsonify({
-                    "code": 1,
-                    "message": "无效的请求数据"
+                    'code': 1,
+                    'message': '无效的请求数据'
                 }), 400
 
-            image = data.get("image")
+            image = data.get('image')
 
             if (not image):
                 return flask.jsonify({
-                    "code": 1,
-                    "message": "无效的图像数据"
+                    'code': 1,
+                    'message': '无效的图像数据'
                 }), 400
 
             imageBytes = ImageHelper.decodeBase64Image(image)
 
             if (not imageBytes or len(imageBytes) < 100):
                 return flask.jsonify({
-                    "code": 1,
-                    "message": "无效或损坏的图像数据"
+                    'code': 1,
+                    'message': '无效或损坏的图像数据'
                 }), 400
 
-            userId = str(user["_id"])
+            userId = str(user['_id'])
             timestamp = int(time.time() * 1000)
             userDir = os.path.join(DirectoryState.SAVED_DRAWINGS_DIR, userId)
 
             os.makedirs(userDir, exist_ok=True)
 
-            fileName = f"{ timestamp }.png"
+            fileName = f'{ timestamp }.png'
             filePath = os.path.join(userDir, fileName)
 
-            with open(filePath, "wb") as f:
+            with open(filePath, 'wb') as f:
                 f.write(imageBytes)
 
-            logging.info(f"绘画已保存: { filePath }")
+            logging.info(f'绘画已保存: { filePath }')
 
-            if (data.get("analyze")):
+            if (data.get('analyze')):
                 return DrawingHandler.analyzeImage(filePath, fileName, userId)
 
             return flask.jsonify({
-                "code": 0,
-                "message": "绘画保存成功",
-                "filePath": filePath,
-                "fileName": fileName
+                'code': 0,
+                'message': '绘画保存成功',
+                'filePath': filePath,
+                'fileName': fileName
             }), 200
 
         except Exception as e:
-            logging.error(f"❌ 绘画保存失败: { str(e) }")
+            logging.error(f'❌ 绘画保存失败: { str(e) }')
             return flask.jsonify({
-                "code": 1,
-                "message": "绘画保存失败"
+                'code': 1,
+                'message': '绘画保存失败'
             }), 500

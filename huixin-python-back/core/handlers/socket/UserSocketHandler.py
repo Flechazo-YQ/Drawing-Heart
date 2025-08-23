@@ -21,13 +21,13 @@ class UserSocketHandler:
         sid = flask.request.sid # type: ignore
 
         user = flask.g.user
-        userId = str(user["_id"])
+        userId = str(user['_id'])
 
         UserSocketHandler.__sessionStore(userId)
         UserSocketHandler.__sidAndUserIdStore(userId, sid)
 
-        flask_socketio.join_room(f"user_{ userId }", sid=sid)
-        logging.info(f"用户{ userId }(SID: { sid })已认证成功并加入房间{ f'user_{ userId }' }")
+        flask_socketio.join_room(f'user_{ userId }', sid=sid)
+        logging.info(f'用户{ userId }(SID: { sid })已认证成功并加入房间{ f"user_{ userId }" }')
 
     # 处理用户发送的消息
     @staticmethod
@@ -35,64 +35,64 @@ class UserSocketHandler:
     @AuthenticateHelper.userAuthenticated
     def handleUserMessage(data: Dict):
         user = flask.g.user
-        userId = str(user["_id"])
+        userId = str(user['_id'])
 
-        chatId = data.get("chatId")
-        content = data.get("content")
+        chatId = data.get('chatId')
+        content = data.get('content')
 
         if (not chatId or not content):
-            logging.error(f"❌ 缺少对话ID或内容")
+            logging.error(f'❌ 缺少对话ID或内容')
             return None
 
         # 处理用户消息
         newMessage = MongoDBConfig.messageManager.createMessage(
             chatId=chatId,
-            type="text",
+            type='text',
             content=content,
-            sender="user"
+            sender='user'
         )
 
         if (not newMessage):
-            logging.error(f"❌ 创建新消息失败")
+            logging.error(f'❌ 创建新消息失败')
             return None
 
         chats = MongoDBConfig.chatManager.getChatById(chatId)
 
         if (not chats):
-            logging.error(f"❌ 未找到对话: { chatId }")
+            logging.error(f'❌ 未找到对话: { chatId }')
             return None
 
-        adminId = chats.get("adminId")
+        adminId = chats.get('adminId')
 
         if (not adminId):
             BroadcastHelper.unsignDangerousChats()
 
             dangerousChatsList: DangerousChatsListData = {
-                "chats": chats
+                'chats': chats
             }
 
             SocketQueueHandler.queueEmit(
-                SocketState.DANGEROUS_CHATS_LIST["event"],
+                SocketState.DANGEROUS_CHATS_LIST['event'],
                 dangerousChatsList,
-                room="admin_room"
+                room='admin_room'
             )
 
         adminSid = SocketState.adminIdToSid.get(adminId)
-        chatType = chats.get("type", "normal")
+        chatType = chats.get('type', 'normal')
 
-        if (chatType == "dangerous" and adminSid):
+        if (chatType == 'dangerous' and adminSid):
             BroadcastHelper.signedDangerousChats()
 
             newMessageData: NewMessageData = {
-                "userId": userId,
-                "chatId": chatId,
-                "role": "user",
-                "content": content,
-                "timestamp": str(newMessage.get("createdAt", ""))
+                'userId': userId,
+                'chatId': chatId,
+                'role': 'user',
+                'content': content,
+                'timestamp': str(newMessage.get('createdAt', ''))
             }
 
             SocketQueueHandler.queueEmit(
-                SocketState.NEW_MESSAGE["event"], 
+                SocketState.NEW_MESSAGE['event'], 
                 newMessageData,
                 sid=adminSid
             )
@@ -100,7 +100,7 @@ class UserSocketHandler:
     # 存储用户id到session
     @staticmethod
     def __sessionStore(userId: str):
-        flask.session["userId"] = userId
+        flask.session['userId'] = userId
 
     # 存储用户sid及id间的映射
     @staticmethod

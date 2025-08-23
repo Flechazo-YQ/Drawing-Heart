@@ -17,18 +17,18 @@ class UserProfileHandler:
         token = flask.request.headers.get('Authorization')
 
         if (not token):
-            logging.error("❌ 头像上传失败: 缺少Authorization令牌")
+            logging.error('❌ 头像上传失败: 缺少Authorization令牌')
             return flask.jsonify({
                 'code': 1, 
                 'message': 'Token is missing!'
             }), 401
 
-        logging.info(f"收到头像上传请求，令牌: { token[:15] }...")
+        logging.info(f'收到头像上传请求，令牌: { token[:15] }...')
 
         userId = UserTokenHelper.verifyUserToken(token)
 
         if (not userId):
-            logging.error(f"❌ 头像上传失败: 无效的令牌: { token[:15] }...")
+            logging.error(f'❌ 头像上传失败: 无效的令牌: { token[:15] }...')
             return flask.jsonify({
                 'code': 1, 
                 'message': 'Invalid token! 请重新登录'
@@ -37,7 +37,7 @@ class UserProfileHandler:
         try:
             # 检查是否有文件上传
             if ('avatar' not in flask.request.files):
-                logging.error("❌ 头像上传失败: 请求中没有avatar文件")
+                logging.error('❌ 头像上传失败: 请求中没有avatar文件')
                 return flask.jsonify({
                     'code': 1, 
                     'message': '没有上传文件'
@@ -47,7 +47,7 @@ class UserProfileHandler:
 
             # 检查文件名是否为空
             if (file.filename is None):
-                logging.error("❌ 头像上传失败: 文件名为空")
+                logging.error('❌ 头像上传失败: 文件名为空')
                 return flask.jsonify({
                     'code': 1, 
                     'message': '未选择文件'
@@ -55,7 +55,7 @@ class UserProfileHandler:
 
             # 检查文件类型
             if (not FileHelper.isAllowedFile(file.filename)):
-                logging.error(f"❌ 头像上传失败: 不支持的文件类型 { file.filename }")
+                logging.error(f'❌ 头像上传失败: 不支持的文件类型 { file.filename }')
                 return flask.jsonify({
                     'code': 1, 
                     'message': '不支持的文件类型，请上传jpg、jpeg、png或gif格式的图片'
@@ -84,7 +84,7 @@ class UserProfileHandler:
             success = MongoDBConfig.userManager.updater.avatar(userId, newAvatarUrl)
 
             if (not success):
-                logging.error(f"❌ 更新用户 { userId } 的头像URL失败")
+                logging.error(f'❌ 更新用户 { userId } 的头像URL失败')
                 # 注意：即使数据库更新失败，新文件也已保存，但此处不回滚，以防逻辑复杂化
             
             # 如果数据库更新成功，并且存在旧头像，则删除旧头像文件
@@ -97,9 +97,9 @@ class UserProfileHandler:
                     if (os.path.exists(oldAvatarFilepath)):
                         os.remove(oldAvatarFilepath)
                     else:
-                        logging.warning(f"⚠️ 旧头像文件不存在，无法删除: { oldAvatarFilepath }")
+                        logging.warning(f'⚠️ 旧头像文件不存在，无法删除: { oldAvatarFilepath }')
                 except Exception as e:
-                    logging.error(f"❌ 删除旧头像文件时出错: { str(e) }")
+                    logging.error(f'❌ 删除旧头像文件时出错: { str(e) }')
 
             return flask.jsonify({
                 'code': 0,
@@ -109,7 +109,7 @@ class UserProfileHandler:
                 }
             })
         except Exception as e:
-            logging.error(f"❌ 头像上传错误: { str(e) }")
+            logging.error(f'❌ 头像上传错误: { str(e) }')
             return flask.jsonify({
                 'code': 1, 
                 'message': f'头像上传失败: { str(e) }'
@@ -123,7 +123,7 @@ class UserProfileHandler:
         user = flask.g.user
 
         return flask.jsonify({
-            "username": user["name"]
+            'username': user['name']
         })
 
     # 获取用户详细信息
@@ -133,18 +133,18 @@ class UserProfileHandler:
     def getUserInfo():
         try:
             user = flask.g.user
-            profile = user.get("profile", {})
-            avatarUrl = UrlHelper.getAbsoluteUrl(profile.get("avatar", ""))
-            profile["avatar"] = avatarUrl
-            user["profile"] = profile
+            profile = user.get('profile', {})
+            avatarUrl = UrlHelper.getAbsoluteUrl(profile.get('avatar', ''))
+            profile['avatar'] = avatarUrl
+            user['profile'] = profile
 
             return flask.jsonify({
-                "code": 0,
-                "message": "success",
-                "data": user
+                'code': 0,
+                'message': 'success',
+                'data': user
             })
         except Exception as e:
             return flask.jsonify({
-                "error": str(e)
+                'error': str(e)
             }), 500
         
