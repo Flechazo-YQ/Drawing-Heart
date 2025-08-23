@@ -1,45 +1,36 @@
 import os
 
-class FileHandler:
+class FileHelper:
 
     # 允许的文件扩展名
     ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
     
     # 检查文件类型是否允许
     @classmethod
-    def allowedFile(cls, filename: str):
+    def isAllowedFile(cls, filename: str):
         return '.' in filename and filename.rsplit('.', 1)[1].lower() in cls.ALLOWED_EXTENSIONS
 
     # 查找项目根目录
     @staticmethod
-    def findProjectRoot():
-        currentDir = os.getcwd()
+    def findProjectRoot(currentDir=None, depth=0, maxDepth=10):
+        if (currentDir is None):
+            currentDir = os.getcwd()
 
-        for _ in range(10):
-            if (os.path.basename(currentDir) == 'Drawing-Heart-main'):
-                return currentDir
-            
-            parentDir = os.path.dirname(currentDir)
+        if (depth > maxDepth):
+            return os.getcwd()
 
-            if (parentDir == currentDir):
-                break
+        if (os.path.basename(currentDir) == 'Drawing-Heart-main'):
+            return currentDir
 
-            currentDir = parentDir
+        if (os.path.exists(os.path.join(currentDir, 'huixin-python-back'))):
+            return currentDir
+        
+        parentDir = os.path.dirname(currentDir)
 
-        currentDir = os.getcwd()
-
-        for _ in range(10):
-            if (os.path.exists(os.path.join(currentDir, 'huixin-python-back'))):
-                return currentDir
-            
-            parentDir = os.path.dirname(currentDir)
-
-            if (parentDir == currentDir):
-                break
-
-            currentDir = parentDir
-
-        return os.getcwd()
+        if (parentDir == currentDir):
+            return os.getcwd()
+        
+        return FileHelper.findProjectRoot(parentDir, depth + 1, maxDepth)
 
     # 获取上传项目的路径
     @classmethod

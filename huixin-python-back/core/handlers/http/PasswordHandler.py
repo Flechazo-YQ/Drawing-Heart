@@ -2,15 +2,15 @@ import logging, flask
 
 from core.configs.BlueprintConfig import BlueprintConfig
 from core.configs.MongoDBConfig import MongoDBConfig
-from core.handlers.token.UserTokenHandler import UserTokenHandler
-from core.states.RouteState import RouteState
+from core.states.route.ApiState import ApiState
 from core.utils.PasswordHelper import PasswordHelper
+from core.utils.token.UserTokenHelper import UserTokenHelper
 
 class PasswordHandler:
 
     # 重置密码
     @staticmethod
-    @BlueprintConfig.apiRoutes(RouteState.Api.PASSWORD_RESET['route'], methods=RouteState.Api.PASSWORD_RESET['method'])
+    @BlueprintConfig.apiRoutes(ApiState.PASSWORD_RESET['route'], methods=ApiState.PASSWORD_RESET['method'])
     def resetPassword():
         try:
             data = flask.request.get_json()
@@ -31,8 +31,8 @@ class PasswordHandler:
                 }), 404
                     
             # 生成重置密码的token
-            resetToken = UserTokenHandler.generateUserToken([str(user['_id']), user['username']])
-            
+            UserTokenHelper.generateUserToken([str(user['_id']), user['username']])
+
             # TODO: 发送重置密码邮件
             # 这里应该实现发送邮件的功能
             # 为了演示，我们直接返回成功
@@ -52,7 +52,7 @@ class PasswordHandler:
         
     # 更新密码
     @staticmethod
-    @BlueprintConfig.apiRoutes(RouteState.Api.PASSWORD_UPDATE['route'], methods=RouteState.Api.PASSWORD_UPDATE['method'])
+    @BlueprintConfig.apiRoutes(ApiState.PASSWORD_UPDATE['route'], methods=ApiState.PASSWORD_UPDATE['method'])
     def updatePassword():
         try:
             data = flask.request.get_json()
@@ -66,7 +66,7 @@ class PasswordHandler:
                 }), 400
                 
             # 验证token
-            userId = UserTokenHandler.verifyUserToken(token)
+            userId = UserTokenHelper.verifyUserToken(token)
 
             if (not userId):
                 return flask.jsonify({
@@ -98,7 +98,7 @@ class PasswordHandler:
         
     # 直接重置密码
     @staticmethod
-    @BlueprintConfig.apiRoutes(RouteState.Api.PASSWORD_RESET_DIRECT['route'], methods=RouteState.Api.PASSWORD_RESET_DIRECT['method'])
+    @BlueprintConfig.apiRoutes(ApiState.PASSWORD_RESET_DIRECT['route'], methods=ApiState.PASSWORD_RESET_DIRECT['method'])
     def resetPasswordDirect():
         try:
             data = flask.request.get_json()

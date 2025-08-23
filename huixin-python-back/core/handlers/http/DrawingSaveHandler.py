@@ -1,18 +1,18 @@
 import os, logging, flask, time
 
 from core.configs.BlueprintConfig import BlueprintConfig
-from core.handlers.token.UserTokenHandler import UserTokenHandler
 from core.handlers.DrawingHandler import DrawingHandler
 from core.states.DirectoryState import DirectoryState
-from core.states.RouteState import RouteState
+from core.states.route.ApiState import ApiState
 from core.utils.ImageHelper import ImageHelper
+from core.utils.token.UserTokenHelper import UserTokenHelper
 
 class DrawingSaveHandler:
     
     # 保存绘画并可选进行分析
     @staticmethod
-    @BlueprintConfig.apiRoutes(RouteState.Api.SAVE_DRAWINGS['route'], methods=RouteState.Api.SAVE_DRAWINGS['method'])
-    @UserTokenHandler.userTokenRequired
+    @BlueprintConfig.apiRoutes(ApiState.SAVE_DRAWINGS['route'], methods=ApiState.SAVE_DRAWINGS['method'])
+    @UserTokenHelper.userTokenRequired
     def saveDrawing():
         try:
             user = flask.g.user

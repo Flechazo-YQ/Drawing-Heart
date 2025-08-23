@@ -8,9 +8,9 @@ from flask import Response
 from typing import Final, List, Dict
 
 class StreamChatHandler:
-    DANGER_KEYWORDS: Final[list[str]] = ["自杀", "自残", "死", "想死", "活不下去", "结束生命", "轻生"]
+    DANGER_KEYWORDS: Final[List[str]] = ["自杀", "自残", "死", "想死", "活不下去", "结束生命", "轻生"]
     ADMIN_MESSAGE: Final[str] = "系统检测到您的内容可能存在风险, 已切换到人工客服模式。请稍等片刻, 管理员正在审核您的对话..."
-    HEADERS: Final[dict[str, str]] = {
+    HEADERS: Final[Dict[str, str]] = {
         "Authorization": "Bearer sk-bhgbmuxblqtroypztkuonssqqkitngencupdofitajnmvbtv",
         "Content-Type": "application/json"
     }

@@ -6,7 +6,7 @@ from core.states.TokenState import TokenState
 from datetime import datetime, timedelta, timezone
 from typing import List
 
-class UserTokenHandler:
+class UserTokenHelper:
     
     #生成用户JWT
     @staticmethod
@@ -78,8 +78,8 @@ class UserTokenHandler:
                     'message': 'Token is missing!'
                 }), 401
 
-            userId = UserTokenHandler.verifyUserToken(token)
-            
+            userId = UserTokenHelper.verifyUserToken(token)
+
             if (not userId):
                 return flask.jsonify({
                     'message': 'Invalid token!'

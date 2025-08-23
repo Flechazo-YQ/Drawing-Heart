@@ -15,7 +15,7 @@ class FormatHelper:
         handler = cls.TYPE_HANDLE_CONFIG.get(type(data))
 
         if (handler): return handler(data)
-        if (isinstance(data, dict)): return { key: cls.jsonOrList(value) for key, value in data.items() }
+        if (isinstance(data, dict)): return { key: cls.jsonOrList(value) for (key, value) in data.items() }
         if (isinstance(data, list)): return [cls.jsonOrList(item) for item in data]
 
         return data

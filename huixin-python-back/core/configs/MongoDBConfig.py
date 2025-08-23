@@ -5,7 +5,7 @@ from pymongo import MongoClient
 class MongoDBConfig:
 
     @classmethod
-    def init(cls, connectionString="mongodb://localhost:27017/", databaseName="HuixinDB"):
+    def init(cls, connectionString='mongodb://localhost:27017/', databaseName='HuixinDB'):
         from core.managers.UserManager import UserManager
         from core.managers.ChatManager import ChatManager
         from core.managers.MessageManager import MessageManager
@@ -21,22 +21,22 @@ class MongoDBConfig:
         cls.adminManager = AdminManager(cls.mongoDb)
         cls.codeManager = CodeManager(cls.mongoDb)
 
-        logging.info("✅ MongoDB初始化完成")
+        logging.info('✅ MongoDB初始化完成')
         return cls.mongoDb
 
     class MongoDB:
 
         # 初始化MongoDB连接
-        def __init__(self, connectionString="mongodb://localhost:27017/", databaseName="HuixinDB"):
+        def __init__(self, connectionString='mongodb://localhost:27017/', databaseName='HuixinDB'):
             try:
                 self.client = MongoClient(connectionString)
                 self.db = self.client[databaseName]
 
                 # 测试连接
                 self.client.server_info()
-                logging.info(f"✅ 成功连接到MongoDB数据库: { databaseName }")
+                logging.info(f'✅ 成功连接到MongoDB数据库: { databaseName }')
             except Exception as e:
-                logging.error(f"❌ 连接MongoDB失败: { str(e) }")
+                logging.error(f'❌ 连接MongoDB失败: { str(e) }')
                 raise e
             
             # 获取集合
@@ -54,29 +54,29 @@ class MongoDBConfig:
         def __createIndexes(self):
             try:
                 # 管理员集合索引
-                self.admins.create_index("name", unique=True)
+                self.admins.create_index('name', unique=True)
 
                 # 用户集合索引
-                self.users.create_index("email", unique=True)
-                self.users.create_index("name")
+                self.users.create_index('email', unique=True)
+                self.users.create_index('name')
                 
                 # 对话集合索引
-                self.chats.create_index("userId")
-                self.chats.create_index("adminId")
-                self.chats.create_index("timeNode.createdAt")
-                self.chats.create_index([("userId", 1), ("timeNode.createdAt", -1)])
+                self.chats.create_index('userId')
+                self.chats.create_index('adminId')
+                self.chats.create_index('timeNode.createdAt')
+                self.chats.create_index([('userId', 1), ('timeNode.createdAt', -1)])
 
                 # 消息集合索引
-                self.messages.create_index("chatId")
-                self.messages.create_index("timestamp")
-                self.messages.create_index("sender")
+                self.messages.create_index('chatId')
+                self.messages.create_index('timestamp')
+                self.messages.create_index('sender')
 
                 # 绘画分析结果集合索引
-                self.drawings.create_index("userId")
-                self.drawings.create_index("analysisDate")
-                self.drawings.create_index([("userId", 1), ("analysisDate", -1)])
-                self.drawings.create_index("createdAt")
+                self.drawings.create_index('userId')
+                self.drawings.create_index('analysisDate')
+                self.drawings.create_index([('userId', 1), ('analysisDate', -1)])
+                self.drawings.create_index('createdAt')
 
-                logging.info("✅ 数据库索引创建完成")
+                logging.info('✅ 数据库索引创建完成')
             except Exception as e:
-                logging.warning(f"⚠️ 创建索引时出现警告: { str(e) }")
+                logging.warning(f'⚠️ 创建索引时出现警告: { str(e) }')

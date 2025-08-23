@@ -1,12 +1,15 @@
 import flask, logging, flask_socketio
 
 from core.configs.MongoDBConfig import MongoDBConfig
-from core.handlers.token.AdminTokenHandler import AdminTokenHandler
 from core.handlers.socket.SocketQueueHandler import SocketQueueHandler
 from core.states.SocketState import SocketState
 from core.utils.AuthenticateHelper import AuthenticateHelper
 from core.utils.BroadcastHelper import BroadcastHelper
-from core.utils.TypedDictionaryHelper import TypedDictionaryHelper
+from core.utils.type.socket.data.RequestHistoryResponseData import RequestHistoryResponseData
+from core.utils.type.socket.data.AdminMessageResponseData import AdminMessageResponseData
+from core.utils.type.socket.data.AdminReplyData import AdminReplyData
+from core.utils.type.socket.data.NewMessageData import NewMessageData
+from core.utils.token.AdminTokenHelper import AdminTokenHelper
 
 from typing import Dict
 
@@ -15,7 +18,7 @@ class AdminSocketHandler:
     # 处理管理员认证
     @staticmethod
     @SocketState.socketio.on(SocketState.ADMIN_AUTH)
-    @AdminTokenHandler.adminTokenRequired
+    @AdminTokenHelper.adminTokenRequired
     def handleAdminAuth(data: Dict):
         sid = flask.request.sid # type: ignore
         admin = flask.g.admin
@@ -45,7 +48,7 @@ class AdminSocketHandler:
 
         try:
             messages = MongoDBConfig.messageManager.getMessagesList(chatId)
-            requestHistoryResponseData: TypedDictionaryHelper.RequestHistoryResponseData = {
+            requestHistoryResponseData: RequestHistoryResponseData = {
                 "chatId": chatId,
                 "messages": messages
             }
@@ -77,13 +80,13 @@ class AdminSocketHandler:
         content = data.get("content")
 
         if (not chatId or not content):
-            AdminMessageResponseData: TypedDictionaryHelper.AdminMessageResponseData = {
+            adminMessageResponseData: AdminMessageResponseData = {
                 "status": "error",
                 "message": "缺少对话ID或内容"
             }
             SocketQueueHandler.queueEmit(
                 SocketState.ADMIN_MESSAGE_RESPONSE["event"],
-                AdminMessageResponseData,
+                adminMessageResponseData,
                 sid=sid
             )
             return
@@ -102,7 +105,7 @@ class AdminSocketHandler:
         if (not newMessage):
             raise Exception("创建新消息失败")
         
-        adminMessageResponseData: TypedDictionaryHelper.AdminMessageResponseData = {
+        adminMessageResponseData: AdminMessageResponseData = {
             "status": "success",
             "message": "消息发送成功"
         }
@@ -114,7 +117,7 @@ class AdminSocketHandler:
         )
 
         if (not chat):
-            adminMessageResponseData: TypedDictionaryHelper.AdminMessageResponseData = {
+            adminMessageResponseData: AdminMessageResponseData = {
                 "status": "error",
                 "message": "未找到对话"
             }
@@ -126,7 +129,7 @@ class AdminSocketHandler:
             )
             return
 
-        adminReplyData: TypedDictionaryHelper.AdminReplyData = {
+        adminReplyData: AdminReplyData = {
             "chatId": chatId,
             "content": content,
             "timestamp": str(newMessage.get("timestamp", ""))
@@ -141,7 +144,7 @@ class AdminSocketHandler:
         MongoDBConfig.chatManager.updater.admin(chatId, adminId)
 
         # 发送新消息定义
-        newMessageData: TypedDictionaryHelper.NewMessageData = {
+        newMessageData: NewMessageData = {
             "userId": chat["userId"],
             "chatId": chatId,
             "role": "admin",
@@ -164,7 +167,7 @@ class AdminSocketHandler:
         )
 
         if (chat and "userId" in chat):
-            adminMessageResponseData: TypedDictionaryHelper.AdminMessageResponseData = {
+            adminMessageResponseData: AdminMessageResponseData = {
                 "status": "success",
                 "message": "消息发送成功"
             }

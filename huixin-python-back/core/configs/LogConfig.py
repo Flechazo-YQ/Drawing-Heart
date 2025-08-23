@@ -26,10 +26,10 @@ class LogConfig:
 
                     try:
                         if (os.path.isfile(filePath) or os.path.islink(filePath)):
-                            with open(filePath, "w") as f:
+                            with open(filePath, 'w') as f:
                                 pass
                     except Exception as e:
-                        logging.error(f"❌ 无法清空旧日志文件 { filePath }: { str(e) }")
+                        logging.error(f'❌ 无法清空旧日志文件 { filePath }: { str(e) }')
 
             fileLogFormatter = cls.StripAnsiFormatter(
                 '%(asctime)s - %(levelname)s - [%(filename)s:%(lineno)d] - %(message)s'
@@ -53,8 +53,8 @@ class LogConfig:
 
             # 总日志文件记录
             appLogHandler = TimedRotatingFileHandler(
-                os.path.join(LogConfig.LOG_DIR, "app.log"),
-                when="midnight", interval=1, backupCount=30, encoding='utf-8'
+                os.path.join(LogConfig.LOG_DIR, 'app.log'),
+                when='midnight', interval=1, backupCount=30, encoding='utf-8'
             )
 
             appLogHandler.setFormatter(fileLogFormatter)
@@ -62,8 +62,8 @@ class LogConfig:
 
             # INFO日志文件记录
             infoLogHandler = TimedRotatingFileHandler(
-                os.path.join(LogConfig.LOG_DIR, "info.log"),
-                when="midnight", interval=1, backupCount=30, encoding='utf-8'
+                os.path.join(LogConfig.LOG_DIR, 'info.log'),
+                when='midnight', interval=1, backupCount=30, encoding='utf-8'
             )
 
             infoLogHandler.setFormatter(fileLogFormatter)
@@ -72,8 +72,8 @@ class LogConfig:
 
             # WARNING日志文件记录
             warningLogHandler = TimedRotatingFileHandler(
-                os.path.join(LogConfig.LOG_DIR, "warning.log"),
-                when="midnight", interval=1, backupCount=30, encoding='utf-8'
+                os.path.join(LogConfig.LOG_DIR, 'warning.log'),
+                when='midnight', interval=1, backupCount=30, encoding='utf-8'
             )
 
             warningLogHandler.setFormatter(fileLogFormatter)
@@ -82,15 +82,15 @@ class LogConfig:
 
             # ERROR日志文件记录
             errorLogHandler = TimedRotatingFileHandler(
-                os.path.join(LogConfig.LOG_DIR, "error.log"),
-                when="midnight", interval=1, backupCount=30, encoding='utf-8'
+                os.path.join(LogConfig.LOG_DIR, 'error.log'),
+                when='midnight', interval=1, backupCount=30, encoding='utf-8'
             )
 
             errorLogHandler.setFormatter(fileLogFormatter)
             errorLogHandler.setLevel(logging.ERROR)
             rootLogger.addHandler(errorLogHandler)
 
-            logging.info("✅ 日志系统初始化成功")
+            logging.info('✅ 日志系统初始化成功')
         except Exception as e:
             logging.basicConfig(
                 level=logging.INFO,
@@ -100,4 +100,4 @@ class LogConfig:
                     StreamHandler(sys.stdout)
                 ]
             )
-            logging.error(f"❌ 初始化自定义日志系统失败: { str(e) }")
+            logging.error(f'❌ 初始化自定义日志系统失败: { str(e) }')

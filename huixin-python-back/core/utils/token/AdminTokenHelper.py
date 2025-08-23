@@ -5,7 +5,7 @@ from core.states.TokenState import TokenState
 
 from datetime import datetime, timedelta, timezone
 
-class AdminTokenHandler:
+class AdminTokenHelper:
 
     #生成管理员JWT
     @staticmethod

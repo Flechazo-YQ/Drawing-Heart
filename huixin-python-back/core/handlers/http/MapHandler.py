@@ -1,22 +1,132 @@
 import requests, flask, logging
 
 from core.configs.BlueprintConfig import BlueprintConfig
-from core.states.RouteState import RouteState
+from core.states.route.ApiState import ApiState
 
-from typing import Final
+from typing import Final, Dict, List
 
 class MapSearchHandler:
     GAODE_API_KEY: Final[str] = '1253afe42c5a16a5c4764fc2086f3f62'
-    SEARCH_KEYWORDS: Final[list[str]] = ['心理咨询', '心理医院', '精神卫生', '心理健康', '心理治疗', '心理门诊']
+    SEARCH_KEYWORDS: Final[List[str]] = ['心理咨询', '心理医院', '精神卫生', '心理健康', '心理治疗', '心理门诊']
     SEARCH_RADIUS: Final[int] = 50000  # 搜索半径扩大到50km, 单位为米
     SEARCH_URL: Final[str] = 'https://restapi.amap.com/v3/place/around'
     IP_LOCATION_URL: Final[str] = 'https://restapi.amap.com/v3/ip'  # 高德IP定位API
     AUTOCOMPLETE_URL: Final[str] = 'https://restapi.amap.com/v3/assistant/inputtips'
     GEOCODE_URL: Final[str] = 'https://restapi.amap.com/v3/geocode/geo'
 
+    # 直接搜索心理机构
+    @staticmethod
+    @BlueprintConfig.apiRoutes(ApiState.MAP_SEARCH['route'], methods=ApiState.MAP_SEARCH['method'])
+    def mapSearch():
+        requestData = flask.request.get_json()
+        latitude = requestData.get('latitude')
+        longitude = requestData.get('longitude')
+        radius = requestData.get('radius')
+
+        if (not latitude or not longitude):
+            return flask.jsonify({
+                'error': '缺少经纬度参数'
+            }), 400
+        
+        institutions = MapSearchHandler.__searchNearbyInstitutions(latitude, longitude, radius)
+
+        return flask.jsonify({
+            'code': 0,
+            'status': 'success',
+            'data': institutions
+        }), 200
+    
+    # 处理地址输入时的智能提示
+    @staticmethod
+    @BlueprintConfig.apiRoutes(ApiState.MAP_AUTOCOMPLETE['route'], methods=ApiState.MAP_AUTOCOMPLETE['method'])
+    def geocodeAutocomplete():
+        requestData = flask.request.get_json()
+        keywords = requestData.get('keywords')
+
+        if (not keywords):
+            return flask.jsonify({
+                'error': '缺少关键字参数'
+            }), 400
+
+        params = {
+            'key': MapSearchHandler.GAODE_API_KEY,
+            'keywords': keywords,
+        }
+
+        try:
+            response = requests.get(MapSearchHandler.AUTOCOMPLETE_URL, params=params, timeout=5)
+            response.raise_for_status()
+            data = response.json()
+
+            if (data.get('status') == '1'):
+                tips = data.get('tips', [])
+                # 过滤掉没有地址的建议，并组合成 "名称 (区域)" 的格式
+                suggestions = [
+                    f"{tip.get('name')} ({tip.get('district')})" 
+                    for tip in tips if tip.get('name') and tip.get('district')
+                ]
+
+                return flask.jsonify({
+                    'code': 0,
+                    'status': 'success',
+                    'data': suggestions
+                }), 200
+            
+            return flask.jsonify({
+                'code': 1,
+                'status': 'autocomplete_failed',
+                'message': '获取输入建议失败'
+            }), 200
+        except requests.exceptions.RequestException as e:
+            logging.error(f"❌ 请求高德输入提示API时出错: { str(e) }")
+            return flask.jsonify({'error': '输入提示服务暂时不可用'}), 500
+        
+    # 地址解析
+    @staticmethod
+    @BlueprintConfig.apiRoutes(ApiState.MAP_GEOCODE['route'], methods=ApiState.MAP_GEOCODE['method'])
+    def geocodeAddress():
+        requestData = flask.request.get_json()
+        address = requestData.get('address')
+
+        if (not address):
+            return flask.jsonify({
+                'error': '缺少地址参数'
+            }), 400
+
+        params = {
+            'key': MapSearchHandler.GAODE_API_KEY,
+            'address': address
+        }
+
+        try:
+            response = requests.get(MapSearchHandler.GEOCODE_URL, params=params, timeout=5)
+            response.raise_for_status()
+            data = response.json()
+
+            if (data.get('status') == '1' and data.get('geocodes')):
+                location = data['geocodes'][0]['location']
+                lon, lat = map(float, location.split(','))
+
+                return flask.jsonify({
+                    'code': 0,
+                    'status': 'success',
+                    'data': {'latitude': lat, 'longitude': lon}
+                }), 200
+
+            return flask.jsonify({
+                'code': 1,
+                'status': 'geocode_failed',
+                'message': '地址解析失败，请尝试更详细的地址'
+            }), 200
+        except requests.exceptions.RequestException as e:
+            logging.error(f"❌ 请求高德地址解析API时出错: { str(e) }")
+            return flask.jsonify({
+                'error': '地址解析服务暂时不可用'
+            }), 500
+
     # 后端辅助方法
     @classmethod
-    def searchNearbyInstitutions(cls, latitude: float, longitude: float, radius: int | None = None):
+    def __searchNearbyInstitutions(cls, latitude: float, longitude: float, radius: int | None = None):
         allPois = []
         processedIds = set()
         
@@ -51,8 +161,8 @@ class MapSearchHandler:
                                 'tel': poi.get('tel', ''),
                                 'rating': poi.get('biz_ext', {}).get('rating', None),
                                 'avgPrice': poi.get('biz_ext', {}).get('cost', None),
-                                'image': cls.getPoiImage(poi),
-                                'photos': cls.getPoiPhotos(poi)
+                                'image': cls.__getPoiImage(poi),
+                                'photos': cls.__getPoiPhotos(poi)
                             }
                             allPois.append(processedPoi)
                             processedIds.add(poi.get('id'))
@@ -63,31 +173,9 @@ class MapSearchHandler:
         # 按距离排序
         return sorted(allPois, key=lambda x: x['distance'])
     
-    # 前端调用方法, 直接搜索心理机构
-    @staticmethod
-    @BlueprintConfig.apiRoutes(RouteState.Api.MAP_SEARCH['route'], methods=RouteState.Api.MAP_SEARCH['method'])
-    def mapSearch():
-        requestData = flask.request.get_json()
-        latitude = requestData.get('latitude')
-        longitude = requestData.get('longitude')
-        radius = requestData.get('radius')  # 接收前端传来的搜索半径
-
-        if (not latitude or not longitude):
-            return flask.jsonify({
-                'error': '缺少经纬度参数'
-            }), 400
-        
-        institutions = MapSearchHandler.searchNearbyInstitutions(latitude, longitude, radius)
-
-        return flask.jsonify({
-            'code': 0,
-            'status': 'success',
-            'data': institutions
-        }), 200
-    
     # 获取POI的主要图片
     @classmethod
-    def getPoiImage(cls, poi: dict):
+    def __getPoiImage(cls, poi: Dict):
         # 优先级：POI详情图 > 店铺图片 > 默认图片
         photos = poi.get('photos', [])
 
@@ -105,7 +193,7 @@ class MapSearchHandler:
     
     # 获取POI的所有照片
     @classmethod
-    def getPoiPhotos(cls, poi: dict):
+    def __getPoiPhotos(cls, poi: Dict):
         photos = poi.get('photos', [])
         photoUrls = []
 
@@ -116,7 +204,7 @@ class MapSearchHandler:
         return photoUrls
     
     @staticmethod
-    @BlueprintConfig.apiRoutes(RouteState.Api.MAP_LOCATION['route'], methods=RouteState.Api.MAP_LOCATION['method'])
+    @BlueprintConfig.apiRoutes(ApiState.MAP_LOCATION['route'], methods=ApiState.MAP_LOCATION['method'])
     def getLocationByIp():
     
         # 获取客户端IP，优先从 X-Forwarded-For 获取，适用于反向代理
@@ -172,90 +260,3 @@ class MapSearchHandler:
                 'error': 'IP定位服务暂时不可用'
             }), 500
         
-    # 前端调用方法, 处理地址输入时的智能提示
-    @staticmethod
-    @BlueprintConfig.apiRoutes(RouteState.Api.MAP_AUTOCOMPLETE['route'], methods=RouteState.Api.MAP_AUTOCOMPLETE['method'])
-    def geocodeAutocomplete():
-        requestData = flask.request.get_json()
-        keywords = requestData.get('keywords')
-
-        if (not keywords):
-            return flask.jsonify({
-                'error': '缺少关键字参数'
-            }), 400
-
-        params = {
-            'key': MapSearchHandler.GAODE_API_KEY,
-            'keywords': keywords,
-        }
-
-        try:
-            response = requests.get(MapSearchHandler.AUTOCOMPLETE_URL, params=params, timeout=5)
-            response.raise_for_status()
-            data = response.json()
-
-            if (data.get('status') == '1'):
-                tips = data.get('tips', [])
-                # 过滤掉没有地址的建议，并组合成 "名称 (区域)" 的格式
-                suggestions = [
-                    f"{tip.get('name')} ({tip.get('district')})" 
-                    for tip in tips if tip.get('name') and tip.get('district')
-                ]
-
-                return flask.jsonify({
-                    'code': 0,
-                    'status': 'success',
-                    'data': suggestions
-                }), 200
-            
-            return flask.jsonify({
-                'code': 1,
-                'status': 'autocomplete_failed',
-                'message': '获取输入建议失败'
-            }), 200
-        except requests.exceptions.RequestException as e:
-            logging.error(f"❌ 请求高德输入提示API时出错: { str(e) }")
-            return flask.jsonify({'error': '输入提示服务暂时不可用'}), 500
-        
-    # 前端调用方法, 用于地址解析
-    @staticmethod
-    @BlueprintConfig.apiRoutes(RouteState.Api.MAP_GEOCODE['route'], methods=RouteState.Api.MAP_GEOCODE['method'])
-    def geocodeAddress():
-        requestData = flask.request.get_json()
-        address = requestData.get('address')
-
-        if (not address):
-            return flask.jsonify({
-                'error': '缺少地址参数'
-            }), 400
-
-        params = {
-            'key': MapSearchHandler.GAODE_API_KEY,
-            'address': address
-        }
-
-        try:
-            response = requests.get(MapSearchHandler.GEOCODE_URL, params=params, timeout=5)
-            response.raise_for_status()
-            data = response.json()
-
-            if (data.get('status') == '1' and data.get('geocodes')):
-                location = data['geocodes'][0]['location']
-                lon, lat = map(float, location.split(','))
-
-                return flask.jsonify({
-                    'code': 0,
-                    'status': 'success',
-                    'data': {'latitude': lat, 'longitude': lon}
-                }), 200
-
-            return flask.jsonify({
-                'code': 1,
-                'status': 'geocode_failed',
-                'message': '地址解析失败，请尝试更详细的地址'
-            }), 200
-        except requests.exceptions.RequestException as e:
-            logging.error(f"❌ 请求高德地址解析API时出错: { str(e) }")
-            return flask.jsonify({
-                'error': '地址解析服务暂时不可用'
-            }), 500

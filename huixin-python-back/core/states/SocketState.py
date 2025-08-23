@@ -1,4 +1,9 @@
-from core.utils.TypedDictionaryHelper import TypedDictionaryHelper
+from core.utils.type.socket.EventDict import EventDict
+from core.utils.type.socket.data.AdminMessageResponseData import AdminMessageResponseData
+from core.utils.type.socket.data.AdminReplyData import AdminReplyData
+from core.utils.type.socket.data.DangerousChatsListData import DangerousChatsListData
+from core.utils.type.socket.data.NewMessageData import NewMessageData
+from core.utils.type.socket.data.RequestHistoryResponseData import RequestHistoryResponseData
 
 from queue import Queue
 from flask_socketio import SocketIO
@@ -25,26 +30,26 @@ class SocketState:
     DISCONNECT: Final[str] = "disconnect"
 
     # 后端Socket事件及数据映射
-    REQUEST_HISTORY_RESPONSE: Final[TypedDictionaryHelper.Socket] = {
+    REQUEST_HISTORY_RESPONSE: Final[EventDict] = {
         "event": "request_history_response",
-        "data": TypedDictionaryHelper.RequestHistoryResponseData
+        "data": RequestHistoryResponseData
     }
-    NEW_MESSAGE: Final[TypedDictionaryHelper.Socket] = {
+    NEW_MESSAGE: Final[EventDict] = {
         "event": "new_message",
-        "data": TypedDictionaryHelper.NewMessageData
+        "data": NewMessageData
     }
-    DANGEROUS_CHATS_LIST: Final[TypedDictionaryHelper.Socket] = {
+    DANGEROUS_CHATS_LIST: Final[EventDict] = {
         "event": "dangerous_chats_list",
-        "data": TypedDictionaryHelper.DangerousChatsListData
+        "data": DangerousChatsListData
     }
 
-    ADMIN_MESSAGE_RESPONSE: Final[TypedDictionaryHelper.Socket] = {
+    ADMIN_MESSAGE_RESPONSE: Final[EventDict] = {
         "event": "admin_message_response",
-        "data": TypedDictionaryHelper.AdminMessageResponseData
+        "data": AdminMessageResponseData
     }
-    ADMIN_REPLY: Final[TypedDictionaryHelper.Socket] = {
+    ADMIN_REPLY: Final[EventDict] = {
         "event": "admin_reply",
-        "data": TypedDictionaryHelper.AdminReplyData
+        "data": AdminReplyData
     }
 
 

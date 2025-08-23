@@ -1,49 +1,18 @@
-import logging, os, flask, secrets
+import flask, logging, os, secrets
 
 from core.configs.BlueprintConfig import BlueprintConfig
 from core.configs.MongoDBConfig import MongoDBConfig
-from core.handlers.token.UserTokenHandler import UserTokenHandler
-from core.handlers.FileHandler import FileHandler
 from core.states.DirectoryState import DirectoryState
-from core.states.RouteState import RouteState
+from core.states.route.ApiState import ApiState
+from core.utils.FileHelper import FileHelper
+from core.utils.UrlHelper import UrlHelper
+from core.utils.token.UserTokenHelper import UserTokenHelper
 
-class AvatarUploadHandler:
-    
-    @staticmethod
-    @BlueprintConfig.uploadsRoutes(RouteState.Uploads.SERVE_UPLOADS['route'])
-    def serveUploads(filename: str):
-        try:
-            uploadFolder = flask.current_app.config['UPLOAD_FOLDER']
-
-            # 构建完整路径
-            filename = filename.replace('/', os.sep).replace('\\', os.sep)
-            fullPath = os.path.join(uploadFolder, filename)
-
-            if (os.path.isfile(fullPath)):
-                response = flask.send_file(fullPath)
-
-                response.headers['Cache-Control'] = 'no-cache, no-store, must-revalidate'
-                response.headers['Pragma'] = 'no-cache'
-                response.headers['Expires'] = '0'
-                response.headers['Access-Control-Allow-Origin'] = '*'
-
-                return response
-            else:
-                logging.warning(f"⚠️ 文件不存在: { fullPath }")
-                return flask.jsonify({
-                    'error': 'File not found',
-                    'path': fullPath
-                }), 404
-                
-        except Exception as e:
-            logging.error(f"❌ 提供文件时出错: { str(e) }")
-            return flask.jsonify({
-                'error': f'Server error: { str(e) }'
-            }), 500
+class UserProfileHandler:
 
     # 用户头像上传接口
     @staticmethod
-    @BlueprintConfig.apiRoutes(RouteState.Api.UPLOAD_AVATAR['route'], methods=RouteState.Api.UPLOAD_AVATAR['method'])
+    @BlueprintConfig.apiRoutes(ApiState.UPLOAD_AVATAR['route'], methods=ApiState.UPLOAD_AVATAR['method'])
     def uploadAvatar():
         token = flask.request.headers.get('Authorization')
 
@@ -55,8 +24,8 @@ class AvatarUploadHandler:
             }), 401
 
         logging.info(f"收到头像上传请求，令牌: { token[:15] }...")
-        
-        userId = UserTokenHandler.verifyUserToken(token)
+
+        userId = UserTokenHelper.verifyUserToken(token)
 
         if (not userId):
             logging.error(f"❌ 头像上传失败: 无效的令牌: { token[:15] }...")
@@ -85,7 +54,7 @@ class AvatarUploadHandler:
                 }), 400
 
             # 检查文件类型
-            if (not FileHandler.allowedFile(file.filename)):
+            if (not FileHelper.isAllowedFile(file.filename)):
                 logging.error(f"❌ 头像上传失败: 不支持的文件类型 { file.filename }")
                 return flask.jsonify({
                     'code': 1, 
@@ -145,3 +114,37 @@ class AvatarUploadHandler:
                 'code': 1, 
                 'message': f'头像上传失败: { str(e) }'
             }), 500   
+    
+    # 获取用户名, 并返回JSON格式的响应
+    @staticmethod
+    @BlueprintConfig.apiRoutes(ApiState.PROFILE_NAME['route'], methods=ApiState.PROFILE_NAME['method'])
+    @UserTokenHelper.userTokenRequired
+    def getUsername():
+        user = flask.g.user
+
+        return flask.jsonify({
+            "username": user["name"]
+        })
+
+    # 获取用户详细信息
+    @staticmethod
+    @BlueprintConfig.apiRoutes(ApiState.PROFILE_INFO['route'], methods=ApiState.PROFILE_INFO['method'])
+    @UserTokenHelper.userTokenRequired
+    def getUserInfo():
+        try:
+            user = flask.g.user
+            profile = user.get("profile", {})
+            avatarUrl = UrlHelper.getAbsoluteUrl(profile.get("avatar", ""))
+            profile["avatar"] = avatarUrl
+            user["profile"] = profile
+
+            return flask.jsonify({
+                "code": 0,
+                "message": "success",
+                "data": user
+            })
+        except Exception as e:
+            return flask.jsonify({
+                "error": str(e)
+            }), 500
+        

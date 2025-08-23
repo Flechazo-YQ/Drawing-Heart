@@ -1,38 +1,12 @@
-import base64, os, logging, flask, httpx
+import os, logging, flask
 
 from core.configs.MongoDBConfig import MongoDBConfig
+from core.utils.ImageHelper import ImageHelper
 
 from openai import OpenAI
-from typing import Final
+from httpx import Client
 
 class DrawingHandler:
-    MIME_TYPE_CONFIG: Final[dict[str, str]] = {
-        ".png": "image/png",
-        ".jpg": "image/jpeg",
-        ".jpeg": "image/jpeg",
-        ".gif": "image/gif",
-        ".webp": "image/webp",
-    }
-
-    # 将图片文件转换为 data URL
-    @classmethod
-    def imageToDataUrl(cls, filePath: str):
-
-        # 将图片文件转换为 data URL
-        try:
-            extension = os.path.splitext(filePath)[1].lower()
-            mimeType = cls.MIME_TYPE_CONFIG.get(extension)
-
-            # 读取文件并转换为 base64
-            with open(filePath, "rb") as imageFile:
-                encodedImage = base64.b64encode(imageFile.read()).decode("utf-8")
-
-            # 返回完整的 data URL
-            return f"data:{ mimeType };base64,{ encodedImage }"
-
-        except Exception as e:
-            logging.error(f"❌ 图片转换失败: { str(e) }")
-            return None
         
     # 接入AI分析图片
     @classmethod
@@ -64,7 +38,7 @@ class DrawingHandler:
             # 初始化AI客户端
             try:
                 # 创建自定义httpx客户端避免代理问题
-                httpClient = httpx.Client()
+                httpClient = Client()
                 client = OpenAI(
                     base_url = "https://ark.cn-beijing.volces.com/api/v3",
                     api_key = "d618ffd5-dd7c-4548-8cde-a82ba550f808",
@@ -79,7 +53,7 @@ class DrawingHandler:
                     "message": f"AI客户端初始化失败: { str(clientError) }"
                 }), 500
 
-            dataUrl = cls.imageToDataUrl(filePath)
+            dataUrl = ImageHelper.imageToDataUrl(filePath)
 
             if (not dataUrl):
                 logging.error(f"❌ 图片转换失败: { filePath }")

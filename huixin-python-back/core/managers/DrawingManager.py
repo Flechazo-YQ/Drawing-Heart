@@ -206,7 +206,7 @@ class DrawingManager:
             return None
 
     # 获取用户的历史分析结果
-    def getUserAnalyses(self, userId: str, limit: int = 10, page: int = 1) -> Tuple[List[Dict], int]:
+    def getAnalysesHistory(self, userId: str, limit: int = 10, page: int = 1) -> Tuple[List[Dict], int]:
         try:
             skip = (page - 1) * limit
             idFilter = {

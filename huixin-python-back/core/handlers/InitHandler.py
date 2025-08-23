@@ -7,11 +7,11 @@ from core.configs.MongoDBConfig import MongoDBConfig
 from core.configs.AppConfig import AppConfig
 from core.configs.LogConfig import LogConfig
 from core.handlers.ErrorHandler import ErrorHandler
-from core.handlers.FileHandler import FileHandler
 from core.handlers.socket.SocketQueueHandler import SocketQueueHandler
 from core.states.DirectoryState import DirectoryState
 from core.states.GlobalState import GlobalState
 from core.states.SocketState import SocketState
+from core.utils.FileHelper import FileHelper
 
 from flask import Flask
 from flask_cors import CORS
@@ -44,7 +44,7 @@ class InitHandler:
 
         GlobalState.APP.jinja_env.variable_start_string = '[['
         GlobalState.APP.jinja_env.variable_end_string = ']]'
-        GlobalState.APP.config['UPLOAD_FOLDER'] = FileHandler.getUploadPath()
+        GlobalState.APP.config['UPLOAD_FOLDER'] = FileHelper.getUploadPath()
 
         AppConfig.registerAppConfig(GlobalState.APP)
         ErrorHandler.registerErrorHandlers(GlobalState.APP)

@@ -2,11 +2,12 @@ import flask, flask_socketio, logging
 
 from core.configs.MongoDBConfig import MongoDBConfig
 from core.states.SocketState import SocketState
-from core.handlers.token.UserTokenHandler import UserTokenHandler
 from core.handlers.socket.SocketQueueHandler import SocketQueueHandler
 from core.utils.AuthenticateHelper import AuthenticateHelper
 from core.utils.BroadcastHelper import BroadcastHelper
-from core.utils.TypedDictionaryHelper import TypedDictionaryHelper
+from core.utils.type.socket.data.DangerousChatsListData import DangerousChatsListData
+from core.utils.type.socket.data.NewMessageData import NewMessageData
+from core.utils.token.UserTokenHelper import UserTokenHelper
 
 from typing import Dict
 
@@ -15,7 +16,7 @@ class UserSocketHandler:
     # 处理用户的认证请求
     @staticmethod
     @SocketState.socketio.on(SocketState.USER_AUTH)
-    @UserTokenHandler.userTokenRequired
+    @UserTokenHelper.userTokenRequired
     def handleUserAuth(data: Dict):
         sid = flask.request.sid # type: ignore
 
@@ -66,7 +67,7 @@ class UserSocketHandler:
         if (not adminId):
             BroadcastHelper.unsignDangerousChats()
 
-            dangerousChatsList: TypedDictionaryHelper.DangerousChatsListData = {
+            dangerousChatsList: DangerousChatsListData = {
                 "chats": chats
             }
 
@@ -82,7 +83,7 @@ class UserSocketHandler:
         if (chatType == "dangerous" and adminSid):
             BroadcastHelper.signedDangerousChats()
 
-            newMessageData: TypedDictionaryHelper.NewMessageData = {
+            newMessageData: NewMessageData = {
                 "userId": userId,
                 "chatId": chatId,
                 "role": "user",

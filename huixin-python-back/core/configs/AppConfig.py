@@ -1,7 +1,6 @@
 import flask, logging
 
-from flask import Response
-from flask import Flask
+from flask import Response, Flask
 
 class AppConfig:
 
