@@ -46,6 +46,11 @@ const router = createRouter({
       component: () => import('../views/ForgetPasswordView.vue')
     },
     {
+      path: '/about',
+      name: 'about',
+      component: () => import('../views/AboutView.vue')
+    },
+    {
       path: '/terms',
       name: 'terms',
       component: () => import('../views/TermsOfServiceView.vue')
@@ -65,6 +70,12 @@ const router = createRouter({
       name: 'admin',
       component: () => import('../views/AdminView.vue'),
       meta: { requiresAdminAuth: true }
+    },
+    {
+      path:'/map',
+      name: 'map',
+      component: () => import('../views/MapSearchView.vue'),
+      meta: { requiresAuth: true }
     }
   ]
 })
@@ -84,9 +95,9 @@ router.beforeEach((to, from, next) => {
       next()
     }
   }
-  // 检查是否需要普通用户权限
+    // 检查是否需要普通用户权限
   else if (to.matched.some(record => record.meta.requiresAuth)) {
-    // 检查是否已登录
+    // 检查是否已登录 - 从localStorage获取登录状态
     if (!localStorage.getItem('isLoggedIn')) {
       // 如果没有登录，重定向到登录页
       next({

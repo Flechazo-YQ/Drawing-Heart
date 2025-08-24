@@ -7,24 +7,31 @@
       </button>
       <button class="close-btn" @click="closeSidebar">×</button>
     </div>
-    
+
     <div class="chat-list">
-      <div 
-        v-for="chat in chatList" 
+      <div
+        v-for="chat in filteredChatList"
         :key="chat._id"
-        :class="['chat-item', { 'active': currentChatId === chat._id, 'dangerous': chat.type === 'dangerous' }]"
+        :class="['chat-item', {
+          'active': currentChatId === chat._id,
+          'dangerous': chat.type === 'dangerous' || chat.stats?.isDangerous
+        }]"
         @click="loadChat(chat._id)"
       >
         <div class="chat-title">
-          <span v-if="chat.type === 'dangerous'" class="danger-badge">⚠️</span>
+          <span v-if="chat.type === 'dangerous' || chat.stats?.isDangerous" class="danger-badge">⚠️</span>
           {{ chat.title }}
         </div>
         <div class="chat-info">
-          <span class="message-count">{{ chat.message_count }}条消息</span>
-          <span class="chat-time">{{ formatTime(chat.updated_at) }}</span>
+          <span class="message-count">
+            {{ chat.stats?.messageCount || 0 }}条消息
+          </span>
+          <span class="chat-time">
+            {{ formatTime(chat.timeNode.updatedAt) }}
+          </span>
         </div>
-        <button 
-          class="delete-chat-btn" 
+        <button
+          class="delete-chat-btn"
           @click.stop="deleteChat(chat._id)"
           title="删除对话"
         >
@@ -32,31 +39,39 @@
         </button>
       </div>
     </div>
-    
+
     <div v-if="loading" class="loading">
       加载中...
     </div>
-    
+
     <div v-if="!loading && chatList.length === 0" class="empty-state">
       暂无聊天记录
     </div>
   </div>
-  
+
   <div v-if="isOpen" class="sidebar-overlay" @click="closeSidebar"></div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch } from 'vue'
+import { ref, onMounted, watch, computed } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import config from '@/config'
 
 interface Chat {
   _id: string
+  userId: string
+  adminId: string
+  lastMessage: string
   title: string
-  message_count: number
-  updated_at: string
-  created_at: string
-  type?: string  // 对话类型，'dangerous' 表示危险对话
+  type: string  // 对话类型，'dangerous' 表示危险对话
+  stats?: {
+    messageCount: number
+    isDangerous: boolean
+    emotionAnalysis: [string]
+  }
+  timeNode: {
+    updatedAt: string
+  }
 }
 
 const props = defineProps<{
@@ -65,31 +80,34 @@ const props = defineProps<{
 
 const emit = defineEmits<{
   close: []
-  chatLoaded: [chatId: string]
+  chatLoaded: [chatId: string, messagesList: any[], chatInfo?: any]
   newChat: [chatId: string]
 }>()
 
 const chatList = ref<Chat[]>([])
 const loading = ref(false)
 const currentChatId = ref<string>('')
+const filteredChatList = computed(() =>
+  chatList.value.filter(chat => (chat.stats?.messageCount || 0) > 0)
+)
 
 // 获取聊天列表
 const fetchChatList = async () => {
   try {
     loading.value = true
     const token = localStorage.getItem('token')
-    
-    const response = await fetch(`${config.baseURL}/api/chats`, {
+
+    const response = await fetch(`${config.baseURL}/api/chats/list`, {
       headers: {
         'Authorization': token || '',
         'Content-Type': 'application/json'
       }
     })
-    
+
     const result = await response.json()
     
     if (result.code === 0) {
-      chatList.value = result.data
+      chatList.value = result.data.chats || []
     } else {
       ElMessage.error(result.message || '获取聊天列表失败')
     }
@@ -105,7 +123,7 @@ const fetchChatList = async () => {
 const createNewChat = async () => {
   try {
     const token = localStorage.getItem('token')
-    
+
     const response = await fetch(`${config.baseURL}/api/chats`, {
       method: 'POST',
       headers: {
@@ -116,14 +134,14 @@ const createNewChat = async () => {
         title: '新对话'
       })
     })
-    
+
     const result = await response.json()
-    
+
     if (result.code === 0) {
-      currentChatId.value = result.data.chat_id
+      currentChatId.value = result.data.chatId
       ElMessage.success('创建新对话成功')
       await fetchChatList()
-      emit('newChat', result.data.chat_id)
+      emit('newChat', result.data.chatId)
     } else {
       ElMessage.error(result.message || '创建新对话失败')
     }
@@ -138,7 +156,7 @@ const loadChat = async (chatId: string) => {
   try {
     const token = localStorage.getItem('token')
     
-    const response = await fetch(`${config.baseURL}/api/chats/${chatId}/load`, {
+    const response = await fetch(`${config.baseURL}/api/chats/${chatId}/messages`, {
       method: 'POST',
       headers: {
         'Authorization': token || '',
@@ -147,11 +165,13 @@ const loadChat = async (chatId: string) => {
     })
     
     const result = await response.json()
-    
+    console.log(result)
     if (result.code === 0) {
       currentChatId.value = chatId
       ElMessage.success('加载对话成功')
-      emit('chatLoaded', chatId)
+      // 查找当前 chat 的完整信息
+      const chatInfo = chatList.value.find(chat => chat._id === chatId) || null
+      emit('chatLoaded', chatId, Array.isArray(result.data.messages) ? result.data.messages : [], chatInfo)
     } else {
       ElMessage.error(result.message || '加载对话失败')
     }
@@ -173,23 +193,30 @@ const deleteChat = async (chatId: string) => {
         type: 'warning'
       }
     )
-    
+
     const token = localStorage.getItem('token')
     
-    const response = await fetch(`${config.baseURL}/api/chats/${chatId}`, {
+    const response = await fetch(`${config.baseURL}/api/chats/${chatId}/hide`, {
       method: 'DELETE',
       headers: {
         'Authorization': token || '',
         'Content-Type': 'application/json'
-      }
+      },
+      body: JSON.stringify({chatId})
     })
-    
+
+    if (!response.ok) {
+      const errorData = await response.json().catch(() => null)
+      const errorMessage = errorData ? errorData.message : `服务器错误，状态码: ${response.status}`
+      throw new Error(errorMessage)
+    }
+
     const result = await response.json()
-    
+
     if (result.code === 0) {
       ElMessage.success('删除对话成功')
       await fetchChatList()
-      
+
       // 如果删除的是当前对话，清空当前对话ID
       if (currentChatId.value === chatId) {
         currentChatId.value = ''
@@ -211,7 +238,7 @@ const formatTime = (timeString: string) => {
   const date = new Date(timeString)
   const now = new Date()
   const diff = now.getTime() - date.getTime()
-  
+
   // 如果是今天
   if (diff < 24 * 60 * 60 * 1000 && date.getDate() === now.getDate()) {
     return date.toLocaleTimeString('zh-CN', { hour: '2-digit', minute: '2-digit' })
@@ -376,6 +403,13 @@ onMounted(() => {
   align-items: center;
   font-size: 12px;
   color: #666;
+}
+
+.chat-activity {
+  font-size: 11px;
+  color: #888;
+  margin-top: 2px;
+  padding-left: 4px;
 }
 
 .message-count {

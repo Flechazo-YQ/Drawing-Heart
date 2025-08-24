@@ -59,6 +59,31 @@
 
   --section-gap: 160px;
   /* 页面段落间距 */
+  
+  /* 响应式变量 - 超大屏幕优化 */
+  --container-max-width: 1200px;
+  --font-size-base: 15px;
+  --spacing-unit: 1rem;
+}
+
+/* 2K屏幕优化 */
+@media (min-width: 2560px) {
+  :root {
+    --container-max-width: 1800px;
+    --font-size-base: 16px;
+    --spacing-unit: 1.2rem;
+    --section-gap: 200px;
+  }
+}
+
+/* 4K屏幕优化 */
+@media (min-width: 3840px) {
+  :root {
+    --container-max-width: 3000px;
+    --font-size-base: 18px;
+    --spacing-unit: 1.5rem;
+    --section-gap: 240px;
+  }
 }
 
 @media (prefers-color-scheme: dark) {
@@ -124,6 +149,7 @@ body {
     sans-serif;
   font-size: 15px;
   /* 设置基础字体大小 */
+  font-size: var(--font-size-base);
   text-rendering: optimizeLegibility;
   /* 优化文字渲染 */
   -webkit-font-smoothing: antialiased;

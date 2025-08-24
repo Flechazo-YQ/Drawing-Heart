@@ -1,14 +1,18 @@
 <template>
   <div class="login-container">
+
+    <!-- 统一导航栏 -->
+    <NavBarGuest />
+
     <div class="login-content">
       <div class="login-left">
         <div class="brand-content">
-          <router-link to="/" class="brand-logo">
+          <div class="brand-logo">
             <h1>绘心同学</h1>
             <p class="brand-subtitle">AI心理绘画治疗平台</p>
-          </router-link>
+          </div>
           <div class="hero-image">
-            <img src="@/assets/images/3.png" alt="心理诊断" />
+            <img src="@/assets/images/heart.png" alt="心理诊断" />
           </div>
         </div>
       </div>
@@ -21,10 +25,10 @@
           <form class="login-form" @submit.prevent="handleLogin">
             <div class="form-group">
               <label>用户名 / 邮箱</label>
-              <input 
+              <input
                 v-model="formData.usernameOrEmail"
-                type="text" 
-                class="form-input" 
+                type="text"
+                class="form-input"
                 placeholder="请输入用户名或邮箱"
                 required
               />
@@ -32,10 +36,10 @@
 
             <div class="form-group">
               <label>密码</label>
-              <input 
+              <input
                 v-model="formData.password"
-                type="password" 
-                class="form-input" 
+                type="password"
+                class="form-input"
                 placeholder="请输入密码"
                 required
               />
@@ -69,6 +73,8 @@ import { ref, reactive, onMounted } from 'vue'
 import { useRouter, useRoute } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import config from '@/config' // 导入配置文件
+import NavBarGuest from '@/components/NavBarGuest.vue'
+import socket from '@/utils/network'
 
 const router = useRouter()
 const route = useRoute()
@@ -83,11 +89,11 @@ const formData = reactive({
 const handleLogin = async () => {
   try {
     isLoading.value = true
-    
+
     // 添加请求超时控制
     const controller = new AbortController();
     const timeout = setTimeout(() => controller.abort(), config.requestTimeout || 30000);
-    
+
     try {
       const response = await fetch(`${config.baseURL}${config.loginPath}`, {
         method: 'POST',
@@ -101,9 +107,9 @@ const handleLogin = async () => {
         }),
         signal: controller.signal
       })
-      
+
       clearTimeout(timeout);
-      
+
       // 检查是否能获取到JSON响应
       let data;
       try {
@@ -111,36 +117,62 @@ const handleLogin = async () => {
       } catch (e) {
         throw new Error('服务器返回了无效的数据格式')
       }
-      
+
       if (data.code === 0) {
-        // 登录成功，保存token和用户信息
-        localStorage.setItem('token', data.data.token)
-        localStorage.setItem('userInfo', JSON.stringify({
-          id: data.data.user.id,
-          username: data.data.user.username,
-          email: data.data.user.email,
-          avatar: data.data.user.avatar
-        }))
-        // 添加登录状态标志
-        localStorage.setItem('isLoggedIn', 'true')
-        
-        // 如果选择了"记住我"，保存用户名
-        if (formData.remember) {
-          localStorage.setItem('rememberLogin', 'true')
-          localStorage.setItem('savedUsername', formData.usernameOrEmail)
-        } else {
-          localStorage.removeItem('rememberLogin')
-          localStorage.removeItem('savedUsername')
+        // 登录成功，保存token到localStorage
+        localStorage.setItem('token', data.token)
+
+        // 获取用户信息
+        try {
+          const userInfoResponse = await fetch(`${config.baseURL}${config.userInfoPath}`, {
+            headers: {
+              'Authorization': data.token
+            }
+          });
+
+          const userInfo = await userInfoResponse.json();
+          
+          if (userInfo.code === 0) {
+            const info = { ...userInfo.data, id: userInfo.data._id }
+
+            localStorage.setItem('userInfo', JSON.stringify(info));
+            
+            // 添加登录状态标志到localStorage
+            localStorage.setItem('isLoggedIn', 'true')
+            
+            //向后端发送登录用户id
+            if (!socket.connected) {
+              socket.connect();
+              socket.once('connect', () => {
+                socket.emit('user_auth', { token: data.token });
+              });
+            } else {
+              socket.emit('user_auth', { token: data.token });
+            }
+
+            // 如果选择了"记住我"，保存用户名
+            if (formData.remember) {
+              localStorage.setItem('rememberLogin', 'true')
+              localStorage.setItem('savedUsername', formData.usernameOrEmail)
+            } else {
+              localStorage.removeItem('rememberLogin')
+              localStorage.removeItem('savedUsername')
+            }
+
+            // 清除用户的聊天记录和状态
+            await clearChatHistory(userInfo.data.id);
+          } else {
+            throw new Error('获取用户信息失败');
+          }
+        } catch (userInfoError) {
+          console.error('获取用户信息错误:', userInfoError);
+          ElMessage.error('登录成功但获取用户信息失败，请刷新页面重试');
         }
-        
-        // 清除用户的聊天记录和状态
-        const userData = data.data.user;
-        await clearChatHistory(userData.id);
-        
+
         // 设置最新登录时间戳，用于在聊天页面检测是否刚登录
         localStorage.setItem('lastLoginTimestamp', new Date().getTime().toString());
-        
-        router.push('/draw') // 登录成功后跳转到绘画页面
+
+        router.push('/') // 登录成功后跳转到首页
       } else {
         ElMessage.error(data.message || '登录失败')
       }
@@ -163,21 +195,21 @@ const handleLogin = async () => {
 // 清除聊天历史记录和状态的函数
 const clearChatHistory = async (userId) => {
   if (!userId) return;
-  
+
   // 清除与聊天相关的所有localStorage条目
   localStorage.removeItem(`chatMessages_${userId}`);
   localStorage.removeItem(`isAdminMode_${userId}`);
   localStorage.removeItem(`lastChatTimestamp_${userId}`);
-  
+
   // 清除可能存在的其他聊天相关状态
   localStorage.removeItem('text_result');
   localStorage.removeItem('current_context');
-  
+
   // 调用后端API清除服务器端的聊天上下文
   try {
     const token = localStorage.getItem('token');
     if (token) {
-      await fetch(`${config.baseURL}/api/clear-chat-context`, {
+      await fetch(`${config.baseURL}/api/clear/chats/context`, {
         method: 'POST',
         headers: {
           'Authorization': token,
@@ -205,17 +237,84 @@ onMounted(() => {
 </script>
 
 <style scoped>
+/* 统一导航栏样式 */
+.modern-nav {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 64px;
+  background: #ffffff;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+  z-index: 100;
+}
+
+.nav-content {
+  max-width: 1920px;
+  margin: 0 auto;
+  padding: 0 2rem;
+  height: 100%;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.nav-logo {
+  color: #1a1a1a;
+  font-size: 1.5rem;
+  font-weight: 600;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: default;
+}
+
+.logo-img {
+  width: 32px;
+  height: 32px;
+  object-fit: contain;
+}
+
+.nav-actions {
+  display: flex;
+  align-items: center;
+  gap: 1.5rem;
+}
+
+.nav-link {
+  color: #4a4a4a;
+  text-decoration: none;
+  font-size: 1rem;
+  padding: 0.5rem 1rem;
+  border-radius: 6px;
+  transition: all 0.2s;
+}
+
+.nav-link:hover {
+  color: #42b983;
+  background-color: rgba(66, 185, 131, 0.1);
+  transform: translateY(-1px);
+}
+
+.nav-link.active {
+  color: #42b983;
+  background-color: rgba(66, 185, 131, 0.1);
+  font-weight: 600;
+}
+
 .login-container {
+  height: 80%;
   min-height: 100vh;
   background-color: #f9fafb;
   display: flex;
   align-items: center;
   justify-content: center;
+  padding-top: 64px; /* 为导航栏留出空间 */
 }
 
 .login-content {
   width: 100%;
-  max-width: 1440px;
+  max-width: var(--container-max-width, 1440px);
   margin: 0 auto;
   min-height: 100vh;
   display: grid;
@@ -223,6 +322,7 @@ onMounted(() => {
 }
 
 .login-left {
+  height: 92%;
   background: #ffffff;
   padding: 4rem;
   display: flex;
@@ -236,12 +336,12 @@ onMounted(() => {
 }
 
 .brand-logo {
-  text-decoration: none;
   display: flex;
   flex-direction: column;
   align-items: center;
   gap: 0.5rem;
   margin-bottom: 2rem;
+  cursor: default; /* 默认光标，不显示可点击状态 */
 }
 
 .brand-logo h1 {
@@ -271,9 +371,11 @@ onMounted(() => {
 .login-right {
   background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
   padding: 4rem;
+  margin-top: -10%;
   display: flex;
   align-items: center;
   justify-content: center;
+  height:100%;
 }
 
 .login-box {
@@ -408,11 +510,110 @@ onMounted(() => {
   }
 }
 
+/* 2K分辨率优化 */
+@media (min-width: 2560px) {
+  .login-left {
+    padding: 6rem;
+  }
+
+  .login-right {
+    padding: 6rem 4rem;
+  }
+
+  .login-title {
+    font-size: 2.5rem;
+  }
+
+  .login-subtitle {
+    font-size: 1.2rem;
+  }
+
+  .brand-logo h1 {
+    font-size: 3rem;
+  }
+
+  .brand-subtitle {
+    font-size: 1.3rem;
+  }
+
+  .form-input {
+    padding: 1rem;
+    font-size: 1.1rem;
+  }
+
+  .login-button {
+    padding: 1rem;
+    font-size: 1.2rem;
+  }
+}
+
+/* 4K分辨率优化 */
+@media (min-width: 3840px) {
+  .login-left {
+    padding: 8rem;
+  }
+
+  .login-right {
+    padding: 8rem 6rem;
+  }
+
+  .login-box {
+    max-width: 600px;
+  }
+
+  .login-title {
+    font-size: 3rem;
+    margin-bottom: 1.5rem;
+  }
+
+  .login-subtitle {
+    font-size: 1.4rem;
+    margin-bottom: 3rem;
+  }
+
+  .brand-logo h1 {
+    font-size: 4rem;
+  }
+
+  .brand-subtitle {
+    font-size: 1.6rem;
+  }
+
+  .form-input {
+    padding: 1.25rem;
+    font-size: 1.3rem;
+    border-radius: 12px;
+  }
+
+  .login-button {
+    padding: 1.25rem;
+    font-size: 1.4rem;
+    border-radius: 12px;
+  }
+
+  .form-group {
+    margin-bottom: 2rem;
+  }
+
+  .form-group label {
+    font-size: 1.2rem;
+    margin-bottom: 0.75rem;
+  }
+
+  .form-options {
+    margin: 2rem 0;
+  }
+
+  .remember-me, .forgot-link {
+    font-size: 1.1rem;
+  }
+}
+
 @media (max-width: 640px) {
   .login-container {
     padding: 1rem;
   }
-  
+
   .login-right {
     padding: 1rem;
   }
@@ -420,16 +621,16 @@ onMounted(() => {
   .login-box {
     padding: 1rem;
   }
-  
+
   .login-title {
     font-size: 1.5rem;
   }
-  
+
   .login-subtitle {
     font-size: 0.85rem;
     margin-bottom: 1rem;
   }
-  
+
   .form-group {
     margin-bottom: 0.75rem;
   }
@@ -441,7 +642,7 @@ onMounted(() => {
     padding: 0.75rem;
     font-size: 1rem;
   }
-  
+
   .form-input {
     padding: 0.6rem 0.75rem;
     font-size: 1rem;

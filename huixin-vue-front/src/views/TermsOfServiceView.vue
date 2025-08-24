@@ -1,15 +1,7 @@
 <template>
   <div class="terms-container">
-    <nav class="navbar">
-      <div class="navbar-content">
-        <router-link to="/" class="nav-logo">绘心同学</router-link>
-        <div class="nav-links">
-          <router-link to="/" class="nav-link">首页</router-link>
-          <router-link to="/privacy" class="nav-link">隐私政策</router-link>
-        </div>
-      </div>
-    </nav>
-    
+    <NavBarAdd />
+
     <div class="terms-content">
       <h1>服务条款</h1>
       <div class="terms-section">
@@ -62,55 +54,21 @@
       <div class="terms-section">
         <h2>8. 联系方式</h2>
         <p>如果您对这些条款有任何疑问，请通过以下方式联系我们：</p>
-        <p>邮箱：support@huixin.com</p>
+        <p>邮箱：1241010058@zust.edu.cn</p>
       </div>
     </div>
   </div>
 </template>
+
+<script setup>
+import NavBarAdd from '@/components/NavBarAdd.vue'
+</script>
 
 <style scoped>
 .terms-container {
   min-height: 100vh;
   background-color: #f9fafb;
   padding: 2rem;
-}
-
-.navbar {
-  background: white;
-  padding: 1rem 2rem;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-  margin-bottom: 2rem;
-  border-radius: 8px;
-}
-
-.navbar-content {
-  max-width: 1200px;
-  margin: 0 auto;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.nav-logo {
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: #42b983;
-  text-decoration: none;
-}
-
-.nav-links {
-  display: flex;
-  gap: 1.5rem;
-}
-
-.nav-link {
-  color: #4b5563;
-  text-decoration: none;
-  transition: color 0.2s ease;
-}
-
-.nav-link:hover {
-  color: #42b983;
 }
 
 .terms-content {
@@ -178,4 +136,4 @@ li {
     font-size: 1.25rem;
   }
 }
-</style> 
+</style>

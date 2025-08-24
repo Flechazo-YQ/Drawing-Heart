@@ -1,5 +1,12 @@
 <script setup lang="ts">
 import { RouterView } from 'vue-router'
+import { onMounted, onUnmounted } from 'vue'
+
+onMounted(() => {
+  // 移除自动清除登录状态的逻辑
+  // 登录状态将使用 localStorage 持久化保存
+  // 只有用户主动退出登录时才会清除
+})
 </script>
 
 <template>
@@ -8,6 +15,9 @@ import { RouterView } from 'vue-router'
 
 <style>
 @import '@/assets/styles/base.css';
+  @import '@/assets/styles/responsive-4k.css';
+@import '@/assets/styles/utilities-4k.css';
+@import '@/assets/styles/fix-width-issue.css';
 
 * {
   margin: 0;

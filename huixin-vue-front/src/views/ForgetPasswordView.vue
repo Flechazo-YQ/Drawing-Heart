@@ -8,7 +8,7 @@
             <p class="brand-subtitle">AI心理绘画治疗平台</p>
           </router-link>
           <div class="hero-image">
-            <img src="../assets/images/3.png" alt="心理诊断" />
+            <img src="../assets/images/heart.png" alt="心理诊断" />
           </div>
         </div>
       </div>
@@ -21,21 +21,31 @@
           <form class="forget-form" @submit.prevent="handleSubmit">
             <div class="form-group">
               <label>电子邮箱</label>
-              <input 
+              <input
                 v-model="email"
-                type="email" 
-                class="form-input" 
+                type="email"
+                class="form-input"
                 placeholder="请输入您的注册邮箱"
                 required
               />
             </div>
 
             <div class="form-group">
+              <label>邮箱验证码</label>
+              <div class="verification-code-group">
+                <input v-model="code" type="text" class="form-input" placeholder="请输入4位验证码" required />
+                <button @click.prevent="sendCode" :disabled="isSendingCode || countdown > 0" class="send-code-button">
+                  {{ countdown > 0 ? `${countdown}s` : '发送验证码' }}
+                </button>
+              </div>
+            </div>
+
+            <div class="form-group">
               <label>新密码</label>
-              <input 
+              <input
                 v-model="password"
-                type="password" 
-                class="form-input" 
+                type="password"
+                class="form-input"
                 placeholder="请输入新密码"
                 required
               />
@@ -43,10 +53,10 @@
 
             <div class="form-group">
               <label>确认新密码</label>
-              <input 
+              <input
                 v-model="confirmPassword"
-                type="password" 
-                class="form-input" 
+                type="password"
+                class="form-input"
                 placeholder="请再次输入新密码"
                 required
               />
@@ -72,12 +82,39 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import config from '@/config' // 导入配置文件
+import apiClient from '@/api' // 导入API客户端
 
 const router = useRouter()
 const email = ref('')
 const password = ref('')
 const confirmPassword = ref('')
+const code = ref('')
 const isLoading = ref(false)
+const isSendingCode = ref(false)
+const countdown = ref(0)
+
+const sendCode = async () => {
+  if (!email.value) {
+    ElMessage.error('请输入电子邮箱地址')
+    return
+  }
+  isSendingCode.value = true
+  try {
+    const response = await apiClient.post(config.sendResetCodePath, { email: email.value })
+    ElMessage.success('验证码已发送，请注意查收邮箱')
+    countdown.value = 60
+    const timer = setInterval(() => {
+      countdown.value--
+      if (countdown.value <= 0) {
+        clearInterval(timer)
+      }
+    }, 1000)
+  } catch (error) {
+    ElMessage.error(`请求失败，请稍后重试`)
+  } finally {
+    isSendingCode.value = false
+  }
+}
 
 const handleSubmit = async () => {
   if (password.value !== confirmPassword.value) {
@@ -87,26 +124,23 @@ const handleSubmit = async () => {
 
   try {
     isLoading.value = true
-    const response = await fetch(`${config.baseURL}/api/reset-password-direct`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json'
-      },
-      body: JSON.stringify({
-        email: email.value,
-        password: password.value
-      })
+    const data = await apiClient.post(config.resetPasswordDirectPath, {
+      email: email.value,
+      password: password.value,
+      code: code.value
     })
 
-    const data = await response.json()
     if (data.code === 0) {
       ElMessage.success('密码重置成功，请使用新密码登录')
-      router.push('/login')
+      // 延迟跳转，让用户有时间看到成功消息
+      setTimeout(() => {
+        router.push('/login')
+      }, 1500)
     } else {
-      ElMessage.error(data.message || '重置失败，请检查邮箱是否正确')
+      // 错误已由 apiClient 拦截器处理
     }
   } catch (error) {
-    ElMessage.error('网络错误，请稍后重试')
+    ElMessage.error('密码重置失败，请稍后再试')
   } finally {
     isLoading.value = false
   }
@@ -118,8 +152,9 @@ const handleSubmit = async () => {
   min-height: 100vh;
   background-color: #f9fafb;
   display: flex;
-  align-items: center;
+  align-items: flex-start;
   justify-content: center;
+  padding-top: 0;
 }
 
 .forget-content {
@@ -179,7 +214,7 @@ const handleSubmit = async () => {
 
 .forget-right {
   background: linear-gradient(135deg, #f8f9fa 0%, #ffffff 100%);
-  padding: 4rem;
+  padding: 0;
   display: flex;
   align-items: center;
   justify-content: center;
@@ -188,61 +223,30 @@ const handleSubmit = async () => {
 .forget-box {
   width: 100%;
   max-width: 450px;
-  position: relative;
-  padding-top: 56.25%;
-}
-
-.forget-box::before {
-  content: "";
-  display: block;
-  position: absolute;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  pointer-events: none;
-  box-sizing: border-box;
-}
-
-.forget-title, .forget-subtitle, .forget-form {
-  position: relative;
-  z-index: 1;
+  padding: 2rem;
 }
 
 .forget-title {
   font-size: 1.75rem;
   color: #1a1a1a;
-  margin: 0;
+  margin: 0 0 0.5rem 0;
   font-weight: 600;
-  position: absolute;
-  top: 0.5rem;
-  left: 1.5rem;
 }
 
 .forget-subtitle {
   color: #6b7280;
-  margin: 0;
+  margin: 0 0 2rem 0;
   font-size: 0.9rem;
-  position: absolute;
-  top: 2.75rem;
-  left: 1.5rem;
 }
 
 .forget-form {
-  position: absolute;
-  top: 5rem;
-  left: 0;
-  width: 100%;
-  height: calc(100% - 5rem);
   display: flex;
   flex-direction: column;
-  justify-content: flex-start;
-  padding: 1.5rem;
-  box-sizing: border-box;
+  gap: 0.8rem;
 }
 
 .form-group {
-  margin-bottom: 1rem;
+  margin-bottom: 0.8rem;
 }
 
 .form-group label {
@@ -289,7 +293,7 @@ const handleSubmit = async () => {
 
 .login-hint {
   text-align: center;
-  margin-top: 1rem;
+  margin-top: 0.8rem;
   color: #6b7280;
   font-size: 0.75rem;
 }
@@ -303,6 +307,29 @@ const handleSubmit = async () => {
 
 .login-link:hover {
   color: #3aa876;
+}
+
+.verification-code-group {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.send-code-button {
+  padding: 0.5rem 0.75rem;
+  border: 1px solid #42b983;
+  background-color: #fff;
+  color: #42b983;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.2s;
+  white-space: nowrap;
+}
+
+.send-code-button:disabled {
+  cursor: not-allowed;
+  background-color: #f0f2f5;
+  border-color: #e5e7eb;
+  color: #a0aec0;
 }
 
 @media (max-width: 1024px) {

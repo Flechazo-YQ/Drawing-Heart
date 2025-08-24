@@ -5,6 +5,17 @@
         <router-link to="/" class="nav-logo">绘心同学</router-link>
       </div>
       <div class="admin-title">管理员系统</div>
+      <div class="admin-info" v-if="adminInfo">
+        <div class="admin-details">
+          <span class="admin-name">{{ adminInfo.name }}</span>
+          <span class="admin-status" :class="{ active: adminInfo.stats?.isActive }">
+            {{ adminInfo.stats?.isActive ? '在线' : '离线' }}
+          </span>
+        </div>
+        <div class="admin-last-login" v-if="adminInfo.timeNode?.lastLoginAt">
+          上次登录: {{ formatTime(adminInfo.timeNode.lastLoginAt) }}
+        </div>
+      </div>
       <div class="admin-actions">
         <button @click="logout" class="logout-btn">退出登录</button>
       </div>
@@ -17,8 +28,8 @@
           <div v-if="dangerousUsers.length === 0" class="no-alerts">
             暂无危险对话
           </div>
-          <div 
-            v-for="user in dangerousUsers" 
+          <div
+            v-for="user in dangerousUsers"
             :key="user.userId"
             class="alert-item"
             :class="{ active: currentUserId === user.userId }"
@@ -29,6 +40,16 @@
               <div class="alert-time">{{ user.time }}</div>
             </div>
             <div class="alert-preview">{{ user.lastMessage }}</div>
+            <button
+              @click.stop="deleteUserChat(user.userId)"
+              class="delete-chat-btn"
+              title="删除对话记录"
+            >
+              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+                <path d="M3 6h18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6m3 0V4c0-1 1-2 2-2h4c0-1 1-2 2-2v2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
           </div>
         </div>
       </div>
@@ -45,22 +66,16 @@
         <div v-else class="chat-container">
           <div class="chat-header">
             <h3>正在与用户 {{ currentUser ? currentUser.username : '' }} 对话</h3>
-            <button @click="clearChatHistory" class="clear-history-btn" title="清除对话显示">
-              <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-                <path d="M3 6h18" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M19 6v14c0 1-1 2-2 2H7c-1 0-2-1-2-2V6m3 0V4c0-1 1-2 2-2h4c0-1 1-2 2-2v2" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-              </svg>
-              清除显示
-            </button>
           </div>
-          
+
           <div class="chat-history" ref="chatHistory">
-            <div 
-              v-for="(msg, index) in currentChat" 
+            <div
+              v-for="(msg, index) in currentChat"
               :key="index"
               class="chat-message"
               :class="{ 'user-message': msg.role === 'user', 'admin-message': msg.role === 'admin', 'ai-message': msg.role === 'assistant' }"
             >
+              <img :src="getAvatarSrc(msg.role)" :class="['avatar', msg.role]" :alt="getAvatarAlt(msg.role)" />
               <div class="message-content">
                 <div class="message-sender">{{ getSenderLabel(msg.role) }}</div>
                 <div class="message-text">{{ msg.content }}</div>
@@ -71,10 +86,10 @@
 
           <div class="chat-input">
             <div class="input-wrapper">
-              <textarea 
-                v-model="messageInput" 
+              <textarea
+                v-model="messageInput"
                 ref="adminTextarea"
-                placeholder="回复用户消息，Enter发送，Shift+Enter换行..." 
+                placeholder="回复用户消息，Enter发送，Shift+Enter换行..."
                 @keydown="handleKeyDown"
                 @input="handleInput"
                 class="input-area"
@@ -86,9 +101,9 @@
                   {{ messageInput.length }}/500
                 </span>
                 <div class="input-actions">
-                  <button 
-                    @click="sendMessage" 
-                    :disabled="!messageInput.trim()" 
+                  <button
+                    @click="sendMessage"
+                    :disabled="!messageInput.trim()"
                     class="send-button"
                     title="发送消息 (Enter)"
                   >
@@ -108,11 +123,14 @@
 </template>
 
 <script setup>
-import { ref, computed, onMounted, watch, nextTick } from 'vue'
+import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import io from 'socket.io-client'
-import config from '@/config' // 导入配置文件
+import robotAvatar from '@/assets/images/AI.png'
+import boyAvatar from '@/assets/images/boy.png'
+import girlAvatar from '@/assets/images/girl.png'
+import adminAvatar from '@/assets/images/admin.png'
+import socket from '@/utils/network'
 
 const router = useRouter()
 const dangerousUsers = ref([])
@@ -120,13 +138,31 @@ const currentUserId = ref(null)
 const currentChat = ref([])
 const messageInput = ref('')
 const chatHistory = ref(null)
-let socket = null
+const adminInfo = ref(null)
+
+// 获取管理员信息
+const getAdminInfo = () => {
+  const adminInfoData = localStorage.getItem('adminInfo')
+  if (adminInfoData) {
+    try {
+      adminInfo.value = JSON.parse(adminInfoData)
+    } catch (error) {
+      console.error('解析管理员信息失败:', error)
+    }
+  }
+}
 
 // 模拟数据 - 实际应用中从WebSocket获取
 onMounted(() => {
+  // 添加页面类名以便CSS样式正确应用
+  document.body.classList.add('admin-page')
+
+  // 获取管理员信息
+  getAdminInfo()
+
   // 初始化WebSocket
   initWebSocket()
-  
+
   // 检查管理员登录状态
   if (!localStorage.getItem('isAdminLoggedIn')) {
     router.push('/admin-login')
@@ -135,15 +171,16 @@ onMounted(() => {
 })
 
 const initWebSocket = () => {
-  // 使用配置文件中的socketUrl或当前域名
-  const socketUrl = config.socketUrl || config.baseURL || `${window.location.protocol}//${window.location.host}`
-  
   try {
-    socket = io(socketUrl, {
-      withCredentials: false,
-      transports: ['websocket']
-    })
-    
+    socket.off('connect')
+    socket.off('auth_response')
+    socket.off('dangerous_chats_list')
+    socket.off('chat_history')
+    socket.off('new_message')
+    socket.off('disconnect')
+    socket.off('error')
+    socket.off('request_history_response')
+
     socket.on('connect', () => {
       console.log('SocketIO连接已建立')
       // 发送管理员身份验证信息
@@ -151,7 +188,7 @@ const initWebSocket = () => {
         token: localStorage.getItem('adminToken')
       })
     })
-    
+
     socket.on('auth_response', (data) => {
       if (data.status === 'error') {
         ElMessage.error(data.message || '身份验证失败')
@@ -160,19 +197,19 @@ const initWebSocket = () => {
         console.log('管理员身份验证成功')
       }
     })
-    
+
     socket.on('dangerous_chats_list', (data) => {
       dangerousUsers.value = data.chats.map(chat => ({
         ...chat,
         time: formatTime(new Date())
       }))
     })
-    
+
     socket.on('chat_history', (data) => {
       currentChat.value = data.messages
       scrollToBottom()
     })
-    
+
     socket.on('new_message', (data) => {
       if (data.userId === currentUserId.value) {
         currentChat.value.push({
@@ -185,7 +222,7 @@ const initWebSocket = () => {
       // 更新侧边栏中的最后一条消息
       updateUserLastMessage(data.userId, data.content)
     })
-    
+
     socket.on('disconnect', () => {
       console.log('SocketIO连接已关闭')
       // 可以添加重连逻辑
@@ -195,7 +232,7 @@ const initWebSocket = () => {
         }
       }, 3000)
     })
-    
+
     socket.on('error', (error) => {
       console.error('SocketIO错误:', error)
       ElMessage.error(error.message || '连接服务器失败，请检查网络或刷新页面')
@@ -204,6 +241,19 @@ const initWebSocket = () => {
     console.error('初始化SocketIO失败:', error)
     ElMessage.error('无法连接到服务器，请刷新页面重试')
   }
+
+  socket.on('request_history_response', (data) => {
+    currentChat.value = (data.messages || []).map(msg => ({
+      role: msg.sender === 'user' ? 'user'
+          : msg.sender === 'assistant' ? 'assistant'
+          : msg.sender === 'system' ? 'assistant' // 系统消息归为AI助手
+          : msg.sender === 'admin' ? 'admin'
+          : msg.sender,
+      content: msg.content,
+      time: msg.createdAt || msg.time || msg.timestamp || '',
+    }))
+    nextTick(scrollToBottom)
+  })
 }
 
 const addDangerousUser = (user) => {
@@ -234,11 +284,16 @@ const updateUserLastMessage = (userId, message) => {
 
 const selectUser = (userId) => {
   currentUserId.value = userId
+
+  // 从 dangerousUsers 中找到当前用户对象
+  const user = dangerousUsers.value.find(u => u.userId === userId)
+  const chatId = user && (user.chatId || user._id)
   
   // 通过SocketIO请求对话历史
   if (socket && socket.connected) {
     socket.emit('request_history', {
-      userId: userId
+      userId: userId,
+      chatId: chatId
     })
   } else {
     ElMessage.error('服务器连接已断开，请刷新页面')
@@ -268,30 +323,60 @@ const handleInput = () => {
   }
 }
 
-const clearChatHistory = () => {
-  // 只清除前端显示，不删除服务器数据
-  currentChat.value = []
-  ElMessage.success('已清除当前对话显示')
+const deleteUserChat = (userId) => {
+  // 确认删除
+  if (confirm('确定要删除这个用户的对话记录吗？此操作不可撤销。')) {
+    // 发送删除请求到服务器
+    if (socket && socket.connected) {
+      socket.emit('delete_user_chat', {
+        userId: userId
+      })
+
+      // 从本地列表中移除
+      const index = dangerousUsers.value.findIndex(u => u.userId === userId)
+      if (index >= 0) {
+        dangerousUsers.value.splice(index, 1)
+      }
+
+      // 如果删除的是当前选中的用户，清空聊天记录
+      if (currentUserId.value === userId) {
+        currentUserId.value = null
+        currentChat.value = []
+      }
+
+      ElMessage.success('对话记录已删除')
+    } else {
+      ElMessage.error('服务器连接已断开，请刷新页面')
+    }
+  }
 }
 
 const sendMessage = () => {
   if (!messageInput.value.trim() || !currentUserId.value) return
-  
+
+  // 找到当前用户的 chatId
+  const currentUser = dangerousUsers.value.find(u => u.userId === currentUserId.value)
+  const chatId = currentUser && (currentUser.chatId || currentUser._id)
+  if (!chatId) {
+    ElMessage.error('找不到对应的对话ID，无法发送消息')
+    return
+  }
+
   // 生成唯一的消息ID
   const messageId = Date.now().toString() + '-' + Math.random().toString(36).substr(2, 9)
-  
+
   // 发送消息到服务器
   if (socket && socket.connected) {
     socket.emit('admin_message', {
-      userId: currentUserId.value,
+      chatId: chatId,
       content: messageInput.value,
       messageId: messageId
     })
-    
+
     // 不在这里添加到本地聊天记录，而是由socket.on('new_message')事件处理
     // 清空输入框
     messageInput.value = ''
-    
+
     // 重置输入框高度
     if (adminTextarea.value) {
       adminTextarea.value.style.height = 'auto'
@@ -310,7 +395,7 @@ const scrollToBottom = async () => {
 
 const formatTime = (dateInput) => {
   if (!dateInput) return ''
-  
+
   try {
     let date
     if (dateInput instanceof Date) {
@@ -318,10 +403,10 @@ const formatTime = (dateInput) => {
     } else {
       date = new Date(dateInput)
     }
-    
+
     // 检查是否为有效日期
     if (isNaN(date.getTime())) return String(dateInput)
-    
+
     return new Intl.DateTimeFormat('zh-CN', {
       year: 'numeric',
       month: '2-digit',
@@ -344,6 +429,29 @@ const getSenderLabel = (role) => {
   }
 }
 
+const getAvatarSrc = (role) => {
+  switch (role) {
+    case 'user':
+      // 这里可以根据用户性别选择头像，暂时使用默认头像
+      return boyAvatar
+    case 'assistant':
+      return robotAvatar
+    case 'admin':
+      return adminAvatar
+    default:
+      return robotAvatar
+  }
+}
+
+const getAvatarAlt = (role) => {
+  switch (role) {
+    case 'user': return '用户头像'
+    case 'assistant': return 'AI助手头像'
+    case 'admin': return '管理员头像'
+    default: return '头像'
+  }
+}
+
 const currentUser = computed(() => {
   return dangerousUsers.value.find(user => user.userId === currentUserId.value)
 })
@@ -357,7 +465,8 @@ const logout = () => {
   // 清除管理员登录状态
   localStorage.removeItem('isAdminLoggedIn')
   localStorage.removeItem('adminToken')
-  
+  localStorage.removeItem('adminInfo')
+
   // 跳转到管理员登录页
   router.push('/admin-login')
 }
@@ -370,11 +479,12 @@ watch(() => router.currentRoute.value.path, (newPath) => {
 })
 
 // 组件销毁时清理资源
-onMounted(() => {
-  return () => {
-    if (socket) {
-      socket.disconnect()
-    }
+onUnmounted(() => {
+  // 移除页面类名
+  document.body.classList.remove('admin-page')
+
+  if (socket) {
+    socket.disconnect()
   }
 })
 </script>
@@ -406,6 +516,43 @@ onMounted(() => {
   font-size: 1.5rem;
   font-weight: 600;
   color: #2c3e50;
+}
+
+.admin-info {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.25rem;
+}
+
+.admin-details {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.admin-name {
+  font-weight: 500;
+  color: #2c3e50;
+}
+
+.admin-status {
+  padding: 0.25rem 0.5rem;
+  border-radius: 12px;
+  font-size: 0.75rem;
+  font-weight: 500;
+  background-color: #f1f5f9;
+  color: #64748b;
+}
+
+.admin-status.active {
+  background-color: #dcfce7;
+  color: #16a34a;
+}
+
+.admin-last-login {
+  font-size: 0.75rem;
+  color: #64748b;
 }
 
 .logout-btn {
@@ -465,10 +612,15 @@ onMounted(() => {
   cursor: pointer;
   box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
   transition: all 0.2s;
+  position: relative;
 }
 
 .alert-item:hover {
   background-color: #f3f4f6;
+}
+
+.alert-item:hover .delete-chat-btn {
+  opacity: 1;
 }
 
 .alert-item.active {
@@ -498,6 +650,36 @@ onMounted(() => {
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
+  padding-right: 36px; /* 为删除按钮留出空间 */
+}
+
+.delete-chat-btn {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  width: 28px;
+  height: 28px;
+  background: #ef4444;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: all 0.2s ease;
+  font-size: 12px;
+}
+
+.delete-chat-btn:hover {
+  background: #dc2626;
+  transform: scale(1.05);
+}
+
+.delete-chat-btn svg {
+  width: 14px;
+  height: 14px;
 }
 
 .admin-main {
@@ -505,6 +687,7 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   background-color: #ffffff;
+  overflow: hidden; /* 确保内容不会溢出 */
 }
 
 .no-selection {
@@ -540,14 +723,14 @@ onMounted(() => {
   display: flex;
   flex-direction: column;
   height: 100%;
+  max-width: 1200px; /* 设置最大宽度 */
+  margin: 0 auto; /* 居中对齐 */
+  width: 100%;
 }
 
 .chat-header {
   padding: 1rem;
   border-bottom: 1px solid #e5e7eb;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
 }
 
 .chat-header h3 {
@@ -555,31 +738,6 @@ onMounted(() => {
   font-weight: 600;
   color: #1f2937;
   margin: 0;
-}
-
-.clear-history-btn {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  padding: 8px 16px;
-  background: #f3f4f6;
-  color: #6b7280;
-  border: 1px solid #d1d5db;
-  border-radius: 8px;
-  font-size: 14px;
-  cursor: pointer;
-  transition: all 0.2s ease;
-}
-
-.clear-history-btn:hover {
-  background: #e5e7eb;
-  color: #374151;
-  transform: translateY(-1px);
-}
-
-.clear-history-btn svg {
-  width: 16px;
-  height: 16px;
 }
 
 .chat-history {
@@ -590,6 +748,8 @@ onMounted(() => {
   flex-direction: column;
   background: #ffffff;
   scroll-behavior: smooth;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .chat-message {
@@ -597,18 +757,24 @@ onMounted(() => {
   max-width: 75%;
   opacity: 0;
   animation: fadeIn 0.4s ease-out forwards;
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
 }
 
 .user-message {
-  align-self: flex-end;
+  flex-direction: row;
+  align-self: flex-start;
 }
 
 .admin-message {
-  align-self: flex-start;
+  flex-direction: row-reverse;
+  align-self: flex-end;
 }
 
 .ai-message {
-  align-self: flex-start;
+  flex-direction: row-reverse;
+  align-self: flex-end;
 }
 
 .message-content {
@@ -617,26 +783,57 @@ onMounted(() => {
   position: relative;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.05);
   font-size: 14px;
-  line-height: 1.5;
+  line-height: 1.6;
+  max-width: 100%;
+  white-space: pre-wrap;
+  word-wrap: break-word;
+  word-break: keep-all;
+  overflow-wrap: break-word;
+  hyphens: none;
 }
 
 .user-message .message-content {
-  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
-  color: white;
-  border-bottom-right-radius: 6px;
+  background: white;
+  color: #374151;
+  border: 1px solid #e5e7eb;
+  border-bottom-left-radius: 6px;
+  margin-left: 12px;
 }
 
 .admin-message .message-content {
   background: linear-gradient(135deg, #10b981 0%, #059669 100%);
   color: white;
-  border-bottom-left-radius: 6px;
+  border-bottom-right-radius: 6px;
+  margin-right: 12px;
 }
 
 .ai-message .message-content {
-  background: white;
-  color: #374151;
-  border: 1px solid #e5e7eb;
-  border-bottom-left-radius: 6px;
+  background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);
+  color: white;
+  border-bottom-right-radius: 6px;
+  margin-right: 12px;
+}
+
+.avatar {
+  width: 42px;
+  height: 42px;
+  border-radius: 50%;
+  object-fit: cover;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  transition: transform 0.2s ease;
+  flex-shrink: 0;
+}
+
+.avatar:hover {
+  transform: scale(1.05);
+}
+
+.avatar.assistant, .avatar.admin {
+  border: 2px solid #007AFF;
+}
+
+.avatar.user {
+  border: 2px solid #10b981;
 }
 
 @keyframes fadeIn {
@@ -658,7 +855,7 @@ onMounted(() => {
 }
 
 .user-message .message-sender {
-  color: rgba(255, 255, 255, 0.8);
+  color: #6b7280;
 }
 
 .admin-message .message-sender {
@@ -666,12 +863,12 @@ onMounted(() => {
 }
 
 .ai-message .message-sender {
-  color: #6b7280;
+  color: rgba(255, 255, 255, 0.8);
 }
 
 .message-text {
   white-space: pre-wrap;
-  word-break: break-word;
+  word-break: keep-all;
   margin-bottom: 8px;
 }
 
@@ -683,7 +880,7 @@ onMounted(() => {
 }
 
 .user-message .message-time {
-  color: rgba(255, 255, 255, 0.7);
+  color: #9ca3af;
 }
 
 .admin-message .message-time {
@@ -691,7 +888,7 @@ onMounted(() => {
 }
 
 .ai-message .message-time {
-  color: #9ca3af;
+  color: rgba(255, 255, 255, 0.7);
 }
 
 .chat-input {
@@ -699,6 +896,8 @@ onMounted(() => {
   padding: 16px;
   border-top: 1px solid #e5e7eb;
   border-radius: 0 0 16px 16px;
+  width: 100%;
+  box-sizing: border-box;
 }
 
 .input-wrapper {
@@ -810,53 +1009,274 @@ onMounted(() => {
   .admin-container {
     flex-direction: column;
   }
-  
+
   .admin-content {
     flex-direction: column;
     height: auto;
   }
-  
+
   .admin-sidebar {
     width: 100%;
     height: 250px;
   }
-  
+
   .admin-main {
     flex: none;
     height: calc(100vh - 64px - 250px);
   }
-  
+
   .chat-input {
     padding: 12px;
   }
-  
+
   .input-wrapper .input-area {
     padding: 12px 16px;
     font-size: 16px; /* 防止iOS缩放 */
   }
-  
+
   .send-button {
     width: 40px;
     height: 40px;
   }
-  
+
   .send-icon {
     width: 18px;
     height: 18px;
   }
-  
+
   .message-content {
-    max-width: 90%;
+    max-width: 85%;
     padding: 12px 16px;
     font-size: 13px;
   }
-  
+
   .chat-history {
     padding: 16px;
   }
-  
+
   .char-count {
     font-size: 11px;
+  }
+}
+
+/* 中等屏幕优化 (平板和小桌面) */
+@media (min-width: 769px) and (max-width: 1024px) {
+  .admin-container {
+    padding: 0;
+  }
+
+  .admin-content {
+    flex-direction: column;
+    height: calc(100vh - 80px);
+  }
+
+  .admin-sidebar {
+    width: 100%;
+    height: 200px;
+    border-right: none;
+    border-bottom: 1px solid #e5e7eb;
+  }
+
+  .admin-main {
+    flex: 1;
+    padding: 20px;
+  }
+
+  .message-content {
+    max-width: 85%;
+    font-size: 15px;
+    padding: 14px 18px;
+  }
+
+  .chat-message {
+    max-width: 90%;
+  }
+
+  .input-area {
+    font-size: 15px;
+    padding: 14px 18px;
+  }
+
+  .send-button {
+    width: 42px;
+    height: 42px;
+  }
+}
+
+/* 常规桌面屏幕优化 */
+@media (min-width: 1025px) and (max-width: 1199px) {
+  .admin-sidebar {
+    width: 320px;
+  }
+
+  .admin-main {
+    padding: 24px;
+  }
+
+  .message-content {
+    max-width: 85%;
+    font-size: 15px;
+    padding: 15px 19px;
+  }
+
+  .chat-message {
+    max-width: 90%;
+  }
+
+  .input-area {
+    font-size: 15px;
+    padding: 15px 19px;
+  }
+
+  .send-button {
+    width: 43px;
+    height: 43px;
+  }
+}
+
+/* 宽屏幕优化 - 确保在宽屏幕上充分利用空间 */
+@media (min-width: 1200px) {
+  .admin-container {
+    max-width: none; /* 移除任何可能的宽度限制 */
+  }
+
+  .admin-sidebar {
+    width: 350px; /* 在宽屏幕上稍微增加侧边栏宽度 */
+  }
+
+  .chat-container {
+    max-width: 1200px; /* 聊天容器最大宽度 */
+  }
+
+  .message-content {
+    max-width: 85%; /* 参考ChatView的成功设置，使用85% */
+    line-height: 1.6;
+    word-wrap: break-word;
+    word-break: keep-all;
+    overflow-wrap: break-word;
+    hyphens: none;
+  }
+
+  .chat-message {
+    max-width: 90%; /* 参考ChatView的成功设置，使用90% */
+  }
+}
+
+/* 2K分辨率优化 */
+@media (min-width: 2560px) {
+  .admin-header {
+    padding: 1.5rem 3rem;
+  }
+
+  .admin-title {
+    font-size: 1.8rem;
+  }
+
+  .nav-logo {
+    font-size: 1.5rem;
+  }
+
+  .admin-sidebar {
+    width: 400px;
+  }
+
+  .alert-list {
+    padding: 1.5rem;
+  }
+
+  .alert-list h3 {
+    font-size: 1.2rem;
+  }
+
+  .chat-container {
+    max-width: 1400px; /* 2K屏幕下稍微增加聊天容器宽度 */
+  }
+
+  .message-content {
+    max-width: 85%; /* 保持与1200px设置一致的85% */
+    font-size: 1.1rem;
+    padding: 16px 20px;
+    line-height: 1.7;
+    word-wrap: break-word;
+    word-break: keep-all;
+    overflow-wrap: break-word;
+    hyphens: none;
+  }
+
+  .chat-message {
+    max-width: 90%; /* 保持与1200px设置一致的90% */
+  }
+
+  .input-area {
+    font-size: 1.1rem;
+    padding: 16px 20px;
+  }
+}
+
+/* 4K分辨率优化 */
+@media (min-width: 3840px) {
+  .admin-header {
+    padding: 2rem 4rem;
+  }
+
+  .admin-title {
+    font-size: 2.2rem;
+  }
+
+  .nav-logo {
+    font-size: 1.8rem;
+  }
+
+  .admin-sidebar {
+    width: 500px;
+  }
+
+  .alert-list {
+    padding: 2rem;
+  }
+
+  .alert-list h3 {
+    font-size: 1.4rem;
+  }
+
+  .chat-container {
+    max-width: 1600px; /* 4K屏幕下的最大聊天容器宽度 */
+  }
+
+  .message-content {
+    max-width: 85%; /* 保持与较小屏幕一致的85% */
+    font-size: 1.3rem;
+    padding: 20px 24px;
+    line-height: 1.8;
+    word-wrap: break-word;
+    word-break: keep-all;
+    overflow-wrap: break-word;
+    hyphens: none;
+  }
+
+  .chat-message {
+    max-width: 90%; /* 保持与较小屏幕一致的90% */
+  }
+
+  .input-area {
+    font-size: 1.3rem;
+    padding: 20px 24px;
+    min-height: 80px;
+  }
+
+  .send-button {
+    width: 60px;
+    height: 60px;
+  }
+
+  .send-icon {
+    width: 28px;
+    height: 28px;
+  }
+
+  .logout-btn {
+    padding: 0.75rem 1.5rem;
+    font-size: 1.1rem;
   }
 }
 </style>

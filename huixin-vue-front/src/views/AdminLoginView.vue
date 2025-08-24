@@ -5,27 +5,27 @@
       <div class="admin-form">
         <div class="form-group">
           <label>用户名</label>
-          <input 
-            v-model="username" 
-            type="text" 
-            class="form-input" 
-            placeholder="管理员用户名" 
+          <input
+            v-model="username"
+            type="text"
+            class="form-input"
+            placeholder="管理员用户名"
             required
           />
         </div>
         <div class="form-group">
           <label>密码</label>
-          <input 
-            v-model="password" 
-            type="password" 
-            class="form-input" 
-            placeholder="管理员密码" 
+          <input
+            v-model="password"
+            type="password"
+            class="form-input"
+            placeholder="管理员密码"
             required
           />
         </div>
-        <button 
-          @click="handleLogin" 
-          class="login-button" 
+        <button
+          @click="handleLogin"
+          class="login-button"
           :disabled="isLoading"
         >
           {{ isLoading ? '登录中...' : '登录' }}
@@ -43,6 +43,7 @@ import { ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import config from '@/config' // 导入配置文件
+import socket from '@/utils/network'
 
 const router = useRouter()
 const username = ref('')
@@ -72,13 +73,52 @@ const handleLogin = async () => {
     const data = await response.json()
 
     if (data.code === 0) {
-      // 登录成功
-      localStorage.setItem('isAdminLoggedIn', 'true')
-      localStorage.setItem('adminToken', data.token)
-      localStorage.setItem('adminUsername', username.value)
-      
-      ElMessage.success('登录成功')
-      router.push('/admin')
+      // 登录成功，获取管理员信息
+      try {
+        const adminInfoResponse = await fetch(`${config.baseURL}/api/admin/info`, {
+          headers: {
+            'Authorization': data.token
+          }
+        });
+
+        const adminInfo = await adminInfoResponse.json();
+
+        if (adminInfo.code === 0) {
+          // 存储完整的管理员信息
+          localStorage.setItem('adminInfo', JSON.stringify(adminInfo.data));
+          localStorage.setItem('isAdminLoggedIn', 'true');
+          localStorage.setItem('adminToken', data.token);
+
+          if (socket && socket.connected) {
+            socket.disconnect()
+          }
+
+          socket.io.opts.auth = { token: data.token };
+
+          // 先解绑所有 connect 事件，防止重复注册
+          socket.off('connect');
+
+          socket.once('connect', () => {
+            socket.emit('admin_auth', { token: data.token });
+          });
+
+          socket.connect();
+
+          ElMessage.success('登录成功')
+          router.push('/admin')
+        } else {
+          throw new Error('获取管理员信息失败');
+        }
+      } catch (adminInfoError) {
+        console.error('获取管理员信息错误:', adminInfoError);
+        ElMessage.error('登录成功但获取管理员信息失败，请刷新页面重试');
+
+        // 即使获取信息失败，也允许进入管理页面
+        localStorage.setItem('isAdminLoggedIn', 'true')
+        localStorage.setItem('adminToken', data.token)
+        localStorage.setItem('adminUsername', username.value)
+        router.push('/admin')
+      }
     } else {
       ElMessage.error(data.message || '登录失败，请检查用户名和密码')
     }
@@ -203,18 +243,18 @@ label {
   .admin-login-container {
     padding: 16px;
   }
-  
+
   .admin-login-box {
     padding: 2rem 1.5rem;
     min-width: 400px;
     max-width: 90vw;
   }
-  
+
   .form-input {
     padding: 0.875rem 1rem;
     font-size: 16px; /* 防止iOS缩放 */
   }
-  
+
   h1 {
     font-size: 1.5rem;
     margin-bottom: 1.5rem;
@@ -225,7 +265,7 @@ label {
   .admin-login-container {
     padding: 12px;
   }
-  
+
   .admin-login-box {
     padding: 1.5rem 1rem;
     min-width: 350px;

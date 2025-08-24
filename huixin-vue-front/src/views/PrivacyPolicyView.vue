@@ -1,16 +1,6 @@
 <template>
   <div class="privacy-policy">
-    <div class="modern-nav">
-      <div class="nav-content">
-        <router-link to="/" class="nav-logo">
-          <span>绘心同学</span>
-        </router-link>
-        <div class="nav-actions">
-          <router-link to="/" class="nav-link">首页</router-link>
-          <router-link to="/login" class="nav-link">登录</router-link>
-        </div>
-      </div>
-    </div>
+    <NavBarAdd />
 
     <div class="privacy-content">
       <h1>隐私政策</h1>
@@ -83,65 +73,20 @@
       <div class="policy-section">
         <h2>9. 联系我们</h2>
         <p>如果您对本隐私政策有任何疑问或关切，请通过以下方式联系我们：</p>
-        <p>电子邮件：support@huixin.edu.cn</p>
+        <p>电子邮件：1241010058@zust.edu.cn</p>
       </div>
     </div>
   </div>
 </template>
 
 <script setup>
-// 隐私政策页面不需要特殊的交互逻辑
+import NavBarAdd from '@/components/NavBarAdd.vue'
 </script>
 
 <style scoped>
 .privacy-policy {
   min-height: 100vh;
   background-color: var(--color-background);
-}
-
-.modern-nav {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  height: 64px;
-  background: #ffffff;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
-  z-index: 100;
-}
-
-.nav-content {
-  max-width: 1440px;
-  margin: 0 auto;
-  padding: 0 2rem;
-  height: 100%;
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-}
-
-.nav-logo {
-  color: #1a1a1a;
-  font-size: 1.5rem;
-  font-weight: 600;
-  text-decoration: none;
-}
-
-.nav-actions {
-  display: flex;
-  align-items: center;
-  gap: 1.5rem;
-}
-
-.nav-link {
-  color: #4a4a4a;
-  text-decoration: none;
-  font-size: 1rem;
-  transition: color 0.2s;
-}
-
-.nav-link:hover {
-  color: #42b983;
 }
 
 .privacy-content {
