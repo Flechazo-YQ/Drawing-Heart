@@ -206,26 +206,25 @@ class DrawingManager:
             return None
 
     # 获取用户的历史分析结果
-    def getAnalysesHistory(self, userId: str, limit: int = 10, page: int = 1) -> Tuple[List[Dict], int]:
+    def getAnalysesHistory(self, userId: str, limit: int = 10, page: int = 1) -> List[Dict]:
         try:
             skip = (page - 1) * limit
             idFilter = {
                 'userId': ObjectId(userId),
                 'stats.isActive': True
             }
-            total = self.db.drawings.count_documents(idFilter)
             analyses = list(self.db.drawings.find(idFilter)
                 .sort('created_at', -1)
                 .skip(skip)
                 .limit(limit))
 
-            return (FormatHelper.jsonOrList(analyses), total)
+            return FormatHelper.jsonOrList(analyses)
         except Exception as e:
             logging.error(f'❌ 获取用户分析历史失败: { str(e) }')
-            return ([], 0)
+            return []
 
     # 获取用户指定日期范围内的分析结果
-    def getAnalysisByDateRange(self, userId: str, startDate: datetime, endDate: datetime) -> Tuple[List[Dict], int]:
+    def getAnalysisByDateRange(self, userId: str, startDate: datetime, endDate: datetime) -> List[Dict]:
         try:
             endOfDayEndDate = endDate.replace(hour=23, minute=59, second=59, microsecond=999999)
             idFilter = {
@@ -237,10 +236,9 @@ class DrawingManager:
                 }
             }
             sort = [('timeNode.createdAt', -1)]
-            total = self.db.drawings.count_documents(idFilter)
             analyses = list(self.db.drawings.find(idFilter).sort(sort))
 
-            return (FormatHelper.jsonOrList(analyses), total)
+            return FormatHelper.jsonOrList(analyses)
         except Exception as e:
             logging.error(f'❌ 获取日期范围分析结果失败: { str(e) }')
-            return ([], 0)
+            return []

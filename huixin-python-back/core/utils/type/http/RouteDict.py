@@ -1,5 +1,7 @@
-from typing import TypedDict, List
+from dataclasses import dataclass
+from typing import List
 
-class RouteDict(TypedDict):
+@dataclass(frozen=True)
+class RouteDict:
     route: str
     method: List[str]

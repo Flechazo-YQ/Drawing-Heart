@@ -2,6 +2,7 @@ import os, logging, flask
 
 from core.configs.MongoDBConfig import MongoDBConfig
 from core.utils.ImageHelper import ImageHelper
+from core.utils.flask.CommonHelper import CommonHelper
 
 from openai import OpenAI
 from httpx import Client
@@ -11,55 +12,40 @@ class DrawingHandler:
     # 接入AI分析图片
     @classmethod
     def analyzeImage(cls, filePath: str, fileName: str, userId: str | None = None):
-        logging.info(f'分析图片: { fileName } : { filePath }, 用户ID: { userId }')
-
         try:
             if (not os.path.exists(filePath)):
                 logging.error(f'❌ 文件未找到: { filePath }')
-                return flask.jsonify({
-                    'message': '找不到要分析的图片文件'
-                }), 404
-                
+                return CommonHelper.errorResponse(1, '找不到要分析的图片文件', 404)
+
             # 验证文件大小
             fileSize = os.path.getsize(filePath)
 
-            logging.info(f'正在分析图片 { fileName }, 大小: { fileSize } bytes')
-
             if (fileSize == 0):
-                return flask.jsonify({
-                    'message': '图片文件为空'
-                }), 400
+                return CommonHelper.errorResponse(1, '图片文件为空', 400)
 
             if (fileSize > 10 * 1024 * 1024):  # 10MB限制
-                return flask.jsonify({
-                    'message': '图片文件太大, 请压缩后重试'
-                }), 400
+                return CommonHelper.errorResponse(1, '图片文件太大, 请压缩后重试', 400)
 
             # 初始化AI客户端
             try:
                 # 创建自定义httpx客户端避免代理问题
-                httpClient = Client()
                 client = OpenAI(
                     base_url = 'https://ark.cn-beijing.volces.com/api/v3',
                     api_key = 'd618ffd5-dd7c-4548-8cde-a82ba550f808',
-                    http_client = httpClient
+                    http_client = Client()
                 )
 
                 logging.info('AI客户端初始化成功')
             except Exception as clientError:
                 logging.error(f'❌ AI客户端初始化失败: { str(clientError) }')
 
-                return flask.jsonify({
-                    'message': f'AI客户端初始化失败: { str(clientError) }'
-                }), 500
+                return CommonHelper.errorResponse(1, f'AI客户端初始化失败: { str(clientError) }', 500)
 
             dataUrl = ImageHelper.imageToDataUrl(filePath)
 
             if (not dataUrl):
                 logging.error(f'❌ 图片转换失败: { filePath }')
-                return flask.jsonify({
-                    'message': '图片转换失败'
-                }), 500
+                return CommonHelper.errorResponse(1, '图片转换失败', 500)
 
             logging.info(f'开始图片AI分析: { fileName }')
 
@@ -116,9 +102,7 @@ class DrawingHandler:
                 if (not response or not response.choices):
                     logging.error(f'❌ AI服务返回空响应')
 
-                    return flask.jsonify({
-                        'message': 'AI分析服务返回空响应, 请稍后重试'
-                    }), 500
+                    return CommonHelper.errorResponse(1, 'AI分析服务返回空响应, 请稍后重试', 500)
 
                 # 获取分析结果
                 analysisResult = response.choices[0].message.content
@@ -126,9 +110,7 @@ class DrawingHandler:
                 if (not analysisResult or len(analysisResult.strip()) == 0):
                     logging.error(f'❌ AI分析返回空内容')
 
-                    return flask.jsonify({
-                        'message': 'AI分析返回空内容, 请稍后重试'
-                    }), 500
+                    return CommonHelper.errorResponse(1, 'AI分析返回空内容, 请稍后重试', 500)
 
                 # 保存分析结果到数据库
                 if (userId):

@@ -1,9 +1,9 @@
 import re, base64, logging, os
 
-from typing import Optional, Final
+from typing import Optional, Final, Dict
 
 class ImageHelper:
-    MIME_TYPE_CONFIG: Final[dict[str, str]] = {
+    MIME_TYPE_CONFIG: Final[Dict[str, str]] = {
         ".png": "image/png",
         ".jpg": "image/jpeg",
         ".jpeg": "image/jpeg",

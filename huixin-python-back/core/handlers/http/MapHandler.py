@@ -16,7 +16,7 @@ class MapSearchHandler:
 
     # 直接搜索心理机构
     @staticmethod
-    @BlueprintConfig.apiRoutes(ApiState.MAP_SEARCH['route'], methods=ApiState.MAP_SEARCH['method'])
+    @BlueprintConfig.apiRoutes(ApiState.MAP_SEARCH.route, methods=ApiState.MAP_SEARCH.method)
     def mapSearch():
         requestData = flask.request.get_json()
         latitude = requestData.get('latitude')
@@ -38,7 +38,7 @@ class MapSearchHandler:
     
     # 处理地址输入时的智能提示
     @staticmethod
-    @BlueprintConfig.apiRoutes(ApiState.MAP_AUTOCOMPLETE['route'], methods=ApiState.MAP_AUTOCOMPLETE['method'])
+    @BlueprintConfig.apiRoutes(ApiState.MAP_AUTOCOMPLETE.route, methods=ApiState.MAP_AUTOCOMPLETE.method)
     def geocodeAutocomplete():
         requestData = flask.request.get_json()
         keywords = requestData.get('keywords')
@@ -83,7 +83,7 @@ class MapSearchHandler:
         
     # 地址解析
     @staticmethod
-    @BlueprintConfig.apiRoutes(ApiState.MAP_GEOCODE['route'], methods=ApiState.MAP_GEOCODE['method'])
+    @BlueprintConfig.apiRoutes(ApiState.MAP_GEOCODE.route, methods=ApiState.MAP_GEOCODE.method)
     def geocodeAddress():
         requestData = flask.request.get_json()
         address = requestData.get('address')
@@ -204,7 +204,7 @@ class MapSearchHandler:
         return photoUrls
     
     @staticmethod
-    @BlueprintConfig.apiRoutes(ApiState.MAP_LOCATION['route'], methods=ApiState.MAP_LOCATION['method'])
+    @BlueprintConfig.apiRoutes(ApiState.MAP_LOCATION.route, methods=ApiState.MAP_LOCATION.method)
     def getLocationByIp():
     
         # 获取客户端IP，优先从 X-Forwarded-For 获取，适用于反向代理
@@ -240,7 +240,10 @@ class MapSearchHandler:
                 return flask.jsonify({
                     'code': 0,
                     'status': 'success',
-                    'data': { 'latitude': centerLatitude, 'longitude': centerLongitude }
+                    'data': { 
+                        'latitude': centerLatitude, 
+                        'longitude': centerLongitude 
+                    }
                 }), 200
             
             # 如果定位失败，返回一个默认位置（浙江科技大学）并告知前端

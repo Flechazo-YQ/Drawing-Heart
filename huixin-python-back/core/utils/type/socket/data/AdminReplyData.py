@@ -1,6 +1,6 @@
-from typing import TypedDict
+from pydantic import BaseModel
 
-class AdminReplyData(TypedDict):
+class AdminReplyData(BaseModel):
     chatId: str
     content: str
     timestamp: str

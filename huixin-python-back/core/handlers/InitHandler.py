@@ -59,9 +59,8 @@ class InitHandler:
             MongoDBConfig.init()
             logging.info('✅ MongoDB初始化成功。')
         except Exception as e:
-            logging.error(f'❌ MongoDB初始化失败: {e}')
-            raise e
-        
+            logging.error(f'❌ MongoDB初始化失败: { str(e) }')
+
     # 初始化情感分析模型
     @staticmethod
     def initClassifier():
@@ -101,6 +100,7 @@ class InitHandler:
             engineio_logger = True
         )
         SocketState.socketio.start_background_task(target=SocketQueueHandler.socketioBackgroundThread)
+        logging.info('✅ Socket.IO后台线程已启动')
 
     # 初始化所有服务
     @classmethod

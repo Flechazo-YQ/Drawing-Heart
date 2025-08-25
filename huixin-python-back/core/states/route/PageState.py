@@ -1,41 +1,47 @@
 from core.utils.type.http.RouteDict import RouteDict
 
-from typing import Final
-
 class PageState:
-    ROOT: Final[RouteDict] = {
-        'route': '/root',
-        'method': []
-    }
-    INDEX: Final[RouteDict] = {
-        'route': '',
-        'method': []
-    }
-    REGISTER: Final[RouteDict] = {
-        'route': '/register',
-        'method': ['GET']
-    }
-    FORGOT: Final[RouteDict] = {
-        'route': '/forgot',
-        'method': ['GET']
-    }
-    DRAW: Final[RouteDict] = {
-        'route': '/draw',
-        'method': []
-    }
-    ANALYSE: Final[RouteDict] = {
-        'route': '/analyse',
-        'method': []
-    }
-    PRIVACY: Final[RouteDict] = {
-        'route': '/privacy',
-        'method': []
-    }
-    CHAT: Final[RouteDict] = {
-        'route': '/chat',
-        'method': ['GET']
-    }
-    TEMPLATES_FILE: Final[RouteDict] = {
-        'route': '/templates/<path:filename>',
-        'method': []
-    }
+    ROOT = RouteDict(
+        route='/root',
+        method=[]
+    )
+
+    INDEX = RouteDict(
+        route='',
+        method=[]
+    )
+
+    REGISTER = RouteDict(
+        route='/register',
+        method=['GET']
+    )
+
+    FORGOT = RouteDict(
+        route='/forgot',
+        method=['GET']
+    )
+
+    DRAW = RouteDict(
+        route='/draw',
+        method=[]
+    )
+
+    ANALYSE = RouteDict(
+        route='/analyse',
+        method=[]
+    )
+
+    PRIVACY = RouteDict(
+        route='/privacy',
+        method=[]
+    )
+
+    CHAT = RouteDict(
+        route='/chat',
+        method=['GET']
+    )
+    
+    TEMPLATES_FILE = RouteDict(
+        route='/templates/<path:filename>',
+        method=[]
+    )

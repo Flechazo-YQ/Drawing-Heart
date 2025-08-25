@@ -1,6 +1,6 @@
-from typing import TypedDict
+from pydantic import BaseModel
 
-class NewMessageData(TypedDict):
+class NewMessageData(BaseModel):
     userId: str
     chatId: str
     role: str

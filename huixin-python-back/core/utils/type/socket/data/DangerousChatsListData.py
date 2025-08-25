@@ -1,4 +1,5 @@
-from typing import TypedDict, Dict, Any
+from pydantic import BaseModel
+from typing import Dict, Any, List
 
-class DangerousChatsListData(TypedDict):
-    chats: Dict[str, Any]
+class DangerousChatsListData(BaseModel):
+    chats: List[Dict[str, Any]]

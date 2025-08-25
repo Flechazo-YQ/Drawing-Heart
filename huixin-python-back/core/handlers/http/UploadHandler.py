@@ -7,7 +7,7 @@ class UploadHandler:
 
     # 处理文件上传
     @staticmethod
-    @BlueprintConfig.uploadsRoutes(UploadsState.SERVE_UPLOADS['route'])
+    @BlueprintConfig.uploadsRoutes(UploadsState.SERVE_UPLOADS.route)
     def serveUploads(filename: str):
         try:
             uploadFolder = flask.current_app.config['UPLOAD_FOLDER']

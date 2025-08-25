@@ -72,10 +72,25 @@ class CodeManager:
             code += str(random.randint(0, 9))
 
         return code
+
+    # 发送验证码
+    @classmethod
+    def sendEmailCode(cls, sendTo: str, code: str):
+        content = f'【绘心同学】您的验证码是：{ code }。60秒内有效，请勿向任何人泄露。如非本人操作，请忽略此邮件。'
+
+        try:
+            logging.info(f'开始向 { sendTo } 发送验证码')
+            cls.__sendEmail(sendTo, content)
+            logging.info(f'向 { sendTo } 发送验证码成功')
+            return code
+        except Exception as e:
+            logging.error(f'❌ 向 { sendTo } 发送验证码失败：{ str(e) }')
+            traceback.print_exc()
+            return False
     
     # 发送邮件，辅助函数
     @classmethod
-    def sendEmail(cls, sendTo: str, content: str, subject: str = '验证码'):
+    def __sendEmail(cls, sendTo: str, content: str, subject: str = '验证码'):
         try:
             logging.info(f'准备邮件: 发送到 { sendTo }, 主题 { subject }')
 
@@ -98,19 +113,3 @@ class CodeManager:
         except Exception as e:
             logging.error(f'❌ 邮件发送过程中出错: { str(e) }')
             raise
-
-    # 发送验证码
-    @classmethod
-    def sendEmailCode(cls, sendTo: str):
-        verificateCode = cls.generateCode()
-        content = f'【绘心同学】您的验证码是：{ verificateCode }。60秒内有效，请勿向任何人泄露。如非本人操作，请忽略此邮件。'
-
-        try:
-            logging.info(f'开始向 { sendTo } 发送验证码')
-            cls.sendEmail(sendTo, content)
-            logging.info(f'向 { sendTo } 发送验证码成功')
-            return verificateCode
-        except Exception as e:
-            logging.error(f'❌ 向 { sendTo } 发送验证码失败：{ str(e) }')
-            traceback.print_exc()
-            return False

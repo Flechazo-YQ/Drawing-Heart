@@ -166,7 +166,7 @@ class StreamChatHandler:
                         assistantReply += content
 
                         if (content): 
-                            yield f'data: { json.dumps({"content": content}) }\n\n'
+                            yield f'data: { json.dumps({ "content": content }) }\n\n'
                     except (json.JSONDecodeError, Exception) as e:
                         logging.error(f'❌ Failed to parse JSON: { line }, Error: { str(e) }')
 
@@ -181,7 +181,7 @@ class StreamChatHandler:
             yield 'data: [DONE]\n\n'
         except Exception as e:
             logging.error(f'❌ 聊天处理错误: { str(e) }')
-            yield f'data: { json.dumps({"error": str(e)}) }\n\n'
+            yield f'data: { json.dumps({ "error": str(e) }) }\n\n'
             yield 'data: [DONE]\n\n'
 
     # 生成AI提示消息

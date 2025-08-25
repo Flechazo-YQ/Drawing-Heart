@@ -6,41 +6,34 @@ from core.states.DirectoryState import DirectoryState
 from core.states.route.ApiState import ApiState
 from core.utils.ImageHelper import ImageHelper
 from core.utils.token.UserTokenHelper import UserTokenHelper
+from core.utils.flask.CommonHelper import CommonHelper
 
 class DrawingSaveHandler:
     
     # 保存绘画并可选进行分析
     @staticmethod
-    @BlueprintConfig.apiRoutes(ApiState.SAVE_DRAWINGS['route'], methods=ApiState.SAVE_DRAWINGS['method'])
+    @BlueprintConfig.apiRoutes(ApiState.SAVE_DRAWINGS.route, methods=ApiState.SAVE_DRAWINGS.method)
     @UserTokenHelper.userTokenRequired
     def saveDrawing():
         try:
             user = flask.g.user
+            userId = str(user['_id'])
+            
             data = flask.request.get_json()
 
             if (not data):
-                return flask.jsonify({
-                    'code': 1,
-                    'message': '无效的请求数据'
-                }), 400
+                return CommonHelper.errorResponse(1, '无效的请求数据', 400)
 
             image = data.get('image')
 
             if (not image):
-                return flask.jsonify({
-                    'code': 1,
-                    'message': '无效的图像数据'
-                }), 400
+                return CommonHelper.errorResponse(1, '无效的图像数据', 400)
 
             imageBytes = ImageHelper.decodeBase64Image(image)
 
             if (not imageBytes or len(imageBytes) < 100):
-                return flask.jsonify({
-                    'code': 1,
-                    'message': '无效或损坏的图像数据'
-                }), 400
+                return CommonHelper.errorResponse(1, '无效或损坏的图像数据', 400)
 
-            userId = str(user['_id'])
             timestamp = int(time.time() * 1000)
             userDir = os.path.join(DirectoryState.SAVED_DRAWINGS_DIR, userId)
 
@@ -66,7 +59,4 @@ class DrawingSaveHandler:
 
         except Exception as e:
             logging.error(f'❌ 绘画保存失败: { str(e) }')
-            return flask.jsonify({
-                'code': 1,
-                'message': '绘画保存失败'
-            }), 500
+            return CommonHelper.errorResponse(1, '绘画保存失败', 500)

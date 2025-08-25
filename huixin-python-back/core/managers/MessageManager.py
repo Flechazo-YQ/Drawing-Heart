@@ -3,7 +3,7 @@ import datetime, logging
 from core.utils.FormatHelper import FormatHelper
 
 from datetime import datetime, timezone
-from typing import List, Dict, Optional, Tuple, TYPE_CHECKING
+from typing import List, Dict, TYPE_CHECKING
 from bson import ObjectId
 
 if (TYPE_CHECKING):

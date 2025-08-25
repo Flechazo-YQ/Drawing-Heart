@@ -7,7 +7,7 @@ class DebugHandler:
 
     # 调试API: 显示所有相关路径信息
     @staticmethod
-    @BlueprintConfig.apiRoutes(ApiState.DEBUG_PATH['route'], methods=ApiState.DEBUG_PATH['method'])
+    @BlueprintConfig.apiRoutes(ApiState.DEBUG_PATH.route, methods=ApiState.DEBUG_PATH.method)
     def debugPaths():
         configUploadFolder = flask.current_app.config['UPLOAD_FOLDER']
         avatarDir = os.path.join(configUploadFolder, 'avatars') if (configUploadFolder) else '未配置上传目录'

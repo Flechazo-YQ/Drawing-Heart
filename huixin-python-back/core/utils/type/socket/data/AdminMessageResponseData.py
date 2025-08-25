@@ -1,5 +1,5 @@
-from typing import TypedDict
+from pydantic import BaseModel
 
-class AdminMessageResponseData(TypedDict):
+class AdminMessageResponseData(BaseModel):
     status: str
     message: str

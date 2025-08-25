@@ -17,7 +17,7 @@ class UserSocketHandler:
     @staticmethod
     @SocketState.socketio.on(SocketState.USER_AUTH)
     @UserTokenHelper.userTokenRequired
-    def handleUserAuth(data: Dict):
+    def userAuth(data: Dict):
         sid = flask.request.sid # type: ignore
 
         user = flask.g.user
@@ -33,7 +33,7 @@ class UserSocketHandler:
     @staticmethod
     @SocketState.socketio.on(SocketState.USER_MESSAGE)
     @AuthenticateHelper.userAuthenticated
-    def handleUserMessage(data: Dict):
+    def userMessage(data: Dict):
         user = flask.g.user
         userId = str(user['_id'])
 
@@ -56,43 +56,44 @@ class UserSocketHandler:
             logging.error(f'❌ 创建新消息失败')
             return None
 
-        chats = MongoDBConfig.chatManager.getChatById(chatId)
+        chat = MongoDBConfig.chatManager.getChatById(chatId)
 
-        if (not chats):
+        if (not chat):
             logging.error(f'❌ 未找到对话: { chatId }')
             return None
 
-        adminId = chats.get('adminId')
+        chats = [chat]
+        adminId = chat.get('adminId')
 
         if (not adminId):
             BroadcastHelper.unsignDangerousChats()
 
-            dangerousChatsList: DangerousChatsListData = {
-                'chats': chats
-            }
+            dangerousChatsList = DangerousChatsListData(
+                chats=chats
+            )
 
             SocketQueueHandler.queueEmit(
-                SocketState.DANGEROUS_CHATS_LIST['event'],
+                SocketState.DANGEROUS_CHATS_LIST.event,
                 dangerousChatsList,
                 room='admin_room'
             )
 
         adminSid = SocketState.adminIdToSid.get(adminId)
-        chatType = chats.get('type', 'normal')
+        chatType = chat.get('type', 'normal')
 
         if (chatType == 'dangerous' and adminSid):
             BroadcastHelper.signedDangerousChats()
 
-            newMessageData: NewMessageData = {
-                'userId': userId,
-                'chatId': chatId,
-                'role': 'user',
-                'content': content,
-                'timestamp': str(newMessage.get('createdAt', ''))
-            }
+            newMessageData = NewMessageData(
+                userId=userId,
+                chatId=chatId,
+                role='user',
+                content=content,
+                timestamp=str(newMessage.get('createdAt', ''))
+            )
 
             SocketQueueHandler.queueEmit(
-                SocketState.NEW_MESSAGE['event'], 
+                SocketState.NEW_MESSAGE.event,
                 newMessageData,
                 sid=adminSid
             )

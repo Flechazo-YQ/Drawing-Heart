@@ -4,22 +4,21 @@ from core.configs.BlueprintConfig import BlueprintConfig
 from core.configs.MongoDBConfig import MongoDBConfig
 from core.states.route.ApiState import ApiState
 from core.utils.token.AdminTokenHelper import AdminTokenHelper
+from core.utils.flask.CommonHelper import CommonHelper
 
 class AdminHandler:
     
     # 处理管理员登录
     @staticmethod
-    @BlueprintConfig.apiRoutes(ApiState.ADMIN_LOGIN['route'], methods=ApiState.ADMIN_LOGIN['method'])
+    @BlueprintConfig.apiRoutes(ApiState.ADMIN_LOGIN.route, methods=ApiState.ADMIN_LOGIN.method)
     def adminLogin():
         data = flask.request.get_json()
+
         username = data.get('username')
         password = data.get('password')
         
         if (not username or not password):
-            return flask.jsonify({
-                'code': 1,
-                'message': '请提供用户名和密码'
-            }), 400
+            return CommonHelper.errorResponse(1, '请提供用户名和密码', 400)
 
         admin = MongoDBConfig.adminManager.verifyCredentials(username, password)
 
@@ -32,15 +31,12 @@ class AdminHandler:
                 'message': '登录成功',
                 'token': token
             }), 200
-        
-        return flask.jsonify({
-            'code': 1,
-            'message': '用户名或密码错误'
-        }), 401
-    
+
+        return CommonHelper.errorResponse(1, '用户名或密码错误', 401)
+
     # 获取管理员信息
     @staticmethod
-    @BlueprintConfig.apiRoutes(ApiState.ADMIN_INFO['route'], methods=ApiState.ADMIN_INFO['method'])
+    @BlueprintConfig.apiRoutes(ApiState.ADMIN_INFO.route, methods=ApiState.ADMIN_INFO.method)
     @AdminTokenHelper.adminTokenRequired
     def getAdminInfo():
         try:
@@ -61,7 +57,5 @@ class AdminHandler:
             
         except Exception as e:
             logging.error(f'❌ 获取管理员信息失败: { str(e) }')
-            return flask.jsonify({
-                'code': 500,
-                'message': f'获取管理员信息失败: { str(e) }'
-            }), 500
+            
+            return CommonHelper.errorResponse(1, f'获取管理员信息失败: { str(e) }', 500)

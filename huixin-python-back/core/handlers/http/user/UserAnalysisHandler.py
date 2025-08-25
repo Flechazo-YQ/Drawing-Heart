@@ -4,6 +4,7 @@ from core.configs.BlueprintConfig import BlueprintConfig
 from core.configs.MongoDBConfig import MongoDBConfig
 from core.states.route.ApiState import ApiState
 from core.utils.token.UserTokenHelper import UserTokenHelper 
+from core.utils.flask.CommonHelper import CommonHelper
 
 from datetime import datetime
 
@@ -11,7 +12,7 @@ class UserAnalysisHandler:
 
     #获取用户的绘画分析历史
     @staticmethod
-    @BlueprintConfig.apiRoutes(ApiState.ANALYSES_HISTORY['route'], methods=ApiState.ANALYSES_HISTORY['method'])
+    @BlueprintConfig.apiRoutes(ApiState.ANALYSES_HISTORY.route, methods=ApiState.ANALYSES_HISTORY.method)
     @UserTokenHelper.userTokenRequired
     def getHistory():
         try:
@@ -35,14 +36,11 @@ class UserAnalysisHandler:
         except Exception as e:
             logging.error(f'❌ 获取用户分析历史错误: { str(e) }')
 
-            return flask.jsonify({
-                'code': 1,
-                'message': f'获取分析历史失败: { str(e) }'
-            }), 500
+            return CommonHelper.errorResponse(1, f'获取分析历史失败: { str(e) }', 500)
 
     # 获取用户当日的绘画分析结果
     @staticmethod
-    @BlueprintConfig.apiRoutes(ApiState.ANALYSES_TODAY['route'], methods=ApiState.ANALYSES_TODAY['method'])
+    @BlueprintConfig.apiRoutes(ApiState.ANALYSES_TODAY.route, methods=ApiState.ANALYSES_TODAY.method)
     @UserTokenHelper.userTokenRequired
     def getToday():
         try:
@@ -50,10 +48,7 @@ class UserAnalysisHandler:
             todayAnalysis = MongoDBConfig.drawingManager.getTodayAnalysis(str(user['_id']))
 
             if (not todayAnalysis):
-                return flask.jsonify({
-                    'code': 1,
-                    'message': '今日暂无分析记录'
-                }), 404
+                return CommonHelper.errorResponse(1, '今日暂无分析记录', 404)
             
             return flask.jsonify({
                 'code': 0,
@@ -63,14 +58,11 @@ class UserAnalysisHandler:
         except Exception as e:
             logging.error(f'❌ 获取当日分析结果错误: { str(e) }')
             
-            return flask.jsonify({
-                'code': 1,
-                'message': f'获取当日分析结果失败: { str(e) }'
-            }), 500
-        
+            return CommonHelper.errorResponse(1, f'获取当日分析结果失败: { str(e) }', 500)
+
     #获取用户最新的绘画分析结果(可选择时间限制)
     @staticmethod
-    @BlueprintConfig.apiRoutes(ApiState.ANALYSES_LATEST['route'], methods=ApiState.ANALYSES_LATEST['method'])
+    @BlueprintConfig.apiRoutes(ApiState.ANALYSES_LATEST.route, methods=ApiState.ANALYSES_LATEST.method)
     @UserTokenHelper.userTokenRequired
     def getLatest():
         try:
@@ -78,10 +70,7 @@ class UserAnalysisHandler:
             analysis = MongoDBConfig.drawingManager.getLatestAnalysis(str(user['_id']))
 
             if (not analysis):
-                return flask.jsonify({
-                    'code': 1,
-                    'message': '暂无分析记录'
-                }), 404
+                return CommonHelper.errorResponse(1, '暂无分析记录', 404)
 
             return flask.jsonify({
                 'code': 0,
@@ -92,11 +81,8 @@ class UserAnalysisHandler:
         except Exception as e:
             logging.error(f'❌ 获取最新分析结果错误: { str(e) }')
 
-            return flask.jsonify({
-                'code': 1,
-                'message': f'获取最新分析结果失败: { str(e) }'
-            }), 500
-        
+            return CommonHelper.errorResponse(1, f'获取最新分析结果失败: { str(e) }', 500)
+
     @staticmethod
     def getByTime():
         try:
@@ -107,35 +93,25 @@ class UserAnalysisHandler:
             end = flask.request.args.get('end')
 
             if (not start or not end):
-                return flask.jsonify({
-                    'code': 1,
-                    'message': '时间范围参数不完整'
-                })
+                return CommonHelper.errorResponse(1, '时间范围参数不完整', 400)
 
             start = datetime.fromisoformat(start)
             end = datetime.fromisoformat(end)
 
             if (not start or not end):
-                return flask.jsonify({
-                    'code': 1,
-                    'message': '时间范围参数无效'
-                })
+                return CommonHelper.errorResponse(1, '时间范围参数无效', 400)
 
-            (analyses, total) = MongoDBConfig.drawingManager.getAnalysisByDateRange(userId, start, end)
+            analyses = MongoDBConfig.drawingManager.getAnalysisByDateRange(userId, start, end)
 
             return flask.jsonify({
                 'code': 0,
                 'message': 'success',
                 'data': {
-                    'analyses': analyses,
-                    'total': total
+                    'analyses': analyses
                 }
             })
 
         except Exception as e:
             logging.error(f'❌ 获取指定时间范围内分析结果错误: { str(e) }')
 
-            return flask.jsonify({
-                'code': 1,
-                'message': f'获取指定时间范围内分析结果失败: { str(e) }'
-            }), 500
+            return CommonHelper.errorResponse(1, f'获取指定时间范围内分析结果失败: { str(e) }', 500)

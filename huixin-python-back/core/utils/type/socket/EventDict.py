@@ -1,5 +1,7 @@
-from typing import TypedDict, Any
+from dataclasses import dataclass
+from typing import Any
 
-class EventDict(TypedDict):
+@dataclass(frozen=True)
+class EventDict:
     event: str
     data: Any

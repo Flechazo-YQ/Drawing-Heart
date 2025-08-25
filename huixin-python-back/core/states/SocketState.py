@@ -30,26 +30,26 @@ class SocketState:
     DISCONNECT: Final[str] = 'disconnect'
 
     # 后端Socket事件及数据映射
-    REQUEST_HISTORY_RESPONSE: Final[EventDict] = {
-        'event': 'request_history_response',
-        'data': RequestHistoryResponseData
-    }
-    NEW_MESSAGE: Final[EventDict] = {
-        'event': 'new_message',
-        'data': NewMessageData
-    }
-    DANGEROUS_CHATS_LIST: Final[EventDict] = {
-        'event': 'dangerous_chats_list',
-        'data': DangerousChatsListData
-    }
+    REQUEST_HISTORY_RESPONSE = EventDict(
+        event='request_history_response',
+        data=RequestHistoryResponseData
+    )
+    NEW_MESSAGE = EventDict(
+        event='new_message',
+        data=NewMessageData
+    )
+    DANGEROUS_CHATS_LIST = EventDict(
+        event='dangerous_chats_list',
+        data=DangerousChatsListData
+    )
 
-    ADMIN_MESSAGE_RESPONSE: Final[EventDict] = {
-        'event': 'admin_message_response',
-        'data': AdminMessageResponseData
-    }
-    ADMIN_REPLY: Final[EventDict] = {
-        'event': 'admin_reply',
-        'data': AdminReplyData
-    }
+    ADMIN_MESSAGE_RESPONSE = EventDict(
+        event='admin_message_response',
+        data=AdminMessageResponseData
+    )
+    ADMIN_REPLY = EventDict(
+        event='admin_reply',
+        data=AdminReplyData
+    )
 
 

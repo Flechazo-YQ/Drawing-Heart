@@ -1,9 +1,11 @@
 import os
 
+from typing import Final, Set
+
 class FileHelper:
 
     # 允许的文件扩展名
-    ALLOWED_EXTENSIONS = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
+    ALLOWED_EXTENSIONS: Final[Set[str]] = {'png', 'jpg', 'jpeg', 'gif', 'webp'}
     
     # 检查文件类型是否允许
     @classmethod

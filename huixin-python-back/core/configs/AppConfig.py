@@ -3,10 +3,16 @@ import flask, logging
 from flask import Response, Flask
 
 class AppConfig:
+    
+    @classmethod
+    def registerAppConfig(cls, app: Flask):
+        app.before_request(cls.__handlePreflight)
+
+        logging.info("✅ 全局配置已注册")
 
     # 全局OPTIONS处理，支持预检请求
     @staticmethod
-    def handlePreflight():
+    def __handlePreflight():
         if (flask.request.method != "OPTIONS"):
             return
 
@@ -18,10 +24,5 @@ class AppConfig:
 
         return response
     
-    @classmethod
-    def registerAppConfig(cls, app: Flask):
-        app.before_request(cls.handlePreflight)
-
-        logging.info("✅ 全局配置已注册")
 
         
