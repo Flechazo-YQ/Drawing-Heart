@@ -14,7 +14,7 @@
             </router-link>
           </div>
           <div class="hero-image">
-            <img src="@/assets/images/others/Heart.png" alt="心理诊断" />
+            <img src="@/assets/images/others/Logo.png" alt="心理诊断" />
           </div>
         </div>
       </div>
