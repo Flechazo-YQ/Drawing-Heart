@@ -1,0 +1,7 @@
+{
+  "dependencies": {
+    "@svgdotjs/svg.draggable.js": "^3.0.6",
+    "fabric": "^6.7.1",
+    "svg.js": "^2.7.1"
+  }
+}
