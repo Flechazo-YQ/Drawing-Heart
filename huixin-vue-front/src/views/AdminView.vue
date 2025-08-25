@@ -126,10 +126,10 @@
 import { ref, computed, onMounted, onUnmounted, watch, nextTick } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
-import robotAvatar from '@/assets/images/AI.png'
-import boyAvatar from '@/assets/images/boy.png'
-import girlAvatar from '@/assets/images/girl.png'
-import adminAvatar from '@/assets/images/admin.png'
+import robotAvatar from '@/assets/images/avatars/AI.png'
+import boyAvatar from '@/assets/images/avatars/Boy.png'
+import girlAvatar from '@/assets/images/avatars/Girl.png'
+import adminAvatar from '@/assets/images/avatars/Admin.png'
 import socket from '@/utils/network'
 
 const router = useRouter()
@@ -288,7 +288,7 @@ const selectUser = (userId) => {
   // 从 dangerousUsers 中找到当前用户对象
   const user = dangerousUsers.value.find(u => u.userId === userId)
   const chatId = user && (user.chatId || user._id)
-  
+
   // 通过SocketIO请求对话历史
   if (socket && socket.connected) {
     socket.emit('request_history', {
@@ -432,8 +432,13 @@ const getSenderLabel = (role) => {
 const getAvatarSrc = (role) => {
   switch (role) {
     case 'user':
-      // 这里可以根据用户性别选择头像，暂时使用默认头像
-      return boyAvatar
+      // 根据用户性别选择头像，默认为男孩头像
+      const user = dangerousUsers.value.find(u => u.userId === currentUserId.value)
+      if (user && user.gender === 'female') {
+        return girlAvatar
+      } else {
+        return boyAvatar
+      }
     case 'assistant':
       return robotAvatar
     case 'admin':
@@ -461,7 +466,7 @@ const logout = () => {
   if (socket) {
     socket.disconnect()
   }
-  
+
   // 清除管理员登录状态
   localStorage.removeItem('isAdminLoggedIn')
   localStorage.removeItem('adminToken')

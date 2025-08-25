@@ -2,7 +2,7 @@
   <nav class="modern-nav">
     <div class="nav-content">
       <div class="nav-logo">
-        <img src="@/assets/images/logo.png" alt="绘心同学" class="logo-img" />
+        <img src="@/assets/images/others/Logo.png" alt="绘心同学" class="logo-img" />
         <span>绘心同学</span>
       </div>
       <div class="nav-actions">
@@ -106,8 +106,8 @@ import { useRoute, useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 
 // 导入默认头像图片
-import boyAvatar from '@/assets/images/boy.png'
-import girlAvatar from '@/assets/images/girl.png'
+import boyAvatar from '@/assets/images/avatars/Boy.png'
+import girlAvatar from '@/assets/images/avatars/Girl.png'
 
 import socket from '@/utils/network'
 

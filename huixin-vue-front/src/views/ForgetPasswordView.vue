@@ -8,7 +8,7 @@
             <p class="brand-subtitle">AI心理绘画治疗平台</p>
           </router-link>
           <div class="hero-image">
-            <img src="../assets/images/heart.png" alt="心理诊断" />
+            <img src="../assets/images/others/Heart.png" alt="心理诊断" />
           </div>
         </div>
       </div>

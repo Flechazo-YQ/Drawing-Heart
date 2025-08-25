@@ -67,8 +67,8 @@ import NavBarUser from '@/components/NavBarUser.vue'
 import config from '@/config'
 
 // 导入默认头像图片
-import boyAvatar from '@/assets/images/boy.png'
-import girlAvatar from '@/assets/images/girl.png'
+import boyAvatar from '@/assets/images/avatars/Boy.png'
+import girlAvatar from '@/assets/images/avatars/Girl.png'
 
 const router = useRouter()
 const userInfo = ref({})

@@ -3,7 +3,7 @@
     <nav class="modern-nav">
       <div class="nav-content">
         <div class="nav-logo">
-          <img src="@/assets/images/logo.png" alt="绘心同学" class="logo-img" />
+          <img src="@/assets/images/others/Logo.png" alt="绘心同学" class="logo-img" />
           <span>绘心同学</span>
         </div>
 

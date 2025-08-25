@@ -7,6 +7,33 @@
         <!-- 灵动岛工具栏（画布内上方） -->
         <div class="dynamic-island-toolbar">
           <div v-if="currentMode === 'draw'" class="toolbar-tools">
+            <button class="toolbar-btn" @click="undoCanvas" :disabled="!canUndo" title="撤回">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                <path d="M9 17L4 12L9 7" stroke="#333" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M20 12H4" stroke="#333" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
+            <button class="toolbar-btn" @click="redoCanvas" :disabled="!canRedo" title="取消撤回">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                <path d="M15 7L20 12L15 17" stroke="#333" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M4 12H20" stroke="#333" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
+            <button class="toolbar-btn" @click="triggerFileUpload" title="上传图片">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                <path d="M4 17v2a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2v-2" stroke="#333" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M7 9l5-5 5 5" stroke="#333" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M12 4v12" stroke="#333" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
+            <button class="toolbar-btn" @click="saveDrawing" title="保存图片">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                <path d="M19 21H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2z" stroke="#333" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M17 3v4" stroke="#333" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M7 3v4" stroke="#333" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M7 13l3 3 4-4" stroke="#333" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
             <div class="pen-tool-container" @mouseleave="handleSliderMouseLeave">
               <button class="toolbar-btn" :class="{ active: currentTool === 'pen' }" @click="switchTool('pen')"
                 @mouseenter="handlePenMouseEnter" title="画笔">
@@ -26,7 +53,7 @@
                     d="M643.4 993.8c-26.8 0-51.2-18.1-58.1-45.2-8.2-32.1 11.3-64.8 43.4-72.9 0.7-0.2 76.9-20.1 146.6-62.2 37.6-22.7 65.6-47.2 83.4-72.8 19.2-27.5 25.9-56 20.6-87-7.1-41.7-21.1-51.2-25.7-54.3-15.3-10.4-44.6-13.8-87.1-10.2-50.3 4.3-115.3 17.9-190.5 33.7-80.8 16.9-172.4 36.1-278.1 51.1-55.1 7.8-101 5.8-140.3-6.1-41-12.4-73.2-35.4-95.8-68.3-28.1-41-39.3-95.8-33.3-162.8 4.2-47.1 17-101.4 38.1-161.4 34.7-99 80.1-180.4 82-183.8 16.2-28.9 52.8-39.2 81.7-23 28.9 16.2 39.2 52.7 23 81.6-0.4 0.8-42.8 77-74 166.4-50.5 144.9-29.8 198.8-18.5 215.2 4.3 6.3 12.3 15.4 31.6 21.2 21.9 6.6 51.7 7.3 88.6 2.1 101.7-14.4 191.3-33.2 270.3-49.7s147.3-30.8 204.8-35.8c33.1-2.8 61.2-2.4 85.9 1.2 30.9 4.6 56.7 14.2 78.9 29.3 21 14.3 38.3 33.5 51.2 56.9 11.9 21.6 20.2 46.6 25.3 76.4 5.6 33 4.5 65.5-3.5 96.8-7.2 28-19.9 55-37.7 80.4C928.4 850 887.6 886 835 917.5c-84.7 50.7-173 73.5-176.8 74.4-5 1.3-9.9 1.9-14.8 1.9z"
                     p-id="20215"></path>
                 </svg>
-                <input type="range" min="1" max="10" v-model="lineWidth" @input="changeLineWidth(lineWidth)"
+                <input type="range" min="1" max="15" v-model="lineWidth" @input="changeLineWidth(lineWidth)"
                   @mousedown="startSizePreview" @mousemove="updateSizePreview" @mouseup="endSizePreview"
                   @mouseleave="endSizePreview" @touchstart="startSizePreview" @touchmove="updateSizePreview"
                   @touchend="endSizePreview">
@@ -45,7 +72,7 @@
               <!-- 橡皮擦粗细调节栏 -->
               <div class="eraser-size-slider" v-if="showEraserSlider && currentTool === 'eraser'"
                 @mouseenter="handleEraserSliderMouseEnter" @mouseleave="handleEraserSliderMouseLeave">
-                <input type="range" min="1" max="50" step="1" v-model="eraserWidth"
+                <input type="range" min="15" max="30" step="1" v-model="eraserWidth"
                   @input="changeEraserWidth(eraserWidth)">
                 <div class="eraser-preview" :style="{
                   width: `${eraserWidth * 1.6}px`,
@@ -66,13 +93,44 @@
             <!-- 调色盘面板将移至右侧，与SVG素材库类似 -->
           </div>
           <div v-else class="toolbar-tools">
-            <span>拼接工具栏（可自定义扩展）</span>
+            <!-- 拼贴模式下的房树人按钮 -->
+            <button class="toolbar-btn" @click="showSvgCategory(svgCategories[0])" title="添加房">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                <path d="M3 21h18v-3H3v3zm3-6h12v-3H6v3zm-3-7l9-4 9 4v2H3V8z" stroke="#333" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
+            <button class="toolbar-btn" @click="showSvgCategory(svgCategories[1])" title="添加树">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                <path d="M12 3L8 10H16L12 3z" stroke="#333" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M10 10L6 16H18L14 10" stroke="#333" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M12 21V16" stroke="#333" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
+            <button class="toolbar-btn" @click="showSvgCategory(svgCategories[2])" title="添加人">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                <circle cx="12" cy="7" r="4" stroke="#333" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M6 21v-2a4 4 0 014-4h4a4 4 0 014 4v2" stroke="#333" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
           </div>
         </div>
         <div class="canvas-container" style="display: flex; justify-content: center; align-items: center;">
           <input type="file" ref="fileInput" accept="image/*" @change="handleFileUpload" style="display: none" />
-          <canvas id="drawingCanvas" ref="canvasRef" @mousedown="startDrawing" @mousemove="draw" @mouseup="stopDrawing"
-            @mouseleave="stopDrawing" style="cursor: crosshair;"></canvas>
+          <canvas :id="currentTool === 'pen' ? 'drawingCanvas' : 'erasingCanvas'" ref="canvasRef" @mousedown="startDrawing" @mouseup="stopDrawing"
+            @mouseenter="handleCanvasMouseEnter" @mousemove="handleCanvasAreaMove" @mouseleave="handleCanvasMouseLeave"></canvas>
+        <!-- 橡皮预览矩形 -->
+        <div v-if="eraserPreview.show" :style="{
+          position: 'absolute',
+          left: eraserPreview.x + 'px',
+          top: eraserPreview.y + 'px',
+          width: eraserPreview.width + 'px',
+          height: eraserPreview.height + 'px',
+          background: 'rgba(0,0,0,0.03)',
+          borderRadius: '4px',
+          pointerEvents: 'none',
+          zIndex: 20,
+          transform: 'translate(-50%, -50%)'
+        }"></div>
 
           <!-- 全屏按钮 -->
           <button class="fullscreen-toggle" @click="toggleFullscreen" v-if="!isImageUploaded">
@@ -117,21 +175,21 @@
             <div class="palette-rgb-picker">
               <label>挑个喜欢的颜色</label>
               <input type="color" v-model="currentColor" @input="changeColor(currentColor)">
-              <div class="palette-rgb-value">{{ currentColor }}</div>
             </div>
           </div>
 
-          <!-- SVG素材库面板 -->
-          <div class="svg-library" v-if="currentMode === 'collage'">
-            <div class="svg-category" v-for="(category, index) in svgCategories" :key="index">
-              <h3>{{ category.name }}</h3>
-              <div class="svg-items">
-                <div class="svg-item" v-for="(svg, svgIndex) in category.items" :key="svgIndex"
-                  @mousedown="startSvgDrag($event, svg)" draggable="true">
-                  <!-- SVG代码插入位置 -->
-                  <!-- 开发者可在此处插入SVG代码 -->
-                  <div v-html="svg.svgCode"></div>
-                  <span>{{ svg.name }}</span>
+          <!-- SVG素材面板 -->
+          <div class="svg-panel" v-if="showSvgPanel && currentMode === 'collage'">
+            <div class="svg-panel-header">
+              {{ currentSvgCategory?.name }}素材
+              <button class="svg-panel-close" @click="showSvgPanel = false">×</button>
+            </div>
+            <div class="svg-panel-content">
+              <div class="svg-grid">
+                <div class="svg-item" v-for="(item, index) in currentSvgCategory?.items" :key="index"
+                  @click="addSvgElement(item, canvasRef.value.width / 2, canvasRef.value.height / 2)">
+                  <div class="svg-icon" v-html="item.svgCode"></div>
+                  <div class="svg-name">{{ item.name }}</div>
                 </div>
               </div>
             </div>
@@ -157,19 +215,15 @@
         </div>
 
         <div class="action-buttons">
-          <button class="action-btn upload" @click="triggerFileUpload" v-if="!hasDrawing">
-            上传照片
-          </button>
-          <button class="action-btn clear" @click="clearCanvas">
-            {{ isImageUploaded ? '返回手绘' : '清空画布' }}
-          </button>
-          <button class="action-btn save" @click="saveDrawing" v-if="!isImageUploaded && !currentFileName">
-            保存图片
-          </button>
-          <button class="action-btn submit" @click="analyzeDrawing" v-if="(isImageUploaded || currentFileName)"
-            :disabled="isLoading">
-            {{ isLoading ? '分析中...' : '前往分析' }}
-          </button>
+          <div style="position: absolute; left: 50%; bottom: 32px; transform: translateX(-50%); z-index: 100; display: flex; gap: 12px;">
+            <button class="action-btn clear" @click="clearCanvas" v-if="hasDrawing">
+              {{ isImageUploaded ? '返回手绘' : '清空画布' }}
+            </button>
+            <button class="action-btn submit" @click="analyzeDrawing" v-if="(isImageUploaded || currentFileName)"
+              :disabled="isLoading">
+              {{ isLoading ? '分析中...' : '前往分析' }}
+            </button>
+          </div>
         </div>
       </div>
 
@@ -201,6 +255,109 @@
 </template>
 
 <script setup>
+// 撤回与取消撤回功能
+import { ref, computed } from 'vue'
+const undoStack = ref([])
+const redoStack = ref([])
+// 计算属性：只有当撤回栈中有元素时才能撤回
+const canUndo = computed(() => undoStack.value.length > 0)
+// 计算属性：只有当取消撤回栈中有元素时才能取消撤回
+const canRedo = computed(() => redoStack.value.length > 0)
+// 计算属性：当画布上有内容或撤回栈/取消撤回栈中有内容时才能清空画布
+const canClear = computed(() => hasDrawing.value || undoStack.value.length > 1 || redoStack.value.length > 0)
+
+// 初始化画布
+onMounted(() => {
+  if (canvasRef.value) {
+    const ctx = canvasRef.value.getContext('2d')
+    ctx.clearRect(0, 0, canvasRef.value.width, canvasRef.value.height)
+    // 填充白色背景
+    ctx.fillStyle = '#ffffff'
+    ctx.fillRect(0, 0, canvasRef.value.width, canvasRef.value.height)
+    // 初始状态不保存到撤回栈
+    // 确保初始状态下撤回按钮是禁用的
+  }
+})
+
+function saveCanvasState() {
+  // 新绘制时保存快照
+  if (canvasRef.value) {
+    step.value++
+    // 如果当前步骤小于历史记录长度，说明是在历史中间进行的新绘制
+    // 需要截断数组，删除当前步骤之后的所有历史记录
+    if (step.value < canvasHistory.value.length) {
+      canvasHistory.value.length = step.value
+    }
+    // 添加新的绘制到历史记录
+    canvasHistory.value.push(canvasRef.value.toDataURL())
+    hasDrawing.value = true // 确保标记为有绘画内容
+  }
+}
+
+function undoCanvas() {
+  // 确保撤回栈中有状态可以撤回，并且画布引用存在
+  if (undoStack.value && undoStack.value.length > 0 && canvasRef.value) {
+    const ctx = canvasRef.value.getContext('2d')
+    // 当前状态保存到取消撤回栈
+    redoStack.value.push(canvasRef.value.toDataURL())
+    // 移除当前状态
+    undoStack.value.pop()
+
+    if (undoStack.value.length > 0) {
+      // 获取上一个状态
+      const previousState = undoStack.value[undoStack.value.length - 1]
+
+      // 加载并显示上一个状态
+      const img = new window.Image()
+      img.onload = function() {
+        ctx.clearRect(0, 0, canvasRef.value.width, canvasRef.value.height)
+        ctx.drawImage(img, 0, 0)
+      }
+      img.src = previousState
+    } else {
+      // 如果撤回栈为空，则清空画布
+      ctx.clearRect(0, 0, canvasRef.value.width, canvasRef.value.height)
+      ctx.fillStyle = '#ffffff'
+      ctx.fillRect(0, 0, canvasRef.value.width, canvasRef.value.height)
+      hasDrawing.value = false
+    }
+  }
+}
+
+function redoCanvas() {
+  // 检查是否可以重做（步骤小于历史记录长度-1）
+  if (step.value < canvasHistory.value.length - 1 && canvasRef.value) {
+    const ctx = canvasRef.value.getContext('2d')
+    // 步骤加1
+    step.value++
+
+    // 加载并显示下一个状态
+    const canvasPic = new Image()
+    canvasPic.src = canvasHistory.value[step.value]
+    canvasPic.addEventListener('load', () => {
+      ctx.clearRect(0, 0, canvasRef.value.width, canvasRef.value.height)
+      ctx.drawImage(canvasPic, 0, 0)
+      hasDrawing.value = true // 重做后一定有内容
+    })
+  } else {
+    console.log('已经是最新的记录了')
+  }
+}
+// 合并画布mousemove事件，既处理绘画又处理橡皮预览
+function handleCanvasAreaMove(e) {
+  draw(e)
+  if (currentTool.value === 'eraser') {
+    const rect = canvasRef.value.getBoundingClientRect()
+    eraserPreview.x = e.clientX - rect.left
+    eraserPreview.y = e.clientY - rect.top
+    eraserPreview.width = eraserWidth.value * 2
+    eraserPreview.height = eraserWidth.value * 2 * 9 / 16
+    eraserPreview.show = true
+  } else {
+    eraserPreview.show = false
+  }
+}
+import { reactive } from 'vue'
 // ...existing code...
 const showPalette = ref(false)
 const basicColors = [
@@ -212,7 +369,7 @@ function selectBasicColor(color) {
   changeColor(color)
   showPalette.value = false
 }
-import { ref, onMounted, onUnmounted } from 'vue'
+import { onMounted, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { ElMessage } from 'element-plus'
 import config from '@/config'
@@ -227,7 +384,39 @@ const currentPage = ref(1)
 const sections = ref([])
 
 // 绘画相关的状态
+// 橡皮预览状态
+const eraserPreview = reactive({
+  show: false,
+  x: 0,
+  y: 0,
+  width: 32,
+  height: 18
+})
+
+function handleCanvasMouseEnter(e) {
+  if (currentTool.value === 'eraser') {
+    eraserPreview.show = true
+  }
+}
+
+function handleCanvasMouseMove(e) {
+  if (currentTool.value === 'eraser') {
+    const rect = canvasRef.value.getBoundingClientRect()
+    eraserPreview.x = e.clientX - rect.left
+    eraserPreview.y = e.clientY - rect.top
+    eraserPreview.width = eraserWidth.value * 2
+    eraserPreview.height = eraserWidth.value * 2 * 9 / 16
+    eraserPreview.show = true
+  } else {
+    eraserPreview.show = false
+  }
+}
+
+function handleCanvasMouseLeave() {
+  eraserPreview.show = false
+}
 const isDrawing = ref(false)
+const isDragging = ref(false)
 const currentTool = ref('pen') // pen, eraser
 const currentColor = ref('#000000')
 const lineWidth = ref(5)
@@ -291,23 +480,37 @@ let canvasBeforePreview = null // 保存预览前的画布状态
 // 模式切换相关
 const currentMode = ref('draw') // 'draw' 或 'collage'
 const showDynamicToolbar = ref(true) // 控制灵动岛工具栏显示
+const showSvgPanel = ref(false) // 控制SVG面板显示
+const currentSvgCategory = ref(null) // 当前选中的SVG类别
 
 // SVG素材分类
 const svgCategories = ref([
   {
-    name: '房树人',
+    name: '房',
     items: [
-      { name: '房', svgCode: '<!-- 开发者可在此处插入房SVG代码 -->' },
-      { name: '树', svgCode: '<!-- 开发者可在此处插入树SVG代码 -->' },
-      { name: '人', svgCode: '<!-- 开发者可在此处插入人SVG代码 -->' }
+      { name: '现代房', svgCode: '<!-- 开发者可在此处插入现代房SVG代码 -->' },
+      { name: '传统房', svgCode: '<!-- 开发者可在此处插入传统房SVG代码 -->' },
+      { name: '别墅', svgCode: '<!-- 开发者可在此处插入别墅SVG代码 -->' },
+      { name: '公寓', svgCode: '<!-- 开发者可在此处插入公寓SVG代码 -->' }
     ]
   },
   {
-    name: '动物',
+    name: '树',
     items: [
-      { name: '狗', svgCode: '<!-- 开发者可在此处插入狗SVG代码 -->' },
-      { name: '猫', svgCode: '<!-- 开发者可在此处插入猫SVG代码 -->' },
-      { name: '鸟', svgCode: '<!-- 开发者可在此处插入鸟SVG代码 -->' }
+      { name: '松树', svgCode: '<!-- 开发者可在此处插入松树SVG代码 -->' },
+      { name: '柳树', svgCode: '<!-- 开发者可在此处插入柳树SVG代码 -->' },
+      { name: '樟树', svgCode: '<!-- 开发者可在此处插入樟树SVG代码 -->' },
+      { name: '枫树', svgCode: '<!-- 开发者可在此处插入枫树SVG代码 -->' },
+      { name: '橡树', svgCode: '<!-- 开发者可在此处插入橡树SVG代码 -->' }
+    ]
+  },
+  {
+    name: '人',
+    items: [
+      { name: '男人', svgCode: '<!-- 开发者可在此处插入男人SVG代码 -->' },
+      { name: '女人', svgCode: '<!-- 开发者可在此处插入女人SVG代码 -->' },
+      { name: '小孩', svgCode: '<!-- 开发者可在此处插入小孩SVG代码 -->' },
+      { name: '老人', svgCode: '<!-- 开发者可在此处插入老人SVG代码 -->' }
     ]
   }
 ])
@@ -346,6 +549,12 @@ const addSvgElement = (svgData, x, y) => {
   selectedElement.value = element
   hasDrawing.value = true
   redrawCollageElements()
+}
+
+// 显示SVG类别面板
+const showSvgCategory = (category) => {
+  currentSvgCategory.value = category
+  showSvgPanel.value = true
 }
 
 // 图片处理相关的状态
@@ -434,12 +643,22 @@ const draw = (e) => {
 
     if (currentTool.value === 'eraser') {
       // 16:9矩形擦除
-      ctx.save()
-      ctx.globalCompositeOperation = 'destination-out'
-      const width = eraserWidth.value * 2
-      const height = eraserWidth.value * 2 * 9 / 16
-      ctx.clearRect(x - width / 2, y - height / 2, width, height)
-      ctx.restore()
+      ctx.save();
+      // 设置橡皮擦模式
+      ctx.globalCompositeOperation = 'destination-out';
+      const width = eraserWidth.value * 2;
+      const height = eraserWidth.value * 2 * 9 / 16;
+      const steps = Math.max(Math.abs(x - lastX), Math.abs(y - lastY));
+
+      // 使用插值确保连续擦除
+      for (let i = 0; i <= steps; i++) {
+        const ix = lastX + (x - lastX) * (i / steps);
+        const iy = lastY + (y - lastY) * (i / steps);
+        ctx.clearRect(ix - width / 2, iy - height / 2, width, height);
+      }
+
+      // 恢复之前的绘图状态
+      ctx.restore();
     } else {
       ctx.beginPath()
       ctx.moveTo(lastX, lastY)
@@ -487,7 +706,11 @@ const draw = (e) => {
 
 // 结束绘画
 const stopDrawing = () => {
-  isDrawing.value = false
+  if (isDrawing.value) {
+    // 每次绘制结束时保存快照，无论是画笔还是橡皮擦
+    saveCanvasState()
+    isDrawing.value = false
+  }
   isDragging.value = false
   isScaling.value = false
   isRotating.value = false
@@ -853,15 +1076,40 @@ const drawSelectionBorder = (element) => {
 
 // 清空画布
 const clearCanvas = () => {
-  ctx.fillStyle = '#ffffff'
-  ctx.fillRect(0, 0, canvasRef.value.width, canvasRef.value.height)
+  if (canvasRef.value) {
+    const ctx = canvasRef.value.getContext('2d')
+    // 清空画布
+    ctx.clearRect(0, 0, canvasRef.value.width, canvasRef.value.height)
+    // 填充白色背景
+    ctx.fillStyle = '#ffffff'
+    ctx.fillRect(0, 0, canvasRef.value.width, canvasRef.value.height)
 
-  // 重置状态
-  isImageUploaded.value = false
-  hasDrawing.value = false
-  currentFileName.value = ''
-  collageElements.value = []
-  selectedElement.value = null
+    // 重置状态
+    isImageUploaded.value = false
+    hasDrawing.value = false
+    currentFileName.value = ''
+    collageElements.value = []
+    selectedElement.value = null
+
+    // 关键修复：完全重置撤回和取消撤回栈
+    // 创建全新的数组实例，彻底断开与之前历史记录的引用关系
+    undoStack.value = []
+    redoStack.value = []
+
+    // 保存初始空白状态到撤回栈
+    saveCanvasState()
+
+    // 确保在保存初始状态后重置 hasDrawing 为 false
+    hasDrawing.value = false
+
+    // 保存一个新的初始空白状态到撤回栈
+    // 这是清空后的第一个状态，作为新的起点
+    const emptyState = canvasRef.value.toDataURL()
+    undoStack.value.push(emptyState)
+
+    // 确保清空画布是一个完全重置的操作
+    console.log('画布已清空，历史记录已重置')
+  }
 }
 
 // 全屏功能
@@ -1192,6 +1440,20 @@ const prevPage = () => {
 </script>
 
 <style scoped>
+/* 优化撤回按钮置灰和禁止悬浮高亮 */
+.toolbar-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+  box-shadow: none;
+}
+/* 优化取消撤回按钮置灰和禁止悬浮高亮 */
+.toolbar-btn:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  pointer-events: none;
+  box-shadow: none;
+}
 /* 右侧调色盘侧边栏样式 */
 /* 右侧调色盘侧边栏卡片风格 */
 /* 画布右侧调色盘侧边栏（窄、贴近画布右侧，距离上下边距相等） */
@@ -1204,7 +1466,7 @@ const prevPage = () => {
   background: #fff;
   border-radius: 16px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
-  z-index: 999;
+  z-index: 10;
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -1314,7 +1576,7 @@ const prevPage = () => {
   flex-direction: row;
   align-items: center;
   box-shadow: 0 2px 12px rgba(0, 0, 0, 0.10);
-  z-index: 101;
+  z-index: 11;
   min-width: 180px;
   max-width: 90%;
   height: 38px;
@@ -1367,7 +1629,7 @@ const prevPage = () => {
   background: rgba(255, 255, 255, 0.95);
   border-radius: 12px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  z-index: 100;
+  z-index: 9;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -1410,7 +1672,7 @@ const prevPage = () => {
   padding-right: 12px;
   padding-bottom: 8px;
   box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
-  z-index: 100;
+  z-index: 9;
 }
 
 .eraser-size-slider input[type="range"] {
@@ -1508,54 +1770,63 @@ body {
   padding: 0;
 }
 
-/* SVG素材库样式 */
-.svg-library {
+/* SVG面板样式 */
+.svg-panel {
   position: absolute;
-  left: 36px;
+  right: 36px;
   top: 64px;
-  width: 140px;
-  min-height: calc(100% - 128px);
+  width: 200px;
+  max-height: 60vh;
   background: #fff;
   border-radius: 16px;
   box-shadow: 0 8px 32px rgba(0, 0, 0, 0.12);
   z-index: 999;
   display: flex;
   flex-direction: column;
-  align-items: center;
-  padding: 18px 12px 18px 12px;
-  animation: svg-slide-in-canvas 0.28s cubic-bezier(.4, 1.4, .6, 1);
+  overflow: hidden;
+  animation: panel-slide-in 0.28s cubic-bezier(.4, 1.4, .6, 1);
 }
 
-@keyframes svg-slide-in-canvas {
+@keyframes panel-slide-in {
   from {
-    left: -180px;
+    right: -220px;
     opacity: 0;
   }
-
   to {
-    left: 36px;
+    right: 36px;
     opacity: 1;
   }
 }
 
-.svg-category {
-  margin-bottom: 16px;
-  width: 100%;
-}
-
-.svg-category h3 {
+.svg-panel-header {
+  padding: 12px 16px;
   font-weight: bold;
   font-size: 16px;
-  margin: 0 0 14px 0;
   color: #333;
-  text-align: center;
+  border-bottom: 1px solid #e5e7eb;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
 }
 
-.svg-items {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 8px;
-  justify-content: center;
+.svg-panel-close {
+  background: none;
+  border: none;
+  font-size: 20px;
+  cursor: pointer;
+  color: #666;
+}
+
+.svg-panel-content {
+  flex: 1;
+  overflow-y: auto;
+  padding: 12px;
+}
+
+.svg-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
 }
 
 .svg-item {
@@ -1563,29 +1834,29 @@ body {
   flex-direction: column;
   align-items: center;
   padding: 8px;
-  border: 2px solid #e5e7eb;
   border-radius: 8px;
   cursor: pointer;
-  background: white;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-  transition: transform 0.18s, border-color 0.18s;
+  transition: all 0.2s;
 }
 
 .svg-item:hover {
-  transform: scale(1.08);
-  border-color: #8b5cf6;
-  background: white;
+  background: #f3f4f6;
+  transform: scale(1.05);
 }
 
-.svg-item svg {
-  width: 32px;
-  height: 32px;
+.svg-icon {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 }
 
-.svg-item span {
-  font-size: 13px;
+.svg-name {
+  font-size: 12px;
   margin-top: 4px;
   color: #666;
+  text-align: center;
 }
 
 /* 功能管理器样式 */
@@ -1593,10 +1864,12 @@ body {
   position: absolute;
   left: 10px;
   bottom: 10px;
-  z-index: 100;
+  z-index: 10;
 }
 
 .manager-btn {
+  margin-bottom: 8px;
+  margin-left: 8px;
   width: 40px;
   height: 40px;
   background: rgba(255, 255, 255, 0.9);
@@ -1721,7 +1994,14 @@ body {
   position: absolute;
   width: 100%;
   height: 100%;
-  cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1024 1024' width='32' height='32'><path d='M477.11 83.21h70v285.81h-70z'/><path d='M532.08 98.21v255.8h-40l-0.05-255.81h40m30-30h-100v30l0.1 255.8v30h100V68.19z' fill='%23FFFFFF'/><path d='M83.04 477.13h283.75v70H83.04z'/><path d='M351.79 492.12v40H98v-40h253.79m30-30H68v100h313.79v-100z' fill='%23FFFFFF'/><path d='M657 477.37h285.87v70H657z'/><path d='M927.87 492.37v40H672v-40h255.87m30-30H642v100h315.87v-100z' fill='%23FFFFFF'/><path d='M477.1 655.98h70v285.65h-70z'/><path d='M532.08 671v255.64h-40V670.99h40m30-30h-100v315.65h100V641z' fill='%23FFFFFF'/><path d='M511.5 511.5m-51 0a51 51 0 1 0 102 0 51 51 0 1 0-102 0Z'/><path d='M511.5 475.5a36 36 0 1 1-36 36 36 36 0 0 1 36-36m0-30a66 66 0 1 0 66 66 66.08 66.08 0 0 0-66-66z' fill='%23FFFFFF'/></svg>") 16 16, crosshair;
+  cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1024 1024' width='32' height='32'><path d='M314.88 626.133333l96.213333 94.933334a130.346667 130.346667 0 0 1-108.16 54.826666 104.32 104.32 0 0 1-73.386666-27.52 102.4 102.4 0 0 0 42.666666-26.88 110.933333 110.933333 0 0 0 25.386667-64v-2.346666a59.52 59.52 0 0 1 7.893333-26.88 31.146667 31.146667 0 0 1 10.026667-2.56m14.08-64c-64 0-85.333333 27.733333-95.146667 85.333333v2.773333c-2.986667 18.773333-5.12 25.386667-8.533333 29.013334a39.68 39.68 0 0 1-8.746667 7.04 33.493333 33.493333 0 0 1-18.133333 5.12 29.866667 29.866667 0 0 1-8.746667-1.066667h-1.92a29.013333 29.013333 0 0 0-10.24-1.92A27.946667 27.946667 0 0 0 149.333333 717.013333c8.96 81.28 78.72 122.88 153.386667 122.88A189.226667 189.226667 0 0 0 481.28 725.333333a27.946667 27.946667 0 0 0-6.4-30.293333l-126.293333-125.653333a28.16 28.16 0 0 0-19.626667-8.106667l0.64 0.426667zM808.32 234.666667H810.666667c0 10.453333-9.386667 49.066667-97.493334 158.72-15.36 18.986667-31.146667 37.76-47.146666 56.106666-31.146667 35.84-147.626667 157.44-147.626667 157.44l-80.853333-81.493333s117.12-114.346667 154.24-147.413333c19.84-17.493333 40.32-34.56 60.586666-50.986667 100.053333-80.426667 140.8-92.373333 155.946667-92.373333m0-64c-47.146667 0-111.786667 38.826667-196.053333 106.666666-21.333333 17.066667-42.666667 34.773333-62.72 52.906667-38.677333 34.133333-76.373333 69.269333-113.066667 105.386667-14.72 14.72-29.653333 29.653333-44.16 44.586666l-3.413333 3.626667a60.8 60.8 0 0 0 0 85.333333l85.333333 86.4c11.306667 11.306667 26.666667 17.706667 42.666667 17.706667a60.586667 60.586667 0 0 0 42.666666-17.706667l3.2-3.2 9.813334-9.813333 34.773333-35.413333c35.84-37.12 71.893333-76.16 105.386667-114.773334 16.64-18.986667 32.853333-38.4 48.64-58.026666 102.186667-126.08 142.72-208 89.173333-249.813334a66.56 66.56 0 0 0-42.666667-13.866666h0.426667z' fill='%233D424D'/></svg>") 8 24, crosshair;
+}
+
+#erasingCanvas {
+  position: absolute;
+  width: 100%;
+  height: 100%;
+  cursor: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1029 1024' width='32' height='32'><path d='M968.96 387.2l-302.4-302.4c-17.76-17.76-41.28-27.36-65.76-27.36s-48 9.6-65.28 26.88l-476.16 476.16c-17.76 17.76-27.36 41.28-27.36 65.76s9.6 48 26.88 65.28l0.96 1.92h0.96l205.44 205.44c43.2 43.2 100.8 67.2 161.76 67.2 60.96 0 118.56-23.52 161.76-67.2l379.68-379.68c17.76-17.76 27.36-41.28 27.36-66.24-0.48-24.48-10.08-48-27.84-65.76z m-432.96 469.92c-29.76 26.88-68.16 41.76-108.48 41.76-43.2 0-83.52-16.8-114.24-47.04l-206.88-206.88c-10.08-10.08-10.08-26.88 0-36.96l90.24-90.24 339.36 339.36z m385.44-385.44l-337.92 337.92-339.36-339.36 337.92-337.92c4.8-4.8 11.52-7.68 18.24-7.68 7.2 0 13.44 2.88 18.24 7.68l302.4 302.4c10.56 10.08 10.56 26.88 0.48 36.96z' fill='%233D424D'/></svg>") 2 26, crosshair;
 }
 
 .fullscreen-toggle {
@@ -1774,7 +2054,7 @@ body {
   padding: 0.75rem;
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
-  z-index: 5;
+  z-index: 1;
   /* 确保工具栏在画布上方，但在按钮下方 */
   flex-wrap: wrap;
   max-width: 90%;

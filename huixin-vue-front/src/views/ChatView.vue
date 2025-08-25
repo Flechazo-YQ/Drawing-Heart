@@ -108,10 +108,10 @@
 <script setup lang="ts">
 import { ref, onMounted, nextTick, watch, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
-import robotAvatar from '@/assets/images/AI.png'
-import boyAvatar from '@/assets/images/boy.png'
-import girlAvatar from '@/assets/images/girl.png'
-import adminAvatar from '@/assets/images/admin.png'
+import robotAvatar from '@/assets/images/avatars/AI.png'
+import boyAvatar from '@/assets/images/avatars/Boy.png'
+import girlAvatar from '@/assets/images/avatars/Girl.png'
+import adminAvatar from '@/assets/images/avatars/Admin.png'
 import { ElMessage } from 'element-plus'
 import config from '../config'
 import ChatSidebar from '@/components/ChatSidebar.vue'
@@ -335,7 +335,7 @@ const saveChatState = () => {
       // 获取用户ID
       const userInfo = JSON.parse(localStorage.getItem('userInfo') || '{}')
       const userId = userInfo.id
-      
+
       if (!userId) {
         console.error('保存聊天记录失败：找不到用户ID')
         return

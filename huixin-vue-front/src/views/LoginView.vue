@@ -12,7 +12,7 @@
             <p class="brand-subtitle">AI心理绘画治疗平台</p>
           </div>
           <div class="hero-image">
-            <img src="@/assets/images/heart.png" alt="心理诊断" />
+            <img src="@/assets/images/others/Heart.png" alt="心理诊断" />
           </div>
         </div>
       </div>
@@ -131,15 +131,15 @@ const handleLogin = async () => {
           });
 
           const userInfo = await userInfoResponse.json();
-          
+
           if (userInfo.code === 0) {
             const info = { ...userInfo.data, id: userInfo.data._id }
 
             localStorage.setItem('userInfo', JSON.stringify(info));
-            
+
             // 添加登录状态标志到localStorage
             localStorage.setItem('isLoggedIn', 'true')
-            
+
             //向后端发送登录用户id
             if (!socket.connected) {
               socket.connect();
