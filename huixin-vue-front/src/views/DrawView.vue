@@ -452,14 +452,72 @@ function handleCanvasAreaMove(e) {
     const rect = canvasRef.value.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
-    const scaleX = selectedElement.value.x + selectedElement.value.width - 5;
-    const scaleY = selectedElement.value.y + selectedElement.value.height - 5;
-    if (x >= scaleX && x <= scaleX + 10 && y >= scaleY && y <= scaleY + 10) {
-      canvasRef.value.style.cursor = 'pointer';
+    const el = selectedElement.value;
+    
+    // 控制点定义
+    const points = [
+      { x: el.x - 4, y: el.y - 4, type: 'nw' },
+      { x: el.x + el.width / 2 - 4, y: el.y - 4, type: 'n' },
+      { x: el.x + el.width - 4, y: el.y - 4, type: 'ne' },
+      { x: el.x - 4, y: el.y + el.height / 2 - 4, type: 'w' },
+      { x: el.x + el.width - 4, y: el.y + el.height / 2 - 4, type: 'e' },
+      { x: el.x - 4, y: el.y + el.height - 4, type: 'sw' },
+      { x: el.x + el.width / 2 - 4, y: el.y + el.height - 4, type: 's' },
+      { x: el.x + el.width - 4, y: el.y + el.height - 4, type: 'se' }
+    ];
+    
+    // 检查是否在控制点上
+    let found = null;
+    for (let i = 0; i < points.length; i++) {
+      const pt = points[i];
+      if (x >= pt.x && x <= pt.x + 8 && y >= pt.y && y <= pt.y + 8) {
+        found = pt.type;
+        break;
+      }
+    }
+    
+    // 边框线判定（±4px范围）
+    let onBorder = false;
+    if (!found) {
+      // 上边
+      if (y >= el.y - 4 && y <= el.y + 4 && x >= el.x - 4 && x <= el.x + el.width + 4) onBorder = 'n';
+      // 下边
+      if (y >= el.y + el.height - 4 && y <= el.y + el.height + 4 && x >= el.x - 4 && x <= el.x + el.width + 4) onBorder = 's';
+      // 左边
+      if (x >= el.x - 4 && x <= el.x + 4 && y >= el.y - 4 && y <= el.y + el.height + 4) onBorder = 'w';
+      // 右边
+      if (x >= el.x + el.width - 4 && x <= el.x + el.width + 4 && y >= el.y - 4 && y <= el.y + el.height + 4) onBorder = 'e';
+    }
+    
+    if (found) {
+      // 角点等比缩放
+      if (['nw','ne','sw','se'].includes(found)) {
+        if (found === 'nw' || found === 'se') {
+          canvasRef.value.style.cursor = 'nwse-resize';
+        } else {
+          canvasRef.value.style.cursor = 'nesw-resize';
+        }
+      } else {
+        // 边点非等比缩放
+        if (found === 'n' || found === 's') {
+          canvasRef.value.style.cursor = 'ns-resize';
+        } else {
+          canvasRef.value.style.cursor = 'ew-resize';
+        }
+      }
+    } else if (onBorder) {
+      // 边框线也可缩放
+      if (onBorder === 'n' || onBorder === 's') {
+        canvasRef.value.style.cursor = 'ns-resize';
+      } else {
+        canvasRef.value.style.cursor = 'ew-resize';
+      }
+    } else if (x > el.x && x < el.x + el.width && y > el.y && y < el.y + el.height) {
+      // 框内可抓取
+      canvasRef.value.style.cursor = 'move';
     } else {
       canvasRef.value.style.cursor = '';
     }
-    // Optionally, you can add collage-specific logic here
     return;
   }
 
@@ -590,6 +648,12 @@ let ctx = null
 let lastX = 0
 let lastY = 0
 let canvasBeforePreview = null // 保存预览前的画布状态
+
+// 拼贴模式拖拽相关变量
+let dragStartX = 0
+let dragStartY = 0
+let dragType = null // 'move', 'n', 's', 'e', 'w', 'nw', 'ne', 'sw', 'se'
+let dragStart = null // 记录拖拽开始时的元素状态
 
 // 模式切换相关
 const currentMode = ref('draw') // 'draw' 或 'collage'
@@ -844,7 +908,7 @@ const draw = (e) => {
     const x = e.clientX - rect.left
     const y = e.clientY - rect.top
 
-    if (isDragging.value && selectedElement.value) {
+    if (dragType === 'move' && selectedElement.value) {
       // 拼接模式下的拖拽
       selectedElement.value.x = x - dragStartX
       selectedElement.value.y = y - dragStartY
@@ -862,6 +926,52 @@ const draw = (e) => {
 
       const angle = Math.atan2(y - centerY, x - centerX) * 180 / Math.PI
       selectedElement.value.rotation = angle
+    } else if (dragType && selectedElement.value && dragStart) {
+      // 处理边框和控制点拖拽调整大小
+      const el = selectedElement.value;
+      const dx = x - dragStart.x;
+      const dy = y - dragStart.y;
+      
+      switch (dragType) {
+        case 'n': // 上边
+          el.y = dragStart.y + dy;
+          el.height = dragStart.height - dy;
+          break;
+        case 's': // 下边
+          el.height = dragStart.height + dy;
+          break;
+        case 'w': // 左边
+          el.x = dragStart.x + dx;
+          el.width = dragStart.width - dx;
+          break;
+        case 'e': // 右边
+          el.width = dragStart.width + dx;
+          break;
+        case 'nw': // 左上角
+          el.x = dragStart.x + dx;
+          el.y = dragStart.y + dy;
+          el.width = dragStart.width - dx;
+          el.height = dragStart.height - dy;
+          break;
+        case 'ne': // 右上角
+          el.y = dragStart.y + dy;
+          el.width = dragStart.width + dx;
+          el.height = dragStart.height - dy;
+          break;
+        case 'sw': // 左下角
+          el.x = dragStart.x + dx;
+          el.width = dragStart.width - dx;
+          el.height = dragStart.height + dy;
+          break;
+        case 'se': // 右下角
+          el.width = dragStart.width + dx;
+          el.height = dragStart.height + dy;
+          break;
+      }
+      
+      // 确保元素尺寸不小于最小值
+      if (el.width < 20) el.width = 20;
+      if (el.height < 20) el.height = 20;
     }
 
     redrawCollageElements()
@@ -880,6 +990,8 @@ const stopDrawing = () => {
   isDragging.value = false
   isScaling.value = false
   isRotating.value = false
+  dragType = null
+  dragStart = null
 }
 
 // 切换工具
@@ -1022,16 +1134,55 @@ const handleCollageClick = (e) => {
   const x = e.clientX - rect.left
   const y = e.clientY - rect.top
 
-  // 检查是否点击了缩放控制点
+  // 检查是否点击了控制点或边框
   if (selectedElement.value) {
-    const scaleX = selectedElement.value.x + selectedElement.value.width - 5
-    const scaleY = selectedElement.value.y + selectedElement.value.height - 5
-
-    if (x >= scaleX && x <= scaleX + 10 && y >= scaleY && y <= scaleY + 10) {
-      isScaling.value = true
-      return
+    const el = selectedElement.value;
+    
+    // 控制点定义
+    const points = [
+      { x: el.x - 4, y: el.y - 4, type: 'nw' },
+      { x: el.x + el.width / 2 - 4, y: el.y - 4, type: 'n' },
+      { x: el.x + el.width - 4, y: el.y - 4, type: 'ne' },
+      { x: el.x - 4, y: el.y + el.height / 2 - 4, type: 'w' },
+      { x: el.x + el.width - 4, y: el.y + el.height / 2 - 4, type: 'e' },
+      { x: el.x - 4, y: el.y + el.height - 4, type: 'sw' },
+      { x: el.x + el.width / 2 - 4, y: el.y + el.height - 4, type: 's' },
+      { x: el.x + el.width - 4, y: el.y + el.height - 4, type: 'se' }
+    ];
+    
+    // 检查是否在控制点上
+    let found = null;
+    for (let i = 0; i < points.length; i++) {
+      const pt = points[i];
+      if (x >= pt.x && x <= pt.x + 8 && y >= pt.y && y <= pt.y + 8) {
+        found = pt.type;
+        break;
+      }
     }
-
+    
+    // 边框线判定（±4px范围）
+    let onBorder = false;
+    if (!found) {
+      if (y >= el.y - 4 && y <= el.y + 4 && x >= el.x - 4 && x <= el.x + el.width + 4) onBorder = 'n';
+      if (y >= el.y + el.height - 4 && y <= el.y + el.height + 4 && x >= el.x - 4 && x <= el.x + el.width + 4) onBorder = 's';
+      if (x >= el.x - 4 && x <= el.x + 4 && y >= el.y - 4 && y <= el.y + el.height + 4) onBorder = 'w';
+      if (x >= el.x + el.width - 4 && x <= el.x + el.width + 4 && y >= el.y - 4 && y <= el.y + el.height + 4) onBorder = 'e';
+    }
+    
+    if (found) {
+      dragType = found;
+      dragStart = { x, y, ...el };
+      return;
+    } else if (onBorder) {
+      dragType = onBorder;
+      dragStart = { x, y, ...el };
+      return;
+    } else if (x > el.x && x < el.x + el.width && y > el.y && y < el.y + el.height) {
+      dragType = 'move';
+      dragStart = { x, y, ...el };
+      return;
+    }
+    
     // 检查是否点击了旋转控制点
     const rotateX = selectedElement.value.x + selectedElement.value.width / 2
     const rotateY = selectedElement.value.y - 20
@@ -1056,12 +1207,15 @@ const handleCollageClick = (e) => {
 
   if (foundElement) {
     selectedElement.value = foundElement
-    isDragging.value = true
     // 记录拖拽起始位置
     dragStartX = x - foundElement.x
     dragStartY = y - foundElement.y
+    dragType = 'move'
+    dragStart = { x, y, ...foundElement }
   } else {
     selectedElement.value = null
+    dragType = null
+    dragStart = null
   }
 
   redrawCollageElements()
@@ -1174,20 +1328,12 @@ const redrawCollageElements = () => {
 
     ctx.restore()
 
-    // 绘制选中状态的边框
+    // 绘制选中状态的边框和控制点
     if (selectedElement.value && selectedElement.value.id === element.id) {
       drawSelectionBorder(element)
 
-      // 绘制缩放控制点
-      ctx.fillStyle = '#007bff'
-      ctx.fillRect(
-        element.x + element.width - 5,
-        element.y + element.height - 5,
-        10,
-        10
-      )
-
       // 绘制旋转控制点
+      ctx.fillStyle = '#007bff'
       ctx.beginPath()
       ctx.arc(
         element.x + element.width / 2,
