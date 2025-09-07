@@ -5,7 +5,7 @@ from flask import Flask
 from typing import Final, Optional
 
 class GlobalState:
-    URL: Final[str] = "https://api.siliconflow.cn/v1/chat/completions"
+    URL: Final[str] = 'https://api.siliconflow.cn/v1/chat/completions'
     ALLOWED_EXTENSIONS: Final[set] = {'png', 'jpg', 'jpeg', 'gif'} # 允许的文件扩展名
 
     # Flask应用实例

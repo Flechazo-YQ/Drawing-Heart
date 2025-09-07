@@ -6,14 +6,6 @@ from typing import Dict
 class BlueprintConfig:
     routesToRegister = []
     blueprints: Dict[str, Blueprint] = {}
-
-    @classmethod
-    def getOrCreateBlueprint(cls, name: str, importName: str, **kwargs) -> Blueprint:
-        if (name not in cls.blueprints):
-            cls.blueprints[name] = Blueprint(name, importName, **kwargs)
-            return cls.blueprints[name]
-
-        return cls.blueprints[name]
     
     @classmethod
     def apiRoutes(cls, rule: str, **options):
@@ -49,7 +41,7 @@ class BlueprintConfig:
                 case _:
                     prefix = None
 
-            blueprint = cls.getOrCreateBlueprint(blueprintName, importName, url_prefix=prefix)
+            blueprint = cls.__getOrCreateBlueprint(blueprintName, importName, url_prefix=prefix)
 
             blueprint.add_url_rule(rule, view_func=func, **options)
 
@@ -57,3 +49,11 @@ class BlueprintConfig:
             app.register_blueprint(blueprint)
 
         logging.info(f"✅ 自动化路由注册完成：成功注册 { len(cls.blueprints) } 个蓝图和 { len(cls.routesToRegister) } 条路由。")
+
+    @classmethod
+    def __getOrCreateBlueprint(cls, name: str, importName: str, **kwargs) -> Blueprint:
+        if (name not in cls.blueprints):
+            cls.blueprints[name] = Blueprint(name, importName, **kwargs)
+            return cls.blueprints[name]
+
+        return cls.blueprints[name]
