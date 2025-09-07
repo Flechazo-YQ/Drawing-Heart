@@ -82,7 +82,7 @@ class UserChatHandler:
         try:
             if (not chatId):
                 chat = MongoDBConfig.chatManager.createChat(userId, '新对话')
-
+                
                 if (not chat):
                     raise Exception('无法创建对话')
 
