@@ -453,7 +453,7 @@ function handleCanvasAreaMove(e) {
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
     const el = selectedElement.value;
-    
+
     // 控制点定义
     const points = [
       { x: el.x - 4, y: el.y - 4, type: 'nw' },
@@ -465,7 +465,7 @@ function handleCanvasAreaMove(e) {
       { x: el.x + el.width / 2 - 4, y: el.y + el.height - 4, type: 's' },
       { x: el.x + el.width - 4, y: el.y + el.height - 4, type: 'se' }
     ];
-    
+
     // 检查是否在控制点上
     let found = null;
     for (let i = 0; i < points.length; i++) {
@@ -475,7 +475,7 @@ function handleCanvasAreaMove(e) {
         break;
       }
     }
-    
+
     // 边框线判定（±4px范围）
     let onBorder = false;
     if (!found) {
@@ -488,7 +488,7 @@ function handleCanvasAreaMove(e) {
       // 右边
       if (x >= el.x + el.width - 4 && x <= el.x + el.width + 4 && y >= el.y - 4 && y <= el.y + el.height + 4) onBorder = 'e';
     }
-    
+
     if (found) {
       // 角点等比缩放
       if (['nw','ne','sw','se'].includes(found)) {
@@ -931,7 +931,7 @@ const draw = (e) => {
       const el = selectedElement.value;
       const dx = x - dragStart.x;
       const dy = y - dragStart.y;
-      
+
       switch (dragType) {
         case 'n': // 上边
           el.y = dragStart.y + dy;
@@ -968,7 +968,7 @@ const draw = (e) => {
           el.height = dragStart.height + dy;
           break;
       }
-      
+
       // 确保元素尺寸不小于最小值
       if (el.width < 20) el.width = 20;
       if (el.height < 20) el.height = 20;
@@ -1137,7 +1137,7 @@ const handleCollageClick = (e) => {
   // 检查是否点击了控制点或边框
   if (selectedElement.value) {
     const el = selectedElement.value;
-    
+
     // 控制点定义
     const points = [
       { x: el.x - 4, y: el.y - 4, type: 'nw' },
@@ -1149,7 +1149,7 @@ const handleCollageClick = (e) => {
       { x: el.x + el.width / 2 - 4, y: el.y + el.height - 4, type: 's' },
       { x: el.x + el.width - 4, y: el.y + el.height - 4, type: 'se' }
     ];
-    
+
     // 检查是否在控制点上
     let found = null;
     for (let i = 0; i < points.length; i++) {
@@ -1159,7 +1159,7 @@ const handleCollageClick = (e) => {
         break;
       }
     }
-    
+
     // 边框线判定（±4px范围）
     let onBorder = false;
     if (!found) {
@@ -1168,7 +1168,7 @@ const handleCollageClick = (e) => {
       if (x >= el.x - 4 && x <= el.x + 4 && y >= el.y - 4 && y <= el.y + el.height + 4) onBorder = 'w';
       if (x >= el.x + el.width - 4 && x <= el.x + el.width + 4 && y >= el.y - 4 && y <= el.y + el.height + 4) onBorder = 'e';
     }
-    
+
     if (found) {
       dragType = found;
       dragStart = { x, y, ...el };
@@ -1182,7 +1182,7 @@ const handleCollageClick = (e) => {
       dragStart = { x, y, ...el };
       return;
     }
-    
+
     // 检查是否点击了旋转控制点
     const rotateX = selectedElement.value.x + selectedElement.value.width / 2
     const rotateY = selectedElement.value.y - 20

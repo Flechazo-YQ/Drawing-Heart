@@ -73,7 +73,7 @@
       <div class="policy-section">
         <h2>9. 联系我们</h2>
         <p>如果您对本隐私政策有任何疑问或关切，请通过以下方式联系我们：</p>
-        <p>电子邮件：1241010058@zust.edu.cn</p>
+        <p>电子邮件：aqing@huixintongxue.com</p>
       </div>
     </div>
   </div>

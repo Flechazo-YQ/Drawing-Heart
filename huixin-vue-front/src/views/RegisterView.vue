@@ -74,11 +74,11 @@
                 <div class="gender-selector">
                   <label class="gender-option">
                     <input type="radio" v-model="formData.gender" value="male" required />
-                    <span>🚹男</span>
+                    <span>男</span>
                   </label>
                   <label class="gender-option">
                     <input type="radio" v-model="formData.gender" value="female" required />
-                    <span>🚺女</span>
+                    <span>女</span>
                   </label>
                 </div>
               </div>
