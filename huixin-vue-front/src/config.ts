@@ -20,10 +20,16 @@ const getApiDomain = () => {
                         currentHost.includes('.r15.cpolar.top') ||
                         currentHost.includes('4v22948452.eicp.vip') ||
                         currentHost.includes('1075oj69wr205.vicp.fun') ||
+                        currentHost === 'huixintongxue.com' ||
+                        currentHost === 'www.huixintongxue.com' ||
                         currentHost === '101.132.253.65'; // 您的frp服务器
 
   if (isTunnelDomain) {
-    // 内网穿透情况下，使用代理而不是直接访问后端
+    // 针对自己的域名，使用API子域名
+    if (currentHost === 'huixintongxue.com' || currentHost === 'www.huixintongxue.com') {
+      return 'http://api.huixintongxue.com';
+    }
+    // 其他内网穿透情况下，使用代理而不是直接访问后端
     // 这样可以避免CORS问题
     return ''; // 使用相对路径，通过Vite代理转发
   } else if (currentHost === 'localhost' || currentHost === '127.0.0.1') {

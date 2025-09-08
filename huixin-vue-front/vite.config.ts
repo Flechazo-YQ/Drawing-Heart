@@ -25,6 +25,9 @@ export default defineConfig({
     host: '0.0.0.0', // 允许从任何IP访问
     port: 5173,
     allowedHosts: [
+      "huixintongxue.com",
+      "www.huixintongxue.com",
+      "api.huixintongxue.com",
       "4v22948452.eicp.vip",
       "1075oj69wr205.vicp.fun",
       'hkg1.efrp.399339.xyz',
