@@ -36,10 +36,29 @@
             </button>
             <button class="toolbar-btn" @click="saveDrawing" title="保存图片">
               <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
-                <path d="M19 21H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v12a2 2 0 0 1-2 2z" stroke="#333" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M17 3v4" stroke="#333" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M7 3v4" stroke="#333" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
-                <path d="M7 13l3 3 4-4" stroke="#333" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M19 21H5a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h11l5 5v11a2 2 0 0 1-2 2z" stroke="#333" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M17 21v-8H7v8" stroke="#333" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M7 3v5h8" stroke="#333" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </button>
+            <!-- 前往分析按钮 -->
+            <button class="toolbar-btn"
+              :disabled="!hasSavedImage"
+              @click="goToAnalysis"
+              title="前往分析">
+              <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+                <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z"
+                  :stroke="hasSavedImage ? '#333' : '#ccc'"
+                  stroke-width="1.5"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"/>
+                <circle cx="12" cy="12" r="3"
+                  :fill="hasSavedImage ? '#4f46e5' : '#e5e7eb'"/>
+                <path d="M9 12l2 2 4-4"
+                  :stroke="hasSavedImage ? 'white' : '#ccc'"
+                  stroke-width="1"
+                  stroke-linecap="round"
+                  stroke-linejoin="round"/>
               </svg>
             </button>
             <div class="pen-tool-container" @mouseleave="handleSliderMouseLeave">
@@ -126,7 +145,7 @@
           <input type="file" ref="fileInput" accept="image/*" @change="handleFileUpload" style="display: none" />
           <canvas :id="currentTool === 'pen' ? 'drawingCanvas' : 'erasingCanvas'" ref="canvasRef" @mousedown="startDrawing" @mouseup="stopDrawing"
             @mouseenter="handleCanvasMouseEnter" @mousemove="handleCanvasAreaMove" @mouseleave="handleCanvasMouseLeave"></canvas>
-          <div v-if="currentMode === 'collage'" ref="svgCanvasRef" style="position: absolute; left: 0; top: 0; width: 100%; height: 100%; pointer-events: auto; z-index: 10;"></div>
+          <div v-if="currentMode === 'collage'" ref="svgCanvasRef" style="position: absolute; left: 0; top: 0; width: 100%; height: 100%; pointer-events: none; z-index: 10;"></div>
         <!-- 橡皮预览矩形 -->
         <div v-if="eraserPreview.show" :style="{
           position: 'absolute',
@@ -288,6 +307,9 @@ const collageElements = ref([]); // [{svgCode, x, y, width, height, rotate, id}]
 const selectedElement = ref(null);
 let svgDraw = null;
 
+// 绘画内容备份 - 用于在拼贴模式下保持绘画内容
+const drawingCanvasBackup = ref(null);
+
 onMounted(() => {
   if (svgCanvasRef.value && !svgDraw) {
     svgDraw = SVG().addTo(svgCanvasRef.value).size('100%', '100%');
@@ -307,6 +329,8 @@ function addControlHandles(svgNode, el) {
   delBtn.attr('cursor', 'pointer');
   delBtn.on('click', () => {
     collageElements.value = collageElements.value.filter(e => e.id !== el.id);
+    selectedElement.value = null;
+    saveCollageState();
     redrawCollageElements();
   });
   // 缩放按钮
@@ -336,6 +360,10 @@ function addControlHandles(svgNode, el) {
     scaling = false;
     document.removeEventListener('mousemove', scaleMove);
     document.removeEventListener('mouseup', scaleUp);
+    // 缩放完成后保存状态
+    if (currentMode.value === 'collage') {
+      saveCollageState();
+    }
   }
 }
 
@@ -448,75 +476,304 @@ function redoCanvas() {
 }
 // 合并画布mousemove事件，既处理绘画又处理橡皮预览
 function handleCanvasAreaMove(e) {
-  if (currentMode.value === 'collage' && selectedElement.value && canvasRef.value) {
+  if (currentMode.value === 'collage' && canvasRef.value) {
     const rect = canvasRef.value.getBoundingClientRect();
     const x = e.clientX - rect.left;
     const y = e.clientY - rect.top;
-    const el = selectedElement.value;
 
-    // 控制点定义
-    const points = [
-      { x: el.x - 4, y: el.y - 4, type: 'nw' },
-      { x: el.x + el.width / 2 - 4, y: el.y - 4, type: 'n' },
-      { x: el.x + el.width - 4, y: el.y - 4, type: 'ne' },
-      { x: el.x - 4, y: el.y + el.height / 2 - 4, type: 'w' },
-      { x: el.x + el.width - 4, y: el.y + el.height / 2 - 4, type: 'e' },
-      { x: el.x - 4, y: el.y + el.height - 4, type: 'sw' },
-      { x: el.x + el.width / 2 - 4, y: el.y + el.height - 4, type: 's' },
-      { x: el.x + el.width - 4, y: el.y + el.height - 4, type: 'se' }
-    ];
+    // 如果处于拖拽准备状态，检查是否应该开始实际拖拽
+    if (isDragReady.value && !isDragging.value && dragType && dragStart) {
+      const threshold = 3; // 移动超过3像素才开始拖拽
+      const dx = Math.abs(x - dragStart.mouseX);
+      const dy = Math.abs(y - dragStart.mouseY);
 
-    // 检查是否在控制点上
-    let found = null;
-    for (let i = 0; i < points.length; i++) {
-      const pt = points[i];
-      if (x >= pt.x && x <= pt.x + 8 && y >= pt.y && y <= pt.y + 8) {
-        found = pt.type;
-        break;
+      if (dx > threshold || dy > threshold) {
+        isDragging.value = true;
       }
+    }    // 如果正在拖拽，执行拖拽逻辑
+    if (isDragging.value && dragType === 'move' && selectedElement.value) {
+      // 移动元素
+      selectedElement.value.x = x - dragStartX
+      selectedElement.value.y = y - dragStartY
+
+      // 边界检测
+      if (selectedElement.value.x < 0) selectedElement.value.x = 0
+      if (selectedElement.value.y < 0) selectedElement.value.y = 0
+      if (selectedElement.value.x + selectedElement.value.width > canvasRef.value.width) {
+        selectedElement.value.x = canvasRef.value.width - selectedElement.value.width
+      }
+      if (selectedElement.value.y + selectedElement.value.height > canvasRef.value.height) {
+        selectedElement.value.y = canvasRef.value.height - selectedElement.value.height
+      }
+
+      redrawCollageElementsThrottled()
+      return
+    } else if (isDragging.value && dragType && selectedElement.value && dragStart) {
+      // 调整大小逻辑
+      const el = selectedElement.value;
+      const dx = x - dragStart.mouseX; // 使用鼠标位置计算偏移
+      const dy = y - dragStart.mouseY; // 使用鼠标位置计算偏移
+
+      switch (dragType) {
+        case 'n':
+          // 上边：只调整上边和高度
+          const nNewHeight = dragStart.height - dy;
+          if (nNewHeight >= 10) {
+            el.y = dragStart.y + dy;
+            el.height = nNewHeight;
+          } else {
+            el.y = dragStart.y + dragStart.height - 10;
+            el.height = 10;
+          }
+          break;
+        case 's':
+          // 下边：只调整高度
+          const sNewHeight = dragStart.height + dy;
+          if (sNewHeight >= 10) {
+            el.height = sNewHeight;
+          } else {
+            el.height = 10;
+          }
+          break;
+        case 'w':
+          // 左边：调整左边和宽度
+          const wNewWidth = dragStart.width - dx;
+          if (wNewWidth >= 10) {
+            el.x = dragStart.x + dx;
+            el.width = wNewWidth;
+          } else {
+            el.x = dragStart.x + dragStart.width - 10;
+            el.width = 10;
+          }
+          break;
+        case 'e':
+          // 右边：只调整宽度
+          const eNewWidth = dragStart.width + dx;
+          if (eNewWidth >= 10) {
+            el.width = eNewWidth;
+          } else {
+            el.width = 10;
+          }
+          break;
+        case 'nw':
+          // 左上角：同时调整位置和尺寸
+          const nwNewWidth = dragStart.width - dx;
+          const nwNewHeight = dragStart.height - dy;
+
+          // 确保宽度和位置都正确更新
+          if (nwNewWidth >= 10) {
+            el.x = dragStart.x + dx;
+            el.width = nwNewWidth;
+          } else {
+            // 当宽度达到最小值时，x应该是原始右边位置减去最小宽度
+            el.x = dragStart.x + dragStart.width - 10;
+            el.width = 10;
+          }
+
+          // 确保高度和位置都正确更新
+          if (nwNewHeight >= 10) {
+            el.y = dragStart.y + dy;
+            el.height = nwNewHeight;
+          } else {
+            // 当高度达到最小值时，y应该是原始底边位置减去最小高度
+            el.y = dragStart.y + dragStart.height - 10;
+            el.height = 10;
+          }
+          break;
+        case 'ne':
+          // 右上角：调整右边和上边
+          const neNewWidth = dragStart.width + dx;
+          const neNewHeight = dragStart.height - dy;
+
+          // 确保宽度正确更新
+          if (neNewWidth >= 10) {
+            el.width = neNewWidth;
+          } else {
+            el.width = 10;
+          }
+
+          // 确保高度和位置正确更新
+          if (neNewHeight >= 10) {
+            el.y = dragStart.y + dy;
+            el.height = neNewHeight;
+          } else {
+            // 当高度达到最小值时，y应该是原始底边位置减去最小高度
+            el.y = dragStart.y + dragStart.height - 10;
+            el.height = 10;
+          }
+          break;
+        case 'sw':
+          // 左下角：调整左边和下边
+          const swNewWidth = dragStart.width - dx;
+          const swNewHeight = dragStart.height + dy;
+
+          // 确保宽度和位置都正确更新
+          if (swNewWidth >= 10) {
+            el.x = dragStart.x + dx;
+            el.width = swNewWidth;
+          } else {
+            el.x = dragStart.x + dragStart.width - 10;
+            el.width = 10;
+          }
+
+          // 确保高度正确更新
+          if (swNewHeight >= 10) {
+            el.height = swNewHeight;
+          } else {
+            el.height = 10;
+          }
+          break;
+        case 'se':
+          // 右下角：调整宽度和高度
+          const seNewWidth = dragStart.width + dx;
+          const seNewHeight = dragStart.height + dy;
+
+          // 确保宽度正确更新
+          if (seNewWidth >= 10) {
+            el.width = seNewWidth;
+          } else {
+            el.width = 10;
+          }
+
+          // 确保高度正确更新
+          if (seNewHeight >= 10) {
+            el.height = seNewHeight;
+          } else {
+            el.height = 10;
+          }
+          break;
+        case 'rotate':
+          // 旋转逻辑：计算元素中心点到鼠标的角度
+          const centerX = dragStart.x + dragStart.width / 2;
+          const centerY = dragStart.y + dragStart.height / 2;
+
+          // 计算起始角度（从中心点到拖拽开始点的角度）
+          const startAngle = Math.atan2(dragStart.mouseY - centerY, dragStart.mouseX - centerX);
+
+          // 计算当前角度（从中心点到当前鼠标位置的角度）
+          const currentAngle = Math.atan2(y - centerY, x - centerX);
+
+          // 计算角度差并转换为度数
+          const angleDiff = (currentAngle - startAngle) * (180 / Math.PI);
+
+          // 更新元素的旋转角度
+          el.rotation = (dragStart.rotation + angleDiff) % 360;
+
+          // 确保旋转角度在0-360度范围内
+          if (el.rotation < 0) {
+            el.rotation += 360;
+          }
+          break;
+      }
+
+      redrawCollageElementsThrottled()
+      return
     }
 
-    // 边框线判定（±4px范围）
-    let onBorder = false;
-    if (!found) {
-      // 上边
-      if (y >= el.y - 4 && y <= el.y + 4 && x >= el.x - 4 && x <= el.x + el.width + 4) onBorder = 'n';
-      // 下边
-      if (y >= el.y + el.height - 4 && y <= el.y + el.height + 4 && x >= el.x - 4 && x <= el.x + el.width + 4) onBorder = 's';
-      // 左边
-      if (x >= el.x - 4 && x <= el.x + 4 && y >= el.y - 4 && y <= el.y + el.height + 4) onBorder = 'w';
-      // 右边
-      if (x >= el.x + el.width - 4 && x <= el.x + el.width + 4 && y >= el.y - 4 && y <= el.y + el.height + 4) onBorder = 'e';
-    }
+    // 如果有选中元素，检查鼠标位置并设置光标样式
+    if (selectedElement.value) {
+      const el = selectedElement.value;
 
-    if (found) {
-      // 角点等比缩放
-      if (['nw','ne','sw','se'].includes(found)) {
-        if (found === 'nw' || found === 'se') {
-          canvasRef.value.style.cursor = 'nwse-resize';
-        } else {
-          canvasRef.value.style.cursor = 'nesw-resize';
+      // 控制点定义
+      const points = [
+        { x: el.x - 4, y: el.y - 4, type: 'nw' },
+        { x: el.x + el.width / 2 - 4, y: el.y - 4, type: 'n' },
+        { x: el.x + el.width - 4, y: el.y - 4, type: 'ne' },
+        { x: el.x - 4, y: el.y + el.height / 2 - 4, type: 'w' },
+        { x: el.x + el.width - 4, y: el.y + el.height / 2 - 4, type: 'e' },
+        { x: el.x - 4, y: el.y + el.height - 4, type: 'sw' },
+        { x: el.x + el.width / 2 - 4, y: el.y + el.height - 4, type: 's' },
+        { x: el.x + el.width - 4, y: el.y + el.height - 4, type: 'se' }
+      ];
+
+      // 检查是否在控制点上（使用本地坐标系统）
+      const localCoords = getLocalCoordinates(x, y, el);
+      let found = null;
+      for (let i = 0; i < points.length; i++) {
+        const pt = points[i];
+        if (localCoords.x >= pt.x && localCoords.x <= pt.x + 8 &&
+            localCoords.y >= pt.y && localCoords.y <= pt.y + 8) {
+          found = pt.type;
+          break;
         }
-      } else {
-        // 边点非等比缩放
-        if (found === 'n' || found === 's') {
+      }
+
+      // 边框线判定（±4px范围）
+      let onBorder = false;
+      if (!found) {
+        // 上边
+        if (y >= el.y - 4 && y <= el.y + 4 && x >= el.x - 4 && x <= el.x + el.width + 4) onBorder = 'n';
+        // 下边
+        if (y >= el.y + el.height - 4 && y <= el.y + el.height + 4 && x >= el.x - 4 && x <= el.x + el.width + 4) onBorder = 's';
+        // 左边
+        if (x >= el.x - 4 && x <= el.x + 4 && y >= el.y - 4 && y <= el.y + el.height + 4) onBorder = 'w';
+        // 右边
+        if (x >= el.x + el.width - 4 && x <= el.x + el.width + 4 && y >= el.y - 4 && y <= el.y + el.height + 4) onBorder = 'e';
+      }
+
+      // 检查旋转控制点
+      const rotatePoint = {
+        x: el.x + el.width / 2 - 5,
+        y: el.y - 20 - 5,
+        width: 10,
+        height: 10
+      };
+
+      let onRotatePoint = false;
+      if (localCoords.x >= rotatePoint.x && localCoords.x <= rotatePoint.x + rotatePoint.width &&
+          localCoords.y >= rotatePoint.y && localCoords.y <= rotatePoint.y + rotatePoint.height) {
+        onRotatePoint = true;
+      }
+
+      if (found) {
+        // 角点等比缩放
+        if (['nw','ne','sw','se'].includes(found)) {
+          if (found === 'nw' || found === 'se') {
+            canvasRef.value.style.cursor = 'nwse-resize';
+          } else {
+            canvasRef.value.style.cursor = 'nesw-resize';
+          }
+        } else {
+          // 边点非等比缩放
+          if (found === 'n' || found === 's') {
+            canvasRef.value.style.cursor = 'ns-resize';
+          } else {
+            canvasRef.value.style.cursor = 'ew-resize';
+          }
+        }
+      } else if (onRotatePoint) {
+        // 旋转控制点
+        canvasRef.value.style.cursor = 'grab';
+      } else if (onBorder) {
+        // 边框线也可缩放
+        if (onBorder === 'n' || onBorder === 's') {
           canvasRef.value.style.cursor = 'ns-resize';
         } else {
           canvasRef.value.style.cursor = 'ew-resize';
         }
-      }
-    } else if (onBorder) {
-      // 边框线也可缩放
-      if (onBorder === 'n' || onBorder === 's') {
-        canvasRef.value.style.cursor = 'ns-resize';
+      } else if (x > el.x && x < el.x + el.width && y > el.y && y < el.y + el.height) {
+        // 框内可抓取
+        canvasRef.value.style.cursor = 'move';
       } else {
-        canvasRef.value.style.cursor = 'ew-resize';
+        canvasRef.value.style.cursor = 'default';
       }
-    } else if (x > el.x && x < el.x + el.width && y > el.y && y < el.y + el.height) {
-      // 框内可抓取
-      canvasRef.value.style.cursor = 'move';
     } else {
-      canvasRef.value.style.cursor = '';
+      // 检查鼠标是否悬停在任何元素上，即使没有选中元素
+      const sortedElements = [...collageElements.value].sort((a, b) => b.zIndex - a.zIndex)
+      let foundHoverElement = null
+
+      for (const element of sortedElements) {
+        if (isPointInElement(x, y, element)) {
+          foundHoverElement = element
+          break
+        }
+      }
+
+      if (foundHoverElement) {
+        canvasRef.value.style.cursor = 'move';
+      } else {
+        canvasRef.value.style.cursor = 'default';
+      }
     }
     return;
   }
@@ -586,9 +843,20 @@ function handleCanvasMouseMove(e) {
 
 function handleCanvasMouseLeave() {
   eraserPreview.show = false
+  // 鼠标离开画布时停止任何拖拽操作
+  if (dragType || isDragging.value || isDragReady.value) {
+    stopDrawing()
+  }
+  // 重置鼠标样式
+  if (canvasRef.value) {
+    canvasRef.value.style.cursor = 'default'
+  }
 }
 const isDrawing = ref(false)
 const isDragging = ref(false)
+const isDragReady = ref(false) // 是否准备拖拽（鼠标按下但还未移动）
+const isScaling = ref(false) // 是否正在缩放
+const isRotating = ref(false) // 是否正在旋转
 const currentTool = ref('pen') // pen, eraser
 const currentColor = ref('#000000')
 const lineWidth = ref(5)
@@ -654,6 +922,8 @@ let dragStartX = 0
 let dragStartY = 0
 let dragType = null // 'move', 'n', 's', 'e', 'w', 'nw', 'ne', 'sw', 'se'
 let dragStart = null // 记录拖拽开始时的元素状态
+let lastRedrawTime = 0 // 上次重绘时间
+const redrawThrottle = 16 // 16ms 节流，约60fps
 
 // 模式切换相关
 const currentMode = ref('draw') // 'draw' 或 'collage'
@@ -776,6 +1046,9 @@ const addSvgElement = (svgData, x, y) => {
     y: top,
     width,
     height,
+    originalWidth: vbW,  // 保存SVG原始宽度
+    originalHeight: vbH, // 保存SVG原始高度
+    aspectRatio: vbW / vbH, // 保存宽高比
     color: currentColor.value,
     rotation: 0,
     opacity: 1,
@@ -784,12 +1057,17 @@ const addSvgElement = (svgData, x, y) => {
   collageElements.value.push(element)
   selectedElement.value = element
   hasDrawing.value = true
+
+  // 在拼贴模式下保存状态到撤回栈
+  saveCollageState()
+
   redrawCollageElements()
 }
 
 // 图片处理相关的状态
 const isImageUploaded = ref(false)
 const hasDrawing = ref(false)
+const hasSavedImage = ref(false)  // 追踪是否已保存过图片
 const fileInput = ref(null)
 const isFullscreen = ref(false)
 
@@ -850,6 +1128,9 @@ const initCanvas = () => {
 
   // 重绘拼接元素
   redrawCollageElements()
+
+  // 初始化光标样式
+  updateCursor()
 }
 
 // 开始绘画
@@ -903,78 +1184,6 @@ const draw = (e) => {
     if (!hasDrawing.value) {
       hasDrawing.value = true
     }
-  } else if (currentMode.value === 'collage') {
-    const rect = canvasRef.value.getBoundingClientRect()
-    const x = e.clientX - rect.left
-    const y = e.clientY - rect.top
-
-    if (dragType === 'move' && selectedElement.value) {
-      // 拼接模式下的拖拽
-      selectedElement.value.x = x - dragStartX
-      selectedElement.value.y = y - dragStartY
-    } else if (isScaling.value && selectedElement.value) {
-      // 缩放元素
-      const scaleX = x - selectedElement.value.x
-      const scaleY = y - selectedElement.value.y
-
-      selectedElement.value.width = Math.max(50, scaleX)
-      selectedElement.value.height = Math.max(50, scaleY)
-    } else if (isRotating.value && selectedElement.value) {
-      // 旋转元素
-      const centerX = selectedElement.value.x + selectedElement.value.width / 2
-      const centerY = selectedElement.value.y + selectedElement.value.height / 2
-
-      const angle = Math.atan2(y - centerY, x - centerX) * 180 / Math.PI
-      selectedElement.value.rotation = angle
-    } else if (dragType && selectedElement.value && dragStart) {
-      // 处理边框和控制点拖拽调整大小
-      const el = selectedElement.value;
-      const dx = x - dragStart.x;
-      const dy = y - dragStart.y;
-
-      switch (dragType) {
-        case 'n': // 上边
-          el.y = dragStart.y + dy;
-          el.height = dragStart.height - dy;
-          break;
-        case 's': // 下边
-          el.height = dragStart.height + dy;
-          break;
-        case 'w': // 左边
-          el.x = dragStart.x + dx;
-          el.width = dragStart.width - dx;
-          break;
-        case 'e': // 右边
-          el.width = dragStart.width + dx;
-          break;
-        case 'nw': // 左上角
-          el.x = dragStart.x + dx;
-          el.y = dragStart.y + dy;
-          el.width = dragStart.width - dx;
-          el.height = dragStart.height - dy;
-          break;
-        case 'ne': // 右上角
-          el.y = dragStart.y + dy;
-          el.width = dragStart.width + dx;
-          el.height = dragStart.height - dy;
-          break;
-        case 'sw': // 左下角
-          el.x = dragStart.x + dx;
-          el.width = dragStart.width - dx;
-          el.height = dragStart.height + dy;
-          break;
-        case 'se': // 右下角
-          el.width = dragStart.width + dx;
-          el.height = dragStart.height + dy;
-          break;
-      }
-
-      // 确保元素尺寸不小于最小值
-      if (el.width < 20) el.width = 20;
-      if (el.height < 20) el.height = 20;
-    }
-
-    redrawCollageElements()
   }
 
   // 绘制预览圆圈 - 不在这里绘制，改为单独的函数
@@ -988,10 +1197,21 @@ const stopDrawing = () => {
     isDrawing.value = false
   }
   isDragging.value = false
+  isDragReady.value = false
   isScaling.value = false
   isRotating.value = false
-  dragType = null
-  dragStart = null
+
+  // 如果正在拖拽拼贴元素，结束拖拽并进行最终重绘
+  if (dragType !== null) {
+    dragType = null
+    dragStart = null
+    // 拖拽结束时进行最终重绘，确保画面准确
+    if (currentMode.value === 'collage') {
+      redrawCollageElements()
+      // 拖拽完成后保存状态
+      saveCollageState()
+    }
+  }
 }
 
 // 切换工具
@@ -1007,6 +1227,8 @@ const switchTool = (tool) => {
     ctx.strokeStyle = 'rgba(0,0,0,1)'
     ctx.lineWidth = eraserWidth.value
   }
+  // 更新光标样式
+  updateCursor()
 }
 
 // 更改颜色
@@ -1116,16 +1338,89 @@ const drawPreviewCircle = () => {
 
 // 切换模式
 const switchMode = (mode) => {
+  // 保存当前绘画内容（在切换到拼贴模式之前）
+  if (mode === 'collage' && currentMode.value === 'draw') {
+    backupDrawingContent()
+  }
+
   currentMode.value = mode
   showDynamicToolbar.value = true
   selectedElement.value = null
+
+  // 如果有拼贴元素，需要重绘以清除选择边框
+  if (collageElements.value.length > 0) {
+    // 临时切换到拼贴模式进行重绘，然后再切回目标模式
+    const targetMode = mode
+    currentMode.value = 'collage'
+    redrawCollageElements()
+    currentMode.value = targetMode
+  }
+
   if (mode === 'collage') {
     redrawCollageElements()
+    // 在拼贴模式下设置默认光标
+    if (canvasRef.value) {
+      canvasRef.value.style.cursor = 'default'
+    }
   }
   if (mode === 'draw') {
     currentTool.value = 'pen'
     changeColor(currentColor.value)
+    // 切换到绘画模式时恢复工具光标
+    updateCursor()
+
+    // 如果从拼贴模式切换回绘画模式，需要恢复绘画内容并添加拼贴元素到撤回栈
+    if (collageElements.value.length > 0) {
+      restoreDrawingWithCollageElements()
+    }
   }
+}
+
+// 更新光标样式
+const updateCursor = () => {
+  if (!canvasRef.value) return
+
+  if (currentMode.value === 'draw') {
+    // 在绘画模式下，根据当前工具设置光标
+    if (currentTool.value === 'pen') {
+      canvasRef.value.style.cursor = `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1024 1024' width='32' height='32'><path d='M314.88 626.133333l96.213333 94.933334a130.346667 130.346667 0 0 1-108.16 54.826666 104.32 104.32 0 0 1-73.386666-27.52 102.4 102.4 0 0 0 42.666666-26.88 110.933333 110.933333 0 0 0 25.386667-64v-2.346666a59.52 59.52 0 0 1 7.893333-26.88 31.146667 31.146667 0 0 1 10.026667-2.56m14.08-64c-64 0-85.333333 27.733333-95.146667 85.333333v2.773333c-2.986667 18.773333-5.12 25.386667-8.533333 29.013334a39.68 39.68 0 0 1-8.746667 7.04 33.493333 33.493333 0 0 1-18.133333 5.12 29.866667 29.866667 0 0 1-8.746667-1.066667h-1.92a29.013333 29.013333 0 0 0-10.24-1.92A27.946667 27.946667 0 0 0 149.333333 717.013333c8.96 81.28 78.72 122.88 153.386667 122.88A189.226667 189.226667 0 0 0 481.28 725.333333a27.946667 27.946667 0 0 0-6.4-30.293333l-126.293333-125.653333a28.16 28.16 0 0 0-19.626667-8.106667l0.64 0.426667zM808.32 234.666667H810.666667c0 10.453333-9.386667 49.066667-97.493334 158.72-15.36 18.986667-31.146667 37.76-47.146666 56.106666-31.146667 35.84-147.626667 157.44-147.626667 157.44l-80.853333-81.493333s117.12-114.346667 154.24-147.413333c19.84-17.493333 40.32-34.56 60.586666-50.986667 100.053333-80.426667 140.8-92.373333 155.946667-92.373333m0-64c-47.146667 0-111.786667 38.826667-196.053333 106.666666-21.333333 17.066667-42.666667 34.773333-62.72 52.906667-38.677333 34.133333-76.373333 69.269333-113.066667 105.386667-14.72 14.72-29.653333 29.653333-44.16 44.586666l-3.413333 3.626667a60.8 60.8 0 0 0 0 85.333333l85.333333 86.4c11.306667 11.306667 26.666667 17.706667 42.666667 17.706667a60.586667 60.586667 0 0 0 42.666666-17.706667l3.2-3.2 9.813334-9.813333 34.773333-35.413333c35.84-37.12 71.893333-76.16 105.386667-114.773334 16.64-18.986667 32.853333-38.4 48.64-58.026666 102.186667-126.08 142.72-208 89.173333-249.813334a66.56 66.56 0 0 0-42.666667-13.866666h0.426667z' fill='%233D424D'/></svg>") 8 24, crosshair`
+    } else if (currentTool.value === 'eraser') {
+      canvasRef.value.style.cursor = `url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 1029 1024' width='32' height='32'><path d='M968.96 387.2l-302.4-302.4c-17.76-17.76-41.28-27.36-65.76-27.36s-48 9.6-65.28 26.88l-476.16 476.16c-17.76 17.76-27.36 41.28-27.36 65.76s9.6 48 26.88 65.28l0.96 1.92h0.96l205.44 205.44c43.2 43.2 100.8 67.2 161.76 67.2 60.96 0 118.56-23.52 161.76-67.2l379.68-379.68c17.76-17.76 27.36-41.28 27.36-66.24-0.48-24.48-10.08-48-27.84-65.76z m-432.96 469.92c-29.76 26.88-68.16 41.76-108.48 41.76-43.2 0-83.52-16.8-114.24-47.04l-206.88-206.88c-10.08-10.08-10.08-26.88 0-36.96l90.24-90.24 339.36 339.36z m385.44-385.44l-337.92 337.92-339.36-339.36 337.92-337.92c4.8-4.8 11.52-7.68 18.24-7.68 7.2 0 13.44 2.88 18.24 7.68l302.4 302.4c10.56 10.08 10.56 26.88 0.48 36.96z' fill='%233D424D'/></svg>") 2 26, crosshair`
+    }
+  } else if (currentMode.value === 'collage') {
+    // 在拼贴模式下设置默认光标
+    canvasRef.value.style.cursor = 'default'
+  }
+}
+
+// 辅助函数：计算点相对于旋转元素的本地坐标
+const getLocalCoordinates = (x, y, element) => {
+  if (!element.rotation || element.rotation === 0) {
+    return { x, y };
+  }
+
+  // 元素中心点
+  const centerX = element.x + element.width / 2;
+  const centerY = element.y + element.height / 2;
+
+  // 将点转换为相对于中心的坐标
+  const relativeX = x - centerX;
+  const relativeY = y - centerY;
+
+  // 应用反向旋转（因为我们要将旋转后的坐标转换回原始坐标）
+  const angle = -element.rotation * Math.PI / 180;
+  const cos = Math.cos(angle);
+  const sin = Math.sin(angle);
+
+  // 旋转变换
+  const rotatedX = relativeX * cos - relativeY * sin;
+  const rotatedY = relativeX * sin + relativeY * cos;
+
+  // 转换回绝对坐标
+  return {
+    x: rotatedX + centerX,
+    y: rotatedY + centerY
+  };
 }
 
 // 处理拼接模式的点击
@@ -1150,47 +1445,90 @@ const handleCollageClick = (e) => {
       { x: el.x + el.width - 4, y: el.y + el.height - 4, type: 'se' }
     ];
 
-    // 检查是否在控制点上
-    let found = null;
-    for (let i = 0; i < points.length; i++) {
-      const pt = points[i];
-      if (x >= pt.x && x <= pt.x + 8 && y >= pt.y && y <= pt.y + 8) {
-        found = pt.type;
-        break;
+    // 检查旋转控制点（使用本地坐标系统）
+    const localCoords = getLocalCoordinates(x, y, el);
+    const rotatePoint = {
+      x: el.x + el.width / 2 - 5,
+      y: el.y - 20 - 5,
+      width: 10,
+      height: 10
+    };
+
+    if (localCoords.x >= rotatePoint.x && localCoords.x <= rotatePoint.x + rotatePoint.width &&
+        localCoords.y >= rotatePoint.y && localCoords.y <= rotatePoint.y + rotatePoint.height) {
+      isRotating.value = true;
+      isDragReady.value = true;
+      dragType = 'rotate';
+      dragStart = {
+        mouseX: x,
+        mouseY: y,
+        x: el.x,
+        y: el.y,
+        width: el.width,
+        height: el.height,
+        rotation: el.rotation
+      };
+      return;
+    }
+
+    // 检查控制点（使用本地坐标系统）
+    for (const point of points) {
+      if (localCoords.x >= point.x && localCoords.x <= point.x + 8 &&
+          localCoords.y >= point.y && localCoords.y <= point.y + 8) {
+        isDragReady.value = true;
+        dragType = point.type;
+        dragStart = {
+          mouseX: x,
+          mouseY: y,
+          x: el.x,
+          y: el.y,
+          width: el.width,
+          height: el.height,
+          originalWidth: el.originalWidth,
+          originalHeight: el.originalHeight,
+          aspectRatio: el.aspectRatio,
+          rotation: el.rotation
+        };
+        return;
       }
     }
 
-    // 边框线判定（±4px范围）
-    let onBorder = false;
-    if (!found) {
-      if (y >= el.y - 4 && y <= el.y + 4 && x >= el.x - 4 && x <= el.x + el.width + 4) onBorder = 'n';
-      if (y >= el.y + el.height - 4 && y <= el.y + el.height + 4 && x >= el.x - 4 && x <= el.x + el.width + 4) onBorder = 's';
-      if (x >= el.x - 4 && x <= el.x + 4 && y >= el.y - 4 && y <= el.y + el.height + 4) onBorder = 'w';
-      if (x >= el.x + el.width - 4 && x <= el.x + el.width + 4 && y >= el.y - 4 && y <= el.y + el.height + 4) onBorder = 'e';
-    }
-
-    if (found) {
-      dragType = found;
-      dragStart = { x, y, ...el };
+    // 检查是否点击在元素边框附近
+    const borderThreshold = 5;
+    if (x >= el.x - borderThreshold && x <= el.x + el.width + borderThreshold &&
+        y >= el.y - borderThreshold && y <= el.y + el.height + borderThreshold) {
+      // 检查具体在哪个边
+      if (Math.abs(x - el.x) <= borderThreshold) {
+        dragType = 'w'; // 左边
+      } else if (Math.abs(x - (el.x + el.width)) <= borderThreshold) {
+        dragType = 'e'; // 右边
+      } else if (Math.abs(y - el.y) <= borderThreshold) {
+        dragType = 'n'; // 上边
+      } else if (Math.abs(y - (el.y + el.height)) <= borderThreshold) {
+        dragType = 's'; // 下边
+      } else if (x > el.x && x < el.x + el.width && y > el.y && y < el.y + el.height) {
+        dragType = 'move'; // 移动
+        isDragReady.value = true;
+        dragStartX = x - el.x;
+        dragStartY = y - el.y;
+      }
+      if (dragType) {
+        isDragReady.value = true;
+        // 重要：确保dragStart正确记录初始状态
+        // 分别设置鼠标位置和元素初始状态，避免属性冲突
+        dragStart = {
+          mouseX: x,
+          mouseY: y,
+          x: el.x,
+          y: el.y,
+          width: el.width,
+          height: el.height,
+          originalWidth: el.originalWidth,
+          originalHeight: el.originalHeight,
+          aspectRatio: el.aspectRatio
+        };
+      }
       return;
-    } else if (onBorder) {
-      dragType = onBorder;
-      dragStart = { x, y, ...el };
-      return;
-    } else if (x > el.x && x < el.x + el.width && y > el.y && y < el.y + el.height) {
-      dragType = 'move';
-      dragStart = { x, y, ...el };
-      return;
-    }
-
-    // 检查是否点击了旋转控制点
-    const rotateX = selectedElement.value.x + selectedElement.value.width / 2
-    const rotateY = selectedElement.value.y - 20
-    const distance = Math.sqrt(Math.pow(x - rotateX, 2) + Math.pow(y - rotateY, 2))
-
-    if (distance <= 5) {
-      isRotating.value = true
-      return
     }
   }
 
@@ -1208,10 +1546,18 @@ const handleCollageClick = (e) => {
   if (foundElement) {
     selectedElement.value = foundElement
     // 记录拖拽起始位置
+    isDragReady.value = true;
     dragStartX = x - foundElement.x
     dragStartY = y - foundElement.y
     dragType = 'move'
-    dragStart = { x, y, ...foundElement }
+    dragStart = {
+      mouseX: x,
+      mouseY: y,
+      x: foundElement.x,
+      y: foundElement.y,
+      width: foundElement.width,
+      height: foundElement.height
+    }
   } else {
     selectedElement.value = null
     dragType = null
@@ -1268,81 +1614,273 @@ const addImageElement = (event) => {
   }
 }
 
+// 节流版本的重绘函数，用于拖拽过程中
+const redrawCollageElementsThrottled = () => {
+  const now = Date.now()
+  if (now - lastRedrawTime >= redrawThrottle) {
+    lastRedrawTime = now
+    redrawCollageElements()
+  }
+}
+
 // 重绘拼接元素
 const redrawCollageElements = () => {
   if (currentMode.value !== 'collage' || !ctx) return
 
-  // 清空画布并填充白色背景
-  ctx.clearRect(0, 0, canvasRef.value.width, canvasRef.value.height)
-  ctx.fillStyle = '#ffffff'
-  ctx.fillRect(0, 0, canvasRef.value.width, canvasRef.value.height)
+  // 首先恢复绘画内容作为背景
+  if (drawingCanvasBackup.value) {
+    const img = new Image()
+    img.onload = () => {
+      // 清空画布
+      ctx.clearRect(0, 0, canvasRef.value.width, canvasRef.value.height)
+      // 绘制备份的绘画内容
+      ctx.drawImage(img, 0, 0)
+      // 然后绘制拼贴元素
+      drawCollageElementsOnTop()
+    }
+    img.src = drawingCanvasBackup.value
+  } else {
+    // 如果没有绘画内容备份，直接清空画布并填充白色背景
+    ctx.clearRect(0, 0, canvasRef.value.width, canvasRef.value.height)
+    ctx.fillStyle = '#ffffff'
+    ctx.fillRect(0, 0, canvasRef.value.width, canvasRef.value.height)
+    // 绘制拼贴元素
+    drawCollageElementsOnTop()
+  }
+}
 
+// 在现有画布上绘制拼贴元素
+const drawCollageElementsOnTop = () => {
   // 按z-index排序绘制元素
   const sortedElements = [...collageElements.value].sort((a, b) => a.zIndex - b.zIndex)
 
-  sortedElements.forEach(element => {
-    ctx.save()
-    ctx.globalAlpha = element.opacity
-  ctx.translate(element.x, element.y)
-  ctx.rotate(element.rotation * Math.PI / 180)
+  // 同步绘制所有元素
+  const drawPromises = sortedElements.map(element => {
+    return new Promise((resolve) => {
+      ctx.save()
+      ctx.globalAlpha = element.opacity
 
-    if (element.type === 'shape') {
-      drawShape(element)
-    } else if (element.type === 'text') {
-      drawText(element)
-    } else if (element.type === 'image') {
-      drawImage(element)
-    } else if (element.type === 'svg') {
-      // 保留原始viewBox，仅设置width/height，保证内容完整显示且居中
-      let parser = new DOMParser();
-      let doc = parser.parseFromString(element.svgCode, 'image/svg+xml');
-      let svgEl = doc.querySelector('svg');
-      if (svgEl) {
-        // 解析 viewBox
-        let vb = svgEl.getAttribute('viewBox');
-        let minX = 0, minY = 0, vbWidth = element.width, vbHeight = element.height;
-        if (vb) {
-          const vbArr = vb.split(/\s+/);
-          if (vbArr.length === 4) {
-            minX = parseFloat(vbArr[0]);
-            minY = parseFloat(vbArr[1]);
-            vbWidth = parseFloat(vbArr[2]);
-            vbHeight = parseFloat(vbArr[3]);
-          }
+      if (element.type === 'svg') {
+        // 同步绘制SVG
+        drawSvgElement(element).then(() => {
+          ctx.restore()
+          resolve()
+        })
+      } else {
+        // 其他类型元素的绘制逻辑
+        ctx.translate(element.x + element.width / 2, element.y + element.height / 2)
+        ctx.rotate(element.rotation * Math.PI / 180)
+
+        if (element.type === 'image') {
+          drawImage(element)
         }
-        // 计算缩放和偏移
-        const scale = Math.min(element.width / vbWidth, element.height / vbHeight);
-        const offsetX = (element.width - vbWidth * scale) / 2 - minX * scale;
-        const offsetY = (element.height - vbHeight * scale) / 2 - minY * scale;
-        // 获取原始 SVG 内容（去掉 <svg> 标签）
-        let inner = svgEl.innerHTML;
-        // 生成新 SVG 字符串
-        const newSvg = `<svg width="${element.width}" height="${element.height}" viewBox="0 0 ${element.width} ${element.height}" xmlns="http://www.w3.org/2000/svg"><g transform="translate(${offsetX},${offsetY}) scale(${scale})">${inner}</g></svg>`;
-        const img = new Image();
-        img.onload = () => {
-          ctx.drawImage(img, element.x, element.y, element.width, element.height);
-        };
-        img.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(newSvg)}`;
+
+        ctx.restore()
+        resolve()
       }
-    }
+    })
+  })
 
-    ctx.restore()
+  // 等待所有元素绘制完成后绘制选中状态
+  Promise.all(drawPromises).then(() => {
+    sortedElements.forEach(element => {
+      // 绘制选中状态的边框和控制点
+      if (selectedElement.value && selectedElement.value.id === element.id) {
+        drawSelectionBorder(element)
 
-    // 绘制选中状态的边框和控制点
-    if (selectedElement.value && selectedElement.value.id === element.id) {
-      drawSelectionBorder(element)
+        // 绘制旋转控制点（现代化设计）
+        ctx.save()
 
-      // 绘制旋转控制点
-      ctx.fillStyle = '#007bff'
-      ctx.beginPath()
-      ctx.arc(
-        element.x + element.width / 2,
-        element.y - 20,
-        5,
-        0,
-        2 * Math.PI
-      )
-      ctx.fill()
+        // 如果元素有旋转，应用相同的旋转变换
+        if (element.rotation && element.rotation !== 0) {
+          const centerX = element.x + element.width / 2;
+          const centerY = element.y + element.height / 2;
+
+          // 移动到元素中心点
+          ctx.translate(centerX, centerY);
+          // 应用旋转
+          ctx.rotate(element.rotation * Math.PI / 180);
+          // 移回原点（相对于旋转后的坐标系）
+          ctx.translate(-centerX, -centerY);
+        }
+
+        const rotateX = element.x + element.width / 2;
+        const rotateY = element.y - 20;
+
+        // 绘制连接线（从元素顶部到旋转控制点）
+        ctx.save();
+        ctx.strokeStyle = 'rgba(100, 100, 100, 0.4)';
+        ctx.lineWidth = 1;
+        ctx.setLineDash([2, 2]);
+        ctx.beginPath();
+        ctx.moveTo(element.x + element.width / 2, element.y);
+        ctx.lineTo(rotateX, rotateY);
+        ctx.stroke();
+        ctx.restore();
+
+        // 绘制旋转控制点（简洁样式，无阴影）
+        ctx.save();
+
+        // 外圈（灰色边框）
+        ctx.strokeStyle = '#666666';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        ctx.arc(rotateX, rotateY, 8, 0, 2 * Math.PI);
+        ctx.stroke();
+
+        // 内圈（白色填充）
+        ctx.fillStyle = '#ffffff';
+        ctx.beginPath();
+        ctx.arc(rotateX, rotateY, 7, 0, 2 * Math.PI);
+        ctx.fill();
+
+        // 旋转图标（简化版：小箭头）
+        ctx.strokeStyle = '#666666';
+        ctx.lineWidth = 1;
+        ctx.beginPath();
+        // 绘制简化的旋转箭头
+        const arrowSize = 3;
+        ctx.moveTo(rotateX - arrowSize, rotateY - arrowSize);
+        ctx.lineTo(rotateX + arrowSize, rotateY - arrowSize);
+        ctx.lineTo(rotateX, rotateY + arrowSize);
+        ctx.closePath();
+        ctx.stroke();
+
+        ctx.restore()
+      }
+    })
+  })
+}
+
+// 备份当前绘画内容
+const backupDrawingContent = () => {
+  if (canvasRef.value) {
+    drawingCanvasBackup.value = canvasRef.value.toDataURL()
+  }
+}
+
+// 为拼贴模式保存状态到撤回栈
+const saveCollageState = () => {
+  if (currentMode.value === 'collage' && canvasRef.value) {
+    // 在拼贴模式下，我们需要保存包含绘画背景和拼贴元素的完整画布状态
+    setTimeout(() => {
+      // 使用setTimeout确保redrawCollageElements已经完成
+      const currentState = canvasRef.value.toDataURL();
+      undoStack.value.push(currentState);
+      // 清空取消撤回栈
+      redoStack.value = [];
+      hasDrawing.value = true;
+    }, 10);
+  }
+}
+
+// 恢复绘画内容并添加拼贴元素到撤回栈
+const restoreDrawingWithCollageElements = () => {
+  if (!canvasRef.value || !drawingCanvasBackup.value) return
+
+  // 创建图片对象来恢复绘画内容
+  const img = new Image()
+  img.onload = () => {
+    // 清空画布
+    ctx.clearRect(0, 0, canvasRef.value.width, canvasRef.value.height)
+    // 绘制备份的绘画内容
+    ctx.drawImage(img, 0, 0)
+
+    // 绘制所有拼贴元素到画布上（不是拼贴模式，所以不显示选中状态）
+    const sortedElements = [...collageElements.value].sort((a, b) => a.zIndex - b.zIndex)
+
+    const drawPromises = sortedElements.map(element => {
+      return new Promise((resolve) => {
+        ctx.save()
+        ctx.globalAlpha = element.opacity
+
+        if (element.type === 'svg') {
+          drawSvgElement(element).then(() => {
+            ctx.restore()
+            resolve()
+          })
+        } else {
+          ctx.translate(element.x + element.width / 2, element.y + element.height / 2)
+          ctx.rotate(element.rotation * Math.PI / 180)
+
+          if (element.type === 'image') {
+            drawImage(element)
+          }
+
+          ctx.restore()
+          resolve()
+        }
+      })
+    })
+
+    // 等待所有元素绘制完成后保存到撤回栈
+    Promise.all(drawPromises).then(() => {
+      // 将合并后的画布状态保存到撤回栈
+      saveCanvasState()
+      // 清空拼贴元素数组，因为它们已经被"烘焙"到画布上
+      collageElements.value = []
+    })
+  }
+  img.src = drawingCanvasBackup.value
+}
+
+// 绘制SVG元素
+const drawSvgElement = (element) => {
+  return new Promise((resolve) => {
+    // 直接解析SVG并绘制，不使用异步图片加载
+    let parser = new DOMParser();
+    let doc = parser.parseFromString(element.svgCode, 'image/svg+xml');
+    let svgEl = doc.querySelector('svg');
+
+    if (svgEl) {
+      // 设置SVG以非比例模式拉伸填满容器
+      svgEl.setAttribute('width', element.width);
+      svgEl.setAttribute('height', element.height);
+
+      // 关键：设置preserveAspectRatio为none，让SVG内容自由拉伸
+      svgEl.setAttribute('preserveAspectRatio', 'none');
+
+      // 如果没有viewBox，从原始尺寸创建一个
+      if (!svgEl.getAttribute('viewBox')) {
+        const originalWidth = element.originalWidth || 100;
+        const originalHeight = element.originalHeight || 100;
+        svgEl.setAttribute('viewBox', `0 0 ${originalWidth} ${originalHeight}`);
+      }
+
+      // 创建新的SVG字符串
+      const serializer = new XMLSerializer();
+      const svgString = serializer.serializeToString(svgEl);
+
+      // 创建图片并绘制
+      const img = new Image();
+      img.onload = () => {
+        ctx.save()
+        ctx.translate(element.x + element.width / 2, element.y + element.height / 2)
+        ctx.rotate(element.rotation * Math.PI / 180)
+        // 直接绘制SVG，填满整个容器
+        ctx.drawImage(img, -element.width / 2, -element.height / 2, element.width, element.height);
+        ctx.restore()
+        resolve()
+      };
+      img.onerror = () => {
+        // 如果SVG加载失败，绘制占位符
+        ctx.save()
+        ctx.translate(element.x + element.width / 2, element.y + element.height / 2)
+        ctx.rotate(element.rotation * Math.PI / 180)
+        ctx.fillStyle = '#f0f0f0'
+        ctx.fillRect(-element.width / 2, -element.height / 2, element.width, element.height)
+        ctx.strokeStyle = '#ccc'
+        ctx.strokeRect(-element.width / 2, -element.height / 2, element.width, element.height)
+        ctx.fillStyle = '#666'
+        ctx.font = '12px Arial'
+        ctx.textAlign = 'center'
+        ctx.fillText('SVG', 0, 0)
+        ctx.restore()
+        resolve()
+      }
+      img.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svgString)}`;
+    } else {
+      resolve()
     }
   })
 }
@@ -1357,37 +1895,58 @@ const drawImage = (element) => {
 // 绘制选中边框
 const drawSelectionBorder = (element) => {
   ctx.save()
-  ctx.strokeStyle = '#007bff'
-  ctx.lineWidth = 2
-  ctx.setLineDash([5, 5])
-  // 边框
-  ctx.strokeRect(element.x - 2, element.y - 2, element.width + 4, element.height + 4)
+
+  // 如果元素有旋转，应用旋转变换
+  if (element.rotation && element.rotation !== 0) {
+    const centerX = element.x + element.width / 2;
+    const centerY = element.y + element.height / 2;
+
+    // 移动到元素中心点
+    ctx.translate(centerX, centerY);
+    // 应用旋转
+    ctx.rotate(element.rotation * Math.PI / 180);
+    // 移回原点（相对于旋转后的坐标系）
+    ctx.translate(-centerX, -centerY);
+  }
+
+  // 绘制主边框（简洁样式）
+  ctx.strokeStyle = '#666666';
+  ctx.lineWidth = 1;
+  ctx.setLineDash([6, 3]);
+  ctx.lineDashOffset = 0;
+  ctx.strokeRect(element.x, element.y, element.width, element.height);
 
   // 8个缩放点坐标（四角+四边中点）
   const points = [
     // 四角
-    { x: element.x - 6, y: element.y - 6 }, // 左上
-    { x: element.x + element.width + 2, y: element.y - 6 }, // 右上
-    { x: element.x - 6, y: element.y + element.height + 2 }, // 左下
-    { x: element.x + element.width + 2, y: element.y + element.height + 2 }, // 右下
+    { x: element.x - 4, y: element.y - 4 }, // 左上
+    { x: element.x + element.width, y: element.y - 4 }, // 右上
+    { x: element.x - 4, y: element.y + element.height }, // 左下
+    { x: element.x + element.width, y: element.y + element.height }, // 右下
     // 四边中点
-    { x: element.x + element.width / 2 - 4, y: element.y - 6 }, // 上中
-    { x: element.x + element.width / 2 - 4, y: element.y + element.height + 2 }, // 下中
-    { x: element.x - 6, y: element.y + element.height / 2 - 4 }, // 左中
-    { x: element.x + element.width + 2, y: element.y + element.height / 2 - 4 }, // 右中
+    { x: element.x + element.width / 2 - 2, y: element.y - 4 }, // 上中
+    { x: element.x + element.width / 2 - 2, y: element.y + element.height }, // 下中
+    { x: element.x - 4, y: element.y + element.height / 2 - 2 }, // 左中
+    { x: element.x + element.width, y: element.y + element.height / 2 - 2 }, // 右中
   ];
-  // 绘制缩放点（微软画图风格：白色方块+黑色边框）
+
+  // 绘制缩放点（简洁样式：小方块）
   points.forEach(pt => {
     ctx.save();
-    ctx.fillStyle = '#fff';
-    ctx.strokeStyle = '#333';
-    ctx.lineWidth = 1.5;
-    ctx.beginPath();
-    ctx.rect(pt.x, pt.y, 8, 8);
-    ctx.fill();
-    ctx.stroke();
+
+    // 绘制白色背景（无阴影）
+    ctx.fillStyle = '#ffffff';
+    ctx.strokeStyle = '#666666';
+    ctx.lineWidth = 1;
+
+    const rectWidth = 6;
+    const rectHeight = 6;
+
+    ctx.fillRect(pt.x, pt.y, rectWidth, rectHeight);
+    ctx.strokeRect(pt.x, pt.y, rectWidth, rectHeight);
     ctx.restore();
   });
+
   ctx.restore()
 }
 
@@ -1620,6 +2179,7 @@ const saveDrawing = async (isUploaded = false) => {
       if (!isUploaded) {
         hasDrawing.value = true
       }
+      hasSavedImage.value = true  // 标记已保存过图片
       ElMessage.success('保存成功!')
     } else {
       console.error('Save failed with status:', response.status, data)
@@ -1631,6 +2191,18 @@ const saveDrawing = async (isUploaded = false) => {
   } finally {
     isLoading.value = false
   }
+}
+
+// 前往分析方法
+const goToAnalysis = () => {
+  if (!hasSavedImage.value) {
+    ElMessage.warning('请先保存图片后再进行分析')
+    return
+  }
+  // 可以在这里添加跳转到分析页面的逻辑
+  // 例如：router.push('/analysis')
+  // 或者调用现有的分析功能
+  analyzeDrawing()
 }
 
 const parseAnalysisResult = (text) => {
