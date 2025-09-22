@@ -162,10 +162,10 @@ class DrawingHandler:
                 'fileName': fileName
             }), 500
 
-    @classmethod
+    @staticmethod
     @BlueprintConfig.apiRoutes(ApiState.GET_DRAWING_RECORDS.route, methods=ApiState.GET_DRAWING_RECORDS.method)
     @UserTokenHelper.userTokenRequired
-    def getDrawingRecords(cls, userId: str):
+    def getDrawingRecords(userId: str):
         try:
             userDrawingDir = os.path.join(DirectoryState.SAVED_DRAWINGS_DIR, userId)
 

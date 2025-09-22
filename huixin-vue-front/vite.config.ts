@@ -53,6 +53,11 @@ export default defineConfig({
           });
         }
       },
+      '/uploads': {
+        target: process.env.VITE_API_BASE_URL || 'http://127.0.0.1:5000',
+        changeOrigin: true,
+        secure: false
+      },
       '/socket.io': {
         target: process.env.VITE_API_BASE_URL?.replace('http', 'ws') || 'ws://127.0.0.1:5000',
         ws: true,

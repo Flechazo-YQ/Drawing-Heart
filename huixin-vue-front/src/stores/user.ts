@@ -3,17 +3,43 @@ import { ref } from 'vue';
 import config from '@/config';
 
 export const useUserStore = defineStore('user', () => {
-  const id = ref(localStorage.getItem('userId') || null);
-  const name = ref('');
-  const email = ref('');
-  const avatarUrl = ref('');
+  // Initialize user data from localStorage
+  const initializeFromStorage = () => {
+    const userInfoStr = localStorage.getItem('userInfo');
+    if (userInfoStr) {
+      try {
+        const userInfo = JSON.parse(userInfoStr);
+        return {
+          id: userInfo.id || null,
+          name: userInfo.name || '',
+          email: userInfo.email || '',
+          avatarUrl: userInfo.avatar ? `${config.baseURL}/uploads/avatars/${userInfo.avatar}` : ''
+        };
+      } catch (error) {
+        console.error('Error parsing userInfo from localStorage:', error);
+      }
+    }
+    return { id: null, name: '', email: '', avatarUrl: '' };
+  };
+
+  const initialData = initializeFromStorage();
+  const id = ref(initialData.id);
+  const name = ref(initialData.name);
+  const email = ref(initialData.email);
+  const avatarUrl = ref(initialData.avatarUrl);
 
   function setId(newId: string | null) {
     id.value = newId;
-    if (newId) {
-      localStorage.setItem('userId', newId);
-    } else {
-      localStorage.removeItem('userId');
+    // Update the userInfo in localStorage
+    const userInfoStr = localStorage.getItem('userInfo');
+    if (userInfoStr) {
+      try {
+        const userInfo = JSON.parse(userInfoStr);
+        userInfo.id = newId;
+        localStorage.setItem('userInfo', JSON.stringify(userInfo));
+      } catch (error) {
+        console.error('Error updating userInfo in localStorage:', error);
+      }
     }
   }
 

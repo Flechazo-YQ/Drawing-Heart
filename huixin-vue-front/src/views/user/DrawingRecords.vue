@@ -1,5 +1,8 @@
 <template>
   <div class="drawing-records-container">
+    <!-- 统一导航栏 -->
+    <NavBarUser />
+
     <h1 class="title">我的绘画记录</h1>
 
     <div v-if="isLoading" class="loading-state">
@@ -37,6 +40,7 @@
 import { ref, onMounted, watch } from 'vue';
 import { useUserStore } from '@/stores/user';
 import config from '@/config';
+import NavBarUser from '@/components/NavBarUser.vue';
 
 // --- 状态管理 ---
 const drawingRecords = ref([]);
@@ -48,7 +52,13 @@ const userStore = useUserStore();
 
 // --- API 调用 ---
 const fetchDrawingRecords = async () => {
-  // The check for userStore.id is now implicitly handled by the watcher
+  // Final safeguard: Do not proceed if id is null or undefined.
+  if (!userStore.id) {
+    error.value = '用户 ID 无效，无法加载绘画记录。';
+    isLoading.value = false;
+    return;
+  }
+
   isLoading.value = true;
   error.value = null;
   try {
