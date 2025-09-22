@@ -113,7 +113,7 @@ import boyAvatar from '@/assets/images/avatars/Boy.png'
 import girlAvatar from '@/assets/images/avatars/Girl.png'
 import adminAvatar from '@/assets/images/avatars/Admin.png'
 import { ElMessage } from 'element-plus'
-import config from '../config'
+import config from '@/config'
 import ChatSidebar from '@/components/ChatSidebar.vue'
 import NavBarUser from '@/components/NavBarUser.vue'
 

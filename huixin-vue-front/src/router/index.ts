@@ -1,22 +1,67 @@
 import { createRouter, createWebHistory } from 'vue-router'
-import HomeView from '../views/HomeView.vue'
-import LoginView from '../views/LoginView.vue'
-import ChatView from '../views/ChatView.vue'
-import DrawView from '../views/DrawView.vue'
 
+// === 导入组件 ===
+// 主页
+import HomeView from '../views/HomeView.vue'
+// 认证页面
+import LoginView from '../views/auth/LoginView.vue'
+// 功能页面
+import ChatView from '../views/features/ChatView.vue'
+import DrawView from '../views/features/DrawView.vue'
+
+// === 路由配置 ===
 const router = createRouter({
   history: createWebHistory(import.meta.env.BASE_URL),
   routes: [
+    // === 主页 ===
     {
       path: '/',
       name: 'home',
       component: HomeView
     },
+
+    // === 公共页面 ===
+    {
+      path: '/about',
+      name: 'about',
+      component: () => import('../views/public/AboutView.vue')
+    },
+    {
+      path: '/terms',
+      name: 'terms',
+      component: () => import('../views/public/TermsOfServiceView.vue')
+    },
+    {
+      path: '/privacy',
+      name: 'privacy',
+      component: () => import('../views/public/PrivacyPolicyView.vue')
+    },
+
+    // === 认证页面 ===
     {
       path: '/login',
       name: 'login',
       component: LoginView
     },
+    {
+      path: '/register',
+      name: 'register',
+      component: () => import('../views/auth/RegisterView.vue')
+    },
+    {
+      path: '/forget',
+      name: 'forget',
+      component: () => import('../views/auth/ForgetPasswordView.vue')
+    },
+
+    // === 管理员认证 ===
+    {
+      path: '/admin-login',
+      name: 'adminLogin',
+      component: () => import('../views/admin/AdminLoginView.vue')
+    },
+
+    // === 用户功能页面 ===
     {
       path: '/chat',
       name: 'chat',
@@ -30,86 +75,61 @@ const router = createRouter({
       meta: { requiresAuth: true }
     },
     {
-      path: '/register',
-      name: 'register',
-      component: () => import('../views/RegisterView.vue')
+      path:'/map',
+      name: 'map',
+      component: () => import('../views/features/MapSearchView.vue'),
+      meta: { requiresAuth: true }
     },
+
+    // === 用户中心 ===
     {
       path: '/user',
       name: 'user',
-      component: () => import('../views/UserView.vue'),
+      component: () => import('../views/user/UserView.vue'),
       meta: { requiresAuth: true }
     },
     {
-      path: '/forget',
-      name: 'forget',
-      component: () => import('../views/ForgetPasswordView.vue')
+      path: '/records',
+      name: 'records',
+      component: () => import('../views/user/DrawingRecords.vue'),
+      meta: { requiresAuth: true }
     },
-    {
-      path: '/about',
-      name: 'about',
-      component: () => import('../views/AboutView.vue')
-    },
-    {
-      path: '/terms',
-      name: 'terms',
-      component: () => import('../views/TermsOfServiceView.vue')
-    },
-    {
-      path: '/privacy',
-      name: 'privacy',
-      component: () => import('../views/PrivacyPolicyView.vue')
-    },
-    {
-      path: '/admin-login',
-      name: 'adminLogin',
-      component: () => import('../views/AdminLoginView.vue')
-    },
+
+    // === 管理员页面 ===
     {
       path: '/admin',
       name: 'admin',
-      component: () => import('../views/AdminView.vue'),
+      component: () => import('../views/admin/AdminView.vue'),
       meta: { requiresAdminAuth: true }
-    },
-    {
-      path:'/map',
-      name: 'map',
-      component: () => import('../views/MapSearchView.vue'),
-      meta: { requiresAuth: true }
     }
   ]
 })
 
-// 全局路由守卫
+// === 全局路由守卫 ===
 router.beforeEach((to, from, next) => {
-  // 检查是否需要管理员权限
+  // 检查管理员权限
   if (to.matched.some(record => record.meta.requiresAdminAuth)) {
-    // 检查是否已登录管理员
     if (!localStorage.getItem('isAdminLoggedIn')) {
-      // 如果没有登录，重定向到管理员登录页
       next({
         path: '/admin-login',
         query: { redirect: to.fullPath }
       })
-    } else {
-      next()
+      return
     }
   }
-    // 检查是否需要普通用户权限
-  else if (to.matched.some(record => record.meta.requiresAuth)) {
-    // 检查是否已登录 - 从localStorage获取登录状态
+
+  // 检查用户权限
+  if (to.matched.some(record => record.meta.requiresAuth)) {
     if (!localStorage.getItem('isLoggedIn')) {
-      // 如果没有登录，重定向到登录页
       next({
         path: '/login',
         query: { redirect: to.fullPath }
       })
-    } else {
-      next()
+      return
     }
-  } else {
-    next()
   }
+
+  next()
 })
 
 export default router

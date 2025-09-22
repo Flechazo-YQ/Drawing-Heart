@@ -436,7 +436,8 @@ function undoCanvas() {
 
         // 如果当前工具是橡皮擦，恢复橡皮擦模式
         if (currentTool.value === 'eraser') {
-          ctx.globalCompositeOperation = 'destination-out';
+          ctx.globalCompositeOperation = 'source-over';
+          ctx.strokeStyle = '#ffffff';
         }
       }
       img.src = previousState;
@@ -466,7 +467,8 @@ function redoCanvas() {
 
       // 如果当前工具是橡皮擦，恢复橡皮擦模式
       if (currentTool.value === 'eraser') {
-        ctx.globalCompositeOperation = 'destination-out';
+        ctx.globalCompositeOperation = 'source-over';
+        ctx.strokeStyle = '#ffffff';
       }
 
       hasDrawing.value = true; // 取消撤回后一定有内容
@@ -477,9 +479,9 @@ function redoCanvas() {
 // 合并画布mousemove事件，既处理绘画又处理橡皮预览
 function handleCanvasAreaMove(e) {
   if (currentMode.value === 'collage' && canvasRef.value) {
-    const rect = canvasRef.value.getBoundingClientRect();
-    const x = e.clientX - rect.left;
-    const y = e.clientY - rect.top;
+    const coords = getCanvasCoordinates(e)
+    const x = coords.x
+    const y = coords.y
 
     // 如果处于拖拽准备状态，检查是否应该开始实际拖拽
     if (isDragReady.value && !isDragging.value && dragType && dragStart) {
@@ -790,6 +792,11 @@ function handleCanvasAreaMove(e) {
   } else {
     eraserPreview.show = false;
   }
+
+  // 确保在绘画模式下维护正确的光标
+  if (currentMode.value === 'draw') {
+    updateCursor();
+  }
 }
 // ...existing code...
 const showPalette = ref(false)
@@ -826,6 +833,8 @@ function handleCanvasMouseEnter(e) {
   if (currentTool.value === 'eraser') {
     eraserPreview.show = true
   }
+  // 鼠标进入画布时，根据当前工具更新光标
+  updateCursor()
 }
 
 function handleCanvasMouseMove(e) {
@@ -1071,15 +1080,30 @@ const hasSavedImage = ref(false)  // 追踪是否已保存过图片
 const fileInput = ref(null)
 const isFullscreen = ref(false)
 
+// 将CSS坐标转换为画布坐标
+const getCanvasCoordinates = (e) => {
+  const canvas = canvasRef.value
+  const rect = canvas.getBoundingClientRect()
+
+  // 获取鼠标相对于画布显示区域的位置
+  const cssX = e.clientX - rect.left
+  const cssY = e.clientY - rect.top
+
+  // 计算CSS显示尺寸与实际画布分辨率的比例
+  const scaleX = canvas.width / rect.width
+  const scaleY = canvas.height / rect.height
+
+  // 转换为画布坐标
+  const canvasX = cssX * scaleX
+  const canvasY = cssY * scaleY
+
+  return { x: canvasX, y: canvasY }
+}
+
 // 初始化画布
 const initCanvas = () => {
   const canvas = canvasRef.value
   ctx = canvas.getContext('2d')
-
-  // 设置画布大小为容器大小
-  const container = canvas.parentElement
-  const containerWidth = container.clientWidth
-  const containerHeight = container.clientHeight
 
   // 保存当前画布内容（如果有的话）
   let imageData = null
@@ -1087,12 +1111,15 @@ const initCanvas = () => {
     imageData = ctx.getImageData(0, 0, canvas.width, canvas.height)
   }
 
-  // 确保画布尺寸与显示尺寸一致
-  const rect = canvas.getBoundingClientRect()
-  canvas.width = rect.width
-  canvas.height = rect.height
+  // 使用固定的画布分辨率，避免因为容器尺寸变化导致的缩放问题
+  const fixedWidth = 800
+  const fixedHeight = 600
 
-  // 设置CSS尺寸为100%
+  // 设置画布的实际分辨率为固定值
+  canvas.width = fixedWidth
+  canvas.height = fixedHeight
+
+  // 设置CSS尺寸为100%，让画布填满容器
   canvas.style.width = '100%'
   canvas.style.height = '100%'
 
@@ -1108,22 +1135,28 @@ const initCanvas = () => {
 
   // 初始化时不设置hasDrawing为true，让用户选择绘画或上传
 
-  // 如果有保存的画布内容，恢复它
+  // 如果有保存的画布内容，恢复它（只有在分辨率匹配时才直接恢复）
   if (imageData && !isImageUploaded.value) {
-    const tempCanvas = document.createElement('canvas')
-    const tempCtx = tempCanvas.getContext('2d')
-    tempCanvas.width = imageData.width
-    tempCanvas.height = imageData.height
-    tempCtx.putImageData(imageData, 0, 0)
+    if (imageData.width === fixedWidth && imageData.height === fixedHeight) {
+      // 分辨率匹配，直接恢复
+      ctx.putImageData(imageData, 0, 0)
+    } else {
+      // 分辨率不匹配，使用drawImage方式缩放恢复
+      const tempCanvas = document.createElement('canvas')
+      const tempCtx = tempCanvas.getContext('2d')
+      tempCanvas.width = imageData.width
+      tempCanvas.height = imageData.height
+      tempCtx.putImageData(imageData, 0, 0)
 
-    // 计算缩放比例保持宽高比
-    const scale = Math.min(canvas.width / tempCanvas.width, canvas.height / tempCanvas.height)
-    const newWidth = tempCanvas.width * scale
-    const newHeight = tempCanvas.height * scale
-    const x = (canvas.width - newWidth) / 2
-    const y = (canvas.height - newHeight) / 2
+      // 保持宽高比居中绘制
+      const scale = Math.min(canvas.width / tempCanvas.width, canvas.height / tempCanvas.height)
+      const newWidth = tempCanvas.width * scale
+      const newHeight = tempCanvas.height * scale
+      const x = (canvas.width - newWidth) / 2
+      const y = (canvas.height - newHeight) / 2
 
-    ctx.drawImage(tempCanvas, x, y, newWidth, newHeight)
+      ctx.drawImage(tempCanvas, x, y, newWidth, newHeight)
+    }
   }
 
   // 重绘拼接元素
@@ -1137,9 +1170,9 @@ const initCanvas = () => {
 const startDrawing = (e) => {
   if (currentMode.value === 'draw' && !isImageUploaded.value) {
     isDrawing.value = true
-    const rect = canvasRef.value.getBoundingClientRect()
-    lastX = e.clientX - rect.left
-    lastY = e.clientY - rect.top
+    const coords = getCanvasCoordinates(e)
+    lastX = coords.x
+    lastY = coords.y
   } else if (currentMode.value === 'collage') {
     handleCollageClick(e)
   }
@@ -1148,24 +1181,24 @@ const startDrawing = (e) => {
 // 绘画过程
 const draw = (e) => {
   if (currentMode.value === 'draw' && isDrawing.value) {
-    const rect = canvasRef.value.getBoundingClientRect()
-    const x = e.clientX - rect.left
-    const y = e.clientY - rect.top
+    const coords = getCanvasCoordinates(e)
+    const x = coords.x
+    const y = coords.y
 
     if (currentTool.value === 'eraser') {
-      // 16:9矩形擦除
+      // 使用白色矩形涂抹替代擦除
       ctx.save();
-      // 设置橡皮擦模式
-      ctx.globalCompositeOperation = 'destination-out';
+      // 设置白色填充
+      ctx.fillStyle = '#ffffff';
       const width = eraserWidth.value * 2;
       const height = eraserWidth.value * 2 * 9 / 16;
       const steps = Math.max(Math.abs(x - lastX), Math.abs(y - lastY));
 
-      // 使用插值确保连续擦除
+      // 使用插值确保连续涂白
       for (let i = 0; i <= steps; i++) {
         const ix = lastX + (x - lastX) * (i / steps);
         const iy = lastY + (y - lastY) * (i / steps);
-        ctx.clearRect(ix - width / 2, iy - height / 2, width, height);
+        ctx.fillRect(ix - width / 2, iy - height / 2, width, height);
       }
 
       // 恢复之前的绘图状态
@@ -1223,8 +1256,8 @@ const switchTool = (tool) => {
     ctx.strokeStyle = currentColor.value
     ctx.lineWidth = lineWidth.value
   } else if (tool === 'eraser') {
-    ctx.globalCompositeOperation = 'destination-out'
-    ctx.strokeStyle = 'rgba(0,0,0,1)'
+    ctx.globalCompositeOperation = 'source-over'  // 改为正常绘制模式
+    ctx.strokeStyle = '#ffffff'  // 设置为白色
     ctx.lineWidth = eraserWidth.value
   }
   // 更新光标样式
@@ -1425,9 +1458,9 @@ const getLocalCoordinates = (x, y, element) => {
 
 // 处理拼接模式的点击
 const handleCollageClick = (e) => {
-  const rect = canvasRef.value.getBoundingClientRect()
-  const x = e.clientX - rect.left
-  const y = e.clientY - rect.top
+  const coords = getCanvasCoordinates(e)
+  const x = coords.x
+  const y = coords.y
 
   // 检查是否点击了控制点或边框
   if (selectedElement.value) {
@@ -1445,17 +1478,33 @@ const handleCollageClick = (e) => {
       { x: el.x + el.width - 4, y: el.y + el.height - 4, type: 'se' }
     ];
 
-    // 检查旋转控制点（使用本地坐标系统）
-    const localCoords = getLocalCoordinates(x, y, el);
-    const rotatePoint = {
-      x: el.x + el.width / 2 - 5,
-      y: el.y - 20 - 5,
-      width: 10,
-      height: 10
-    };
+    // 检查旋转控制点
+    // 计算旋转控制点的实际位置（与绘制逻辑保持一致）
+    const centerX = el.x + el.width / 2;
+    const centerY = el.y + el.height / 2;
 
-    if (localCoords.x >= rotatePoint.x && localCoords.x <= rotatePoint.x + rotatePoint.width &&
-        localCoords.y >= rotatePoint.y && localCoords.y <= rotatePoint.y + rotatePoint.height) {
+    // 计算未旋转状态下的控制点位置
+    let rotateX = el.x + el.width / 2;
+    let rotateY = el.y - 20;
+
+    // 如果元素有旋转，计算旋转后的控制点位置
+    if (el.rotation && el.rotation !== 0) {
+      const angle = el.rotation * Math.PI / 180;
+      // 计算相对于中心点的偏移
+      const dx = rotateX - centerX;
+      const dy = rotateY - centerY;
+      // 应用旋转变换
+      rotateX = centerX + dx * Math.cos(angle) - dy * Math.sin(angle);
+      rotateY = centerY + dx * Math.sin(angle) + dy * Math.cos(angle);
+    }
+
+    // 检查鼠标是否在旋转控制点范围内
+    const rotatePointRadius = 8;
+    const distanceToRotatePoint = Math.sqrt(
+      Math.pow(x - rotateX, 2) + Math.pow(y - rotateY, 2)
+    );
+
+    if (distanceToRotatePoint <= rotatePointRadius) {
       isRotating.value = true;
       isDragReady.value = true;
       dragType = 'rotate';
@@ -1472,6 +1521,7 @@ const handleCollageClick = (e) => {
     }
 
     // 检查控制点（使用本地坐标系统）
+    const localCoords = getLocalCoordinates(x, y, el);
     for (const point of points) {
       if (localCoords.x >= point.x && localCoords.x <= point.x + 8 &&
           localCoords.y >= point.y && localCoords.y <= point.y + 8) {
@@ -1493,20 +1543,24 @@ const handleCollageClick = (e) => {
       }
     }
 
-    // 检查是否点击在元素边框附近
+    // 检查是否点击在元素内部或边框附近（使用本地坐标系统）
     const borderThreshold = 5;
-    if (x >= el.x - borderThreshold && x <= el.x + el.width + borderThreshold &&
-        y >= el.y - borderThreshold && y <= el.y + el.height + borderThreshold) {
-      // 检查具体在哪个边
-      if (Math.abs(x - el.x) <= borderThreshold) {
+
+    // 检查是否在元素的包围盒内（使用本地坐标系统）
+    if (localCoords.x >= el.x - borderThreshold && localCoords.x <= el.x + el.width + borderThreshold &&
+        localCoords.y >= el.y - borderThreshold && localCoords.y <= el.y + el.height + borderThreshold) {
+
+      // 检查具体在哪个边（基于本地坐标）
+      if (Math.abs(localCoords.x - el.x) <= borderThreshold) {
         dragType = 'w'; // 左边
-      } else if (Math.abs(x - (el.x + el.width)) <= borderThreshold) {
+      } else if (Math.abs(localCoords.x - (el.x + el.width)) <= borderThreshold) {
         dragType = 'e'; // 右边
-      } else if (Math.abs(y - el.y) <= borderThreshold) {
+      } else if (Math.abs(localCoords.y - el.y) <= borderThreshold) {
         dragType = 'n'; // 上边
-      } else if (Math.abs(y - (el.y + el.height)) <= borderThreshold) {
+      } else if (Math.abs(localCoords.y - (el.y + el.height)) <= borderThreshold) {
         dragType = 's'; // 下边
-      } else if (x > el.x && x < el.x + el.width && y > el.y && y < el.y + el.height) {
+      } else if (localCoords.x > el.x && localCoords.x < el.x + el.width &&
+                 localCoords.y > el.y && localCoords.y < el.y + el.height) {
         dragType = 'move'; // 移动
         isDragReady.value = true;
         dragStartX = x - el.x;
@@ -1691,21 +1745,24 @@ const drawCollageElementsOnTop = () => {
         // 绘制旋转控制点（现代化设计）
         ctx.save()
 
-        // 如果元素有旋转，应用相同的旋转变换
+        // 计算旋转控制点的位置（不应用旋转变换到画布）
+        const centerX = element.x + element.width / 2;
+        const centerY = element.y + element.height / 2;
+
+        // 计算未旋转状态下的控制点位置
+        let rotateX = element.x + element.width / 2;
+        let rotateY = element.y - 20;
+
+        // 如果元素有旋转，计算旋转后的控制点位置
         if (element.rotation && element.rotation !== 0) {
-          const centerX = element.x + element.width / 2;
-          const centerY = element.y + element.height / 2;
-
-          // 移动到元素中心点
-          ctx.translate(centerX, centerY);
-          // 应用旋转
-          ctx.rotate(element.rotation * Math.PI / 180);
-          // 移回原点（相对于旋转后的坐标系）
-          ctx.translate(-centerX, -centerY);
+          const angle = element.rotation * Math.PI / 180;
+          // 计算相对于中心点的偏移
+          const dx = rotateX - centerX;
+          const dy = rotateY - centerY;
+          // 应用旋转变换
+          rotateX = centerX + dx * Math.cos(angle) - dy * Math.sin(angle);
+          rotateY = centerY + dx * Math.sin(angle) + dy * Math.cos(angle);
         }
-
-        const rotateX = element.x + element.width / 2;
-        const rotateY = element.y - 20;
 
         // 绘制连接线（从元素顶部到旋转控制点）
         ctx.save();
@@ -1896,42 +1953,76 @@ const drawImage = (element) => {
 const drawSelectionBorder = (element) => {
   ctx.save()
 
-  // 如果元素有旋转，应用旋转变换
-  if (element.rotation && element.rotation !== 0) {
-    const centerX = element.x + element.width / 2;
-    const centerY = element.y + element.height / 2;
+  // 计算元素的四个角点
+  const centerX = element.x + element.width / 2;
+  const centerY = element.y + element.height / 2;
+  const halfWidth = element.width / 2;
+  const halfHeight = element.height / 2;
 
-    // 移动到元素中心点
-    ctx.translate(centerX, centerY);
-    // 应用旋转
-    ctx.rotate(element.rotation * Math.PI / 180);
-    // 移回原点（相对于旋转后的坐标系）
-    ctx.translate(-centerX, -centerY);
+  // 元素的四个角点（相对于中心点）
+  const corners = [
+    { x: -halfWidth, y: -halfHeight }, // 左上
+    { x: halfWidth, y: -halfHeight },  // 右上
+    { x: halfWidth, y: halfHeight },   // 右下
+    { x: -halfWidth, y: halfHeight }   // 左下
+  ];
+
+  // 如果元素有旋转，计算旋转后的角点位置
+  let rotatedCorners = corners;
+  if (element.rotation && element.rotation !== 0) {
+    const angle = element.rotation * Math.PI / 180;
+    rotatedCorners = corners.map(corner => ({
+      x: centerX + corner.x * Math.cos(angle) - corner.y * Math.sin(angle),
+      y: centerY + corner.x * Math.sin(angle) + corner.y * Math.cos(angle)
+    }));
+  } else {
+    // 没有旋转时，直接转换为绝对坐标
+    rotatedCorners = corners.map(corner => ({
+      x: centerX + corner.x,
+      y: centerY + corner.y
+    }));
   }
 
-  // 绘制主边框（简洁样式）
+  // 绘制边框（连接四个角点）
   ctx.strokeStyle = '#666666';
   ctx.lineWidth = 1;
   ctx.setLineDash([6, 3]);
   ctx.lineDashOffset = 0;
-  ctx.strokeRect(element.x, element.y, element.width, element.height);
+  ctx.beginPath();
+  ctx.moveTo(rotatedCorners[0].x, rotatedCorners[0].y);
+  rotatedCorners.forEach((corner, index) => {
+    if (index > 0) {
+      ctx.lineTo(corner.x, corner.y);
+    }
+  });
+  ctx.closePath();
+  ctx.stroke();
 
-  // 8个缩放点坐标（四角+四边中点）
-  const points = [
-    // 四角
-    { x: element.x - 4, y: element.y - 4 }, // 左上
-    { x: element.x + element.width, y: element.y - 4 }, // 右上
-    { x: element.x - 4, y: element.y + element.height }, // 左下
-    { x: element.x + element.width, y: element.y + element.height }, // 右下
-    // 四边中点
-    { x: element.x + element.width / 2 - 2, y: element.y - 4 }, // 上中
-    { x: element.x + element.width / 2 - 2, y: element.y + element.height }, // 下中
-    { x: element.x - 4, y: element.y + element.height / 2 - 2 }, // 左中
-    { x: element.x + element.width, y: element.y + element.height / 2 - 2 }, // 右中
+  // 计算边中点
+  const edgeMidpoints = [
+    { // 上边中点
+      x: (rotatedCorners[0].x + rotatedCorners[1].x) / 2,
+      y: (rotatedCorners[0].y + rotatedCorners[1].y) / 2
+    },
+    { // 右边中点
+      x: (rotatedCorners[1].x + rotatedCorners[2].x) / 2,
+      y: (rotatedCorners[1].y + rotatedCorners[2].y) / 2
+    },
+    { // 下边中点
+      x: (rotatedCorners[2].x + rotatedCorners[3].x) / 2,
+      y: (rotatedCorners[2].y + rotatedCorners[3].y) / 2
+    },
+    { // 左边中点
+      x: (rotatedCorners[3].x + rotatedCorners[0].x) / 2,
+      y: (rotatedCorners[3].y + rotatedCorners[0].y) / 2
+    }
   ];
 
+  // 8个缩放点（4个角点 + 4个边中点）
+  const allPoints = [...rotatedCorners, ...edgeMidpoints];
+
   // 绘制缩放点（简洁样式：小方块）
-  points.forEach(pt => {
+  allPoints.forEach(pt => {
     ctx.save();
 
     // 绘制白色背景（无阴影）
@@ -1942,8 +2033,8 @@ const drawSelectionBorder = (element) => {
     const rectWidth = 6;
     const rectHeight = 6;
 
-    ctx.fillRect(pt.x, pt.y, rectWidth, rectHeight);
-    ctx.strokeRect(pt.x, pt.y, rectWidth, rectHeight);
+    ctx.fillRect(pt.x - 3, pt.y - 3, rectWidth, rectHeight);
+    ctx.strokeRect(pt.x - 3, pt.y - 3, rectWidth, rectHeight);
     ctx.restore();
   });
 
@@ -2022,9 +2113,17 @@ const handleFullscreenChange = () => {
 
   isFullscreen.value = isCurrentlyFullscreen
 
-  // 全屏状态改变时重新初始化画布
+  // 全屏状态改变时仅调整画布CSS尺寸，不重新初始化避免内容缩放
   setTimeout(() => {
-    initCanvas()
+    const canvas = canvasRef.value
+    if (canvas) {
+      // 只重新设置CSS尺寸，保持画布内容不变
+      canvas.style.width = '100%'
+      canvas.style.height = '100%'
+
+      // 重绘拼接元素（如果有的话）
+      redrawCollageElements()
+    }
   }, 100)
 }
 
@@ -3403,9 +3502,9 @@ body {
 
 .draw-container:fullscreen .canvas-container {
   max-width: none;
-  width: 90vw;
-  height: 80vh;
-  aspect-ratio: unset;
+  width: min(90vw, 95vh * 4/3);
+  height: min(95vh, 90vw * 3/4);
+  aspect-ratio: 4/3;
 }
 
 .draw-container:fullscreen .analysis-panel {
@@ -3419,10 +3518,10 @@ body {
 }
 
 .draw-container:fullscreen .action-buttons {
-  background: rgba(0, 0, 0, 0.8);
-  padding: 1rem;
+  background: transparent;
+  padding: 0.5rem;
   border-radius: 8px;
-  margin-top: 1rem;
+  margin-top: 0.5rem;
 }
 
 .draw-container:fullscreen .fullscreen-toggle {
@@ -3458,9 +3557,9 @@ body {
 
 .draw-container:-webkit-full-screen .canvas-container {
   max-width: none;
-  width: 90vw;
-  height: 80vh;
-  aspect-ratio: unset;
+  width: min(90vw, 95vh * 4/3);
+  height: min(95vh, 90vw * 3/4);
+  aspect-ratio: 4/3;
 }
 
 .draw-container:-webkit-full-screen .analysis-panel {
@@ -3474,10 +3573,10 @@ body {
 }
 
 .draw-container:-webkit-full-screen .action-buttons {
-  background: rgba(0, 0, 0, 0.8);
-  padding: 1rem;
+  background: transparent;
+  padding: 0.5rem;
   border-radius: 8px;
-  margin-top: 1rem;
+  margin-top: 0.5rem;
 }
 
 .draw-container:-webkit-full-screen .fullscreen-toggle {
@@ -3513,9 +3612,9 @@ body {
 
 .draw-container:-moz-full-screen .canvas-container {
   max-width: none;
-  width: 90vw;
-  height: 80vh;
-  aspect-ratio: unset;
+  width: min(90vw, 95vh * 4/3);
+  height: min(95vh, 90vw * 3/4);
+  aspect-ratio: 4/3;
 }
 
 .draw-container:-moz-full-screen .analysis-panel {
@@ -3529,10 +3628,10 @@ body {
 }
 
 .draw-container:-moz-full-screen .action-buttons {
-  background: rgba(0, 0, 0, 0.8);
-  padding: 1rem;
+  background: transparent;
+  padding: 0.5rem;
   border-radius: 8px;
-  margin-top: 1rem;
+  margin-top: 0.5rem;
 }
 
 .draw-container:-moz-full-screen .fullscreen-toggle {
@@ -3568,9 +3667,9 @@ body {
 
 .draw-container:-ms-fullscreen .canvas-container {
   max-width: none;
-  width: 90vw;
-  height: 80vh;
-  aspect-ratio: unset;
+  width: min(90vw, 95vh * 4/3);
+  height: min(95vh, 90vw * 3/4);
+  aspect-ratio: 4/3;
 }
 
 .draw-container:-ms-fullscreen .analysis-panel {
@@ -3584,10 +3683,10 @@ body {
 }
 
 .draw-container:-ms-fullscreen .action-buttons {
-  background: rgba(0, 0, 0, 0.8);
-  padding: 1rem;
+  background: transparent;
+  padding: 0.5rem;
   border-radius: 8px;
-  margin-top: 1rem;
+  margin-top: 0.5rem;
 }
 
 .draw-container:-ms-fullscreen .fullscreen-toggle {
