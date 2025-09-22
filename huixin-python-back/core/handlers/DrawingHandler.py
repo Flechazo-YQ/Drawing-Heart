@@ -3,6 +3,12 @@ import os, logging, flask
 from core.configs.MongoDBConfig import MongoDBConfig
 from core.utils.ImageHelper import ImageHelper
 from core.utils.flask.CommonHelper import CommonHelper
+from core.states.DirectoryState import DirectoryState
+
+from openai import OpenAI
+from core.configs.BlueprintConfig import BlueprintConfig
+from core.states.route.ApiState import ApiState
+from core.utils.token.UserTokenHelper import UserTokenHelper
 
 from openai import OpenAI
 from httpx import Client
@@ -155,3 +161,24 @@ class DrawingHandler:
                 'message': f'分析过程中出现错误, 请稍后重试',
                 'fileName': fileName
             }), 500
+
+    @classmethod
+    @BlueprintConfig.apiRoutes(ApiState.GET_DRAWING_RECORDS.route, methods=ApiState.GET_DRAWING_RECORDS.method)
+    @UserTokenHelper.userTokenRequired
+    def getDrawingRecords(cls, userId: str):
+        try:
+            userDrawingDir = os.path.join(DirectoryState.SAVED_DRAWINGS_DIR, userId)
+
+            if not os.path.exists(userDrawingDir) or not os.path.isdir(userDrawingDir):
+                logging.info(f'用户 {userId} 的绘画目录不存在，返回空列表。')
+                return flask.jsonify([]), 200
+
+            fileNames = [f for f in os.listdir(userDrawingDir) if os.path.isfile(os.path.join(userDrawingDir, f))]
+            
+            logging.info(f'成功获取用户 {userId} 的 {len(fileNames)} 条绘画记录。')
+
+            return flask.jsonify(fileNames), 200
+
+        except Exception as e:
+            logging.error(f'❌ 获取用户 {userId} 的绘画记录时出错: {str(e)}')
+            return CommonHelper.errorResponse(1, '服务器在获取绘画记录时发生内部错误。', 500)

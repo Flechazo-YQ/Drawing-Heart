@@ -140,3 +140,8 @@ class ApiState:
         route='/info',
         method=['GET']
     )
+
+    GET_DRAWING_RECORDS = RouteDict(
+        route='/drawings/<userId>',
+        method=['GET']
+    )
