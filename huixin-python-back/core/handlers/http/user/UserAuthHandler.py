@@ -15,11 +15,26 @@ class UserAuthHandler:
     def login():
         data = flask.request.get_json()
 
-        username = data.get('username')
-        email = data.get('email')
+        # 允许前端只提交一个账号字段, 兼容邮箱或用户名
+        username = (data.get('username') or '').strip()
+        email = (data.get('email') or '').strip()
         password = data.get('password')
 
-        user = MongoDBConfig.userManager.getUserByUsername(username) or MongoDBConfig.userManager.getUserByEmail(email)
+        if (not username and not email):
+            return CommonHelper.errorResponse(1, '请输入用户名或邮箱')
+
+        account = username or email
+
+        user = None
+
+        if (account):
+            user = MongoDBConfig.userManager.getUserByUsername(account)
+
+            if (not user and '@' in account):
+                user = MongoDBConfig.userManager.getUserByEmail(account)
+
+        if (not user and email):
+            user = MongoDBConfig.userManager.getUserByEmail(email)
 
         # 如果用户名和邮箱都找不到, 返回错误
         if (not user):
