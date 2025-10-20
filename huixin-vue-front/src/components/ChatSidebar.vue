@@ -1,61 +1,139 @@
 <template>
-  <div class="chat-sidebar" :class="{ 'sidebar-open': isOpen }">
-    <div class="sidebar-header">
-      <h3>聊天历史</h3>
-      <button class="new-chat-btn" @click="createNewChat">
-        <span class="plus-icon">+</span> 新建对话
-      </button>
-      <button class="close-btn" @click="closeSidebar">×</button>
-    </div>
-
-    <div class="chat-list">
-      <div
-        v-for="chat in filteredChatList"
-        :key="chat._id"
-        :class="['chat-item', {
-          'active': currentChatId === chat._id,
-          'dangerous': chat.type === 'dangerous' || chat.stats?.isDangerous
-        }]"
-        @click="loadChat(chat._id)"
-      >
-        <div class="chat-title">
-          <span v-if="chat.type === 'dangerous' || chat.stats?.isDangerous" class="danger-badge">⚠️</span>
-          {{ chat.title }}
-        </div>
-        <div class="chat-info">
-          <span class="message-count">
-            {{ chat.stats?.messageCount || 0 }}条消息
-          </span>
-          <span class="chat-time">
-            {{ formatTime(chat.timeNode.updatedAt) }}
-          </span>
-        </div>
-        <button
-          class="delete-chat-btn"
-          @click.stop="deleteChat(chat._id)"
-          title="删除对话"
-        >
-          🗑️
+  <div
+    v-show="isVisible"
+    class="chat-sidebar"
+    :class="[
+      isInline ? 'sidebar-inline' : 'sidebar-drawer',
+      { 'sidebar-open': !isInline && isOpen }
+    ]"
+  >
+    <div class="sidebar-shell">
+      <div class="sidebar-top">
+        <button class="new-chat-btn" @click="createNewChat">
+          <span class="plus-icon">+</span> 新建会话
         </button>
+
+        <div
+          :class="['search-card', { 'search-card-plain': !hasSearched }]"
+        >
+          <div class="search-bar">
+            <span class="search-icon">🔍</span>
+            <input
+              v-model="searchQuery"
+              type="text"
+              placeholder="搜索历史对话"
+              @keyup.enter="performSearch"
+            />
+            <button
+              class="search-btn"
+              :disabled="!searchQuery.trim()"
+              @click="performSearch"
+            >
+              搜索
+            </button>
+          </div>
+        </div>
       </div>
-    </div>
 
-    <div v-if="loading" class="loading">
-      加载中...
-    </div>
+      <div class="sidebar-content">
+        <template v-if="!hasSearched">
+          <div class="history-header">
+            <span class="history-title">历史会话</span>
+            <span class="history-count">{{ filteredChatList.length }} 个</span>
+          </div>
+          <div class="chat-list">
+            <div
+              v-for="chat in filteredChatList"
+              :key="chat._id"
+              :class="['chat-item', {
+                'active': currentChatId === chat._id,
+                'dangerous': chat.type === 'dangerous' || chat.stats?.isDangerous
+              }]"
+              @click="loadChat(chat._id)"
+            >
+              <div class="chat-meta">
+                <div class="chat-title">
+                  <span
+                    v-if="chat.type === 'dangerous' || chat.stats?.isDangerous"
+                    class="danger-badge"
+                  >⚠️</span>
+                  <span class="title-text">{{ chat.title }}</span>
+                </div>
+                <button
+                  class="delete-chat-btn"
+                  @click.stop="deleteChat(chat._id)"
+                  title="删除对话"
+                >🗑️</button>
+              </div>
+              <div class="chat-info">
+                <span class="message-count">{{ chat.stats?.messageCount || 0 }} 条记录</span>
+                <span class="chat-time">{{ formatTime(chat.timeNode.updatedAt) }}</span>
+              </div>
+            </div>
+          </div>
+          <div v-if="loading" class="loading">加载中...</div>
+          <div v-else-if="!loading && filteredChatList.length === 0" class="empty-state">
+            暂无聊天记录
+          </div>
+        </template>
 
-    <div v-if="!loading && chatList.length === 0" class="empty-state">
-      暂无聊天记录
+        <template v-else>
+          <div class="history-header">
+            <span class="history-title">搜索结果</span>
+            <span class="history-count">{{ searchResults.length }} 个</span>
+          </div>
+          <div v-if="searchResults.length" class="chat-list search-mode">
+            <div
+              v-for="chat in searchResults"
+              :key="chat._id"
+              :class="['chat-item', {
+                'active': currentChatId === chat._id,
+                'dangerous': chat.type === 'dangerous' || chat.stats?.isDangerous
+              }]"
+              @click="loadChat(chat._id)"
+            >
+              <div class="chat-meta">
+                <div class="chat-title">
+                  <span
+                    v-if="chat.type === 'dangerous' || chat.stats?.isDangerous"
+                    class="danger-badge"
+                  >⚠️</span>
+                  <span class="title-text">{{ chat.title }}</span>
+                </div>
+                <button
+                  class="delete-chat-btn"
+                  @click.stop="deleteChat(chat._id)"
+                  title="删除对话"
+                >🗑️</button>
+              </div>
+              <div class="chat-info">
+                <span class="message-count">{{ chat.stats?.messageCount || 0 }} 条记录</span>
+                <span class="chat-time">{{ formatTime(chat.timeNode.updatedAt) }}</span>
+              </div>
+            </div>
+          </div>
+          <div v-else class="search-empty">
+            <div class="empty-icon">🔍</div>
+            <div class="empty-title">没有找到匹配的对话</div>
+            <div class="empty-desc">换个关键词试试吧</div>
+          </div>
+        </template>
+      </div>
     </div>
   </div>
 
-  <div v-if="isOpen" class="sidebar-overlay" @click="closeSidebar"></div>
+  <div
+    v-if="!isInline && isOpen"
+    class="sidebar-overlay"
+    @click="closeSidebar"
+  ></div>
 </template>
 
 <script setup lang="ts">
-import { ref, onMounted, watch, computed } from 'vue'
+import { ref, watch, computed, onMounted, onUnmounted } from 'vue'
 import { ElMessage, ElMessageBox } from 'element-plus'
 import config from '@/config'
+import navLogo from '@/assets/images/others/Logo.png'
 
 interface Chat {
   _id: string
@@ -74,9 +152,104 @@ interface Chat {
   }
 }
 
-const props = defineProps<{
+const CHAT_TITLE_KEY_PREFIX = 'chatFirstTitle_'
+const CHAT_LIST_REFRESH_EVENT = 'chatListRefresh'
+const PLACEHOLDER_TITLES = ['新对话', '新会话', '未命名会话']
+
+const hydratedChatIds = new Set<string>()
+
+const sanitizeTitle = (title: string | null | undefined) => {
+  const safe = (title ?? '').toString()
+  return safe.replace(/\s+/g, ' ').trim()
+}
+
+const isPlaceholderTitle = (title?: string) => {
+  const normalized = sanitizeTitle(title)
+  if (!normalized) return true
+  return PLACEHOLDER_TITLES.includes(normalized)
+}
+
+const getStoredChatTitle = (chatId: string) => {
+  if (!chatId) return ''
+  return localStorage.getItem(`${CHAT_TITLE_KEY_PREFIX}${chatId}`) || ''
+}
+
+const applyTitleOverride = (chat: Chat) => {
+  const stored = sanitizeTitle(getStoredChatTitle(chat._id))
+  const fallback = isPlaceholderTitle(chat.title) ? '' : sanitizeTitle(chat.title)
+  const resolved = stored || fallback || '未命名会话'
+  return { ...chat, title: resolved }
+}
+
+const emitChatTitleUpdate = (chatId: string, title: string) => {
+  document.dispatchEvent(new CustomEvent('chatTitleUpdated', {
+    detail: { chatId, title }
+  }))
+}
+
+const persistChatTitleLocally = (chatId: string, rawTitle: string) => {
+  const normalized = sanitizeTitle(rawTitle)
+  if (isPlaceholderTitle(normalized)) return
+  const key = `${CHAT_TITLE_KEY_PREFIX}${chatId}`
+  const existing = localStorage.getItem(key)
+  if (existing !== normalized) {
+    localStorage.setItem(key, normalized)
+  }
+  emitChatTitleUpdate(chatId, normalized)
+}
+
+const extractFirstUserMessage = (messages: any[]) => {
+  if (!Array.isArray(messages)) return ''
+  const target = messages.find((msg) => {
+    const sender = msg?.sender ?? msg?.type
+    const content = typeof msg?.content === 'string' ? msg.content.trim() : ''
+    return sender === 'user' && content
+  })
+  return target ? target.content : ''
+}
+
+const hydrateMissingTitles = async (list: Chat[]) => {
+  const token = localStorage.getItem('token')
+  for (const chat of list) {
+    if (hydratedChatIds.has(chat._id)) continue
+
+    const stored = sanitizeTitle(getStoredChatTitle(chat._id))
+    if (!isPlaceholderTitle(stored) || !isPlaceholderTitle(chat.title)) {
+      hydratedChatIds.add(chat._id)
+      continue
+    }
+
+    try {
+      const response = await fetch(`${config.baseURL}/api/chats/${chat._id}/messages`, {
+        method: 'POST',
+        headers: {
+          'Authorization': token || '',
+          'Content-Type': 'application/json'
+        }
+      })
+
+      const result = await response.json()
+
+      if (result.code === 0 && Array.isArray(result.data?.messages)) {
+        const firstQuestion = sanitizeTitle(extractFirstUserMessage(result.data.messages))
+        if (!isPlaceholderTitle(firstQuestion)) {
+          persistChatTitleLocally(chat._id, firstQuestion)
+        }
+      }
+    } catch (error) {
+      console.error('补全对话标题失败:', error)
+    } finally {
+      hydratedChatIds.add(chat._id)
+    }
+  }
+}
+
+const props = withDefaults(defineProps<{
   isOpen: boolean
-}>()
+  displayMode?: 'inline' | 'drawer'
+}>(), {
+  displayMode: 'drawer'
+})
 
 const emit = defineEmits<{
   close: []
@@ -87,9 +260,24 @@ const emit = defineEmits<{
 const chatList = ref<Chat[]>([])
 const loading = ref(false)
 const currentChatId = ref<string>('')
+const searchQuery = ref('')
+const hasSearched = ref(false)
 const filteredChatList = computed(() =>
   chatList.value.filter(chat => (chat.stats?.messageCount || 0) > 0)
 )
+
+const searchResults = computed(() => {
+  if (!searchQuery.value.trim()) return []
+  const keyword = searchQuery.value.trim().toLowerCase()
+  return filteredChatList.value.filter(chat => {
+    const titleMatch = chat.title?.toLowerCase().includes(keyword)
+    const countMatch = `${chat.stats?.messageCount || 0}`.includes(keyword)
+    return titleMatch || countMatch
+  })
+})
+
+const isInline = computed(() => props.displayMode === 'inline')
+const isVisible = computed(() => isInline.value || props.isOpen)
 
 // 获取聊天列表
 const fetchChatList = async () => {
@@ -105,9 +293,11 @@ const fetchChatList = async () => {
     })
 
     const result = await response.json()
-    
+
     if (result.code === 0) {
-      chatList.value = result.data.chats || []
+      const sourceList: Chat[] = result.data.chats || []
+      chatList.value = sourceList.map(applyTitleOverride)
+      void hydrateMissingTitles([...chatList.value])
     } else {
       ElMessage.error(result.message || '获取聊天列表失败')
     }
@@ -155,7 +345,7 @@ const createNewChat = async () => {
 const loadChat = async (chatId: string) => {
   try {
     const token = localStorage.getItem('token')
-    
+
     const response = await fetch(`${config.baseURL}/api/chats/${chatId}/messages`, {
       method: 'POST',
       headers: {
@@ -163,7 +353,7 @@ const loadChat = async (chatId: string) => {
         'Content-Type': 'application/json'
       }
     })
-    
+
     const result = await response.json()
     console.log(result)
     if (result.code === 0) {
@@ -195,7 +385,7 @@ const deleteChat = async (chatId: string) => {
     )
 
     const token = localStorage.getItem('token')
-    
+
     const response = await fetch(`${config.baseURL}/api/chats/${chatId}/hide`, {
       method: 'DELETE',
       headers: {
@@ -215,6 +405,7 @@ const deleteChat = async (chatId: string) => {
 
     if (result.code === 0) {
       ElMessage.success('删除对话成功')
+      localStorage.removeItem(`${CHAT_TITLE_KEY_PREFIX}${chatId}`)
       await fetchChatList()
 
       // 如果删除的是当前对话，清空当前对话ID
@@ -231,6 +422,36 @@ const deleteChat = async (chatId: string) => {
       ElMessage.error('删除对话失败')
     }
   }
+}
+
+const performSearch = () => {
+  const trimmed = searchQuery.value.trim()
+  hasSearched.value = Boolean(trimmed)
+}
+
+const handleChatTitleUpdated = (event: Event) => {
+  const detail = (event as CustomEvent<{ chatId: string; title?: string }>).detail
+  if (!detail?.chatId) return
+
+  const incoming = detail.title ? sanitizeTitle(detail.title) : ''
+  const index = chatList.value.findIndex(chat => chat._id === detail.chatId)
+  if (index === -1) return
+
+  const current = chatList.value[index]
+  const fallback = isPlaceholderTitle(current.title) ? '' : sanitizeTitle(current.title)
+  const resolved = incoming || fallback || '未命名会话'
+  chatList.value = chatList.value.map((chat, idx) =>
+    idx === index ? { ...chat, title: resolved } : chat
+  )
+}
+
+const handleChatListRefresh = (event: Event) => {
+  const detail = (event as CustomEvent<{ chatId?: string }>).detail
+  void fetchChatList().then(() => {
+    if (detail?.chatId) {
+      currentChatId.value = detail.chatId
+    }
+  })
 }
 
 // 格式化时间
@@ -258,140 +479,285 @@ const closeSidebar = () => {
   emit('close')
 }
 
-// 监听侧边栏开启状态
-watch(() => props.isOpen, (isOpen) => {
-  if (isOpen) {
+// 监听侧边栏可见状态
+watch(isVisible, (visible) => {
+  if (visible) {
     fetchChatList()
+  }
+}, { immediate: true })
+
+watch(searchQuery, (value) => {
+  if (!value.trim()) {
+    hasSearched.value = false
   }
 })
 
 onMounted(() => {
-  if (props.isOpen) {
-    fetchChatList()
-  }
+  document.addEventListener('chatTitleUpdated', handleChatTitleUpdated)
+  document.addEventListener(CHAT_LIST_REFRESH_EVENT, handleChatListRefresh)
+})
+
+onUnmounted(() => {
+  document.removeEventListener('chatTitleUpdated', handleChatTitleUpdated)
+  document.removeEventListener(CHAT_LIST_REFRESH_EVENT, handleChatListRefresh)
 })
 </script>
 
 <style scoped>
 .chat-sidebar {
-  position: fixed;
-  top: 0;
-  left: -350px;
-  width: 350px;
-  height: 100vh;
   background: #ffffff;
-  border-right: 1px solid #e6e6e6;
-  transition: left 0.3s ease;
-  z-index: 1000;
+  border-right: 1px solid rgba(148, 163, 184, 0.18);
   display: flex;
   flex-direction: column;
-  box-shadow: 2px 0 10px rgba(0, 0, 0, 0.1);
+  transition: transform 0.3s ease;
 }
 
-.sidebar-open {
-  left: 0;
+.chat-sidebar.sidebar-drawer {
+  position: fixed;
+  inset: 0 auto 0 0;
+  width: 320px;
+  transform: translateX(-100%);
+  z-index: 1100;
+  box-shadow: 24px 0 48px rgba(15, 23, 42, 0.08);
+}
+
+.chat-sidebar.sidebar-drawer.sidebar-open {
+  transform: translateX(0);
+}
+
+.chat-sidebar.sidebar-inline {
+  position: sticky;
+  top: 64px;
+  width: 292px;
+  height: calc(100vh - 64px);
 }
 
 .sidebar-overlay {
   position: fixed;
-  top: 0;
-  left: 0;
-  width: 100vw;
-  height: 100vh;
-  background: rgba(0, 0, 0, 0.5);
-  z-index: 999;
+  inset: 0;
+  background: rgba(15, 23, 42, 0.35);
+  z-index: 1000;
 }
 
-.sidebar-header {
-  padding: 20px;
-  border-bottom: 1px solid #e6e6e6;
-  background: #f8f9fa;
-  position: relative;
+.sidebar-shell {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+  padding: 18px 14px 20px;
+  gap: 16px;
+  background: rgba(255, 255, 255, 0.96);
+  box-shadow: 0 24px 48px rgba(148, 163, 184, 0.12);
+  border: 1px solid rgba(148, 163, 184, 0.16);
 }
 
-.sidebar-header h3 {
-  margin: 0 0 15px 0;
-  color: #333;
-  font-size: 18px;
-  font-weight: 600;
+.sidebar-top {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  flex-shrink: 0;
+}
+
+.close-btn:hover {
+  background: rgba(17, 24, 39, 0.08);
+  color: #111827;
 }
 
 .new-chat-btn {
   width: 100%;
-  padding: 10px;
-  background: #007bff;
-  color: white;
   border: none;
-  border-radius: 6px;
+  border-radius: 12px;
+  padding: 10px 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  background: linear-gradient(135deg, #2563eb, #4338ca);
+  color: #ffffff;
+  font-weight: 600;
   cursor: pointer;
-  font-size: 14px;
-  transition: background-color 0.2s;
+  transition: transform 0.2s ease, box-shadow 0.2s ease;
+  box-shadow: 0 12px 24px rgba(37, 99, 235, 0.25);
 }
 
 .new-chat-btn:hover {
-  background: #0056b3;
+  transform: translateY(-2px);
+  box-shadow: 0 18px 32px rgba(37, 99, 235, 0.28);
 }
 
 .plus-icon {
   font-size: 16px;
-  margin-right: 5px;
 }
 
-.close-btn {
-  position: absolute;
-  top: 15px;
-  right: 15px;
-  background: none;
+
+.search-card {
+  background: #ffffff;
+  border-radius: 14px;
+  padding: 14px;
+  border: 1px solid rgba(148, 163, 184, 0.18);
+  box-shadow: 0 16px 32px rgba(15, 23, 42, 0.04);
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.search-card-plain {
+  background: transparent;
   border: none;
-  font-size: 24px;
-  cursor: pointer;
-  color: #666;
-  width: 30px;
-  height: 30px;
-  border-radius: 50%;
+  box-shadow: none;
+  padding: 0;
+}
+
+.search-bar {
   display: flex;
   align-items: center;
-  justify-content: center;
+  gap: 8px;
+  padding: 9px 12px;
+  border-radius: 12px;
+  background: rgba(248, 250, 252, 0.9);
+  border: 1px solid rgba(148, 163, 184, 0.24);
 }
 
-.close-btn:hover {
-  background: #f0f0f0;
-  color: #333;
+.search-icon {
+  font-size: 15px;
+  color: #94a3b8;
+}
+
+.search-bar input {
+  flex: 1;
+  border: none;
+  background: transparent;
+  outline: none;
+  font-size: 13px;
+  color: #1f2937;
+}
+
+.search-bar input::placeholder {
+  color: #9ca3af;
+}
+
+.search-btn {
+  border: none;
+  border-radius: 10px;
+  padding: 6px 10px;
+  background: #2563eb;
+  color: #ffffff;
+  font-size: 12px;
+  cursor: pointer;
+  transition: opacity 0.2s ease;
+}
+
+.search-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+
+.search-suggestions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.suggestion-btn {
+  border: none;
+  border-radius: 12px;
+  padding: 5px 8px;
+  background: rgba(37, 99, 235, 0.12);
+  color: #1d4ed8;
+  font-size: 12px;
+  cursor: pointer;
+  transition: background 0.2s ease;
+}
+
+.suggestion-btn:hover {
+  background: rgba(37, 99, 235, 0.2);
+}
+
+.sidebar-content {
+  flex: 1;
+  min-height: 0;
+  background: transparent;
+  border-radius: 18px;
+  border: none;
+  padding: 16px 12px 12px;
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  box-shadow: none;
+}
+
+.history-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 2px;
+  color: #6b7280;
+  font-size: 12px;
+}
+
+.history-title {
+  font-size: 13px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.history-count {
+  font-size: 11px;
+  color: #9ca3af;
 }
 
 .chat-list {
   flex: 1;
+  min-height: 0;
   overflow-y: auto;
-  padding: 10px;
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  padding-right: 2px;
 }
 
 .chat-item {
-  padding: 15px;
-  border: 1px solid #e6e6e6;
-  border-radius: 8px;
-  margin-bottom: 10px;
+  border-radius: 13px;
+  border: 1px solid rgba(226, 232, 240, 0.9);
+  padding: 10px 11px;
+  background: rgba(248, 250, 252, 0.9);
   cursor: pointer;
-  transition: all 0.2s;
-  position: relative;
-  background: #ffffff;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  transition: border 0.2s ease, transform 0.2s ease, background 0.2s ease;
 }
 
 .chat-item:hover {
-  background: #f8f9fa;
-  border-color: #007bff;
+  transform: translateY(-2px);
+  border-color: rgba(59, 130, 246, 0.5);
+  background: #ffffff;
 }
 
 .chat-item.active {
-  background: #e3f2fd;
-  border-color: #007bff;
+  border-color: rgba(59, 130, 246, 0.8);
+  background: #ffffff;
+  box-shadow: 0 14px 28px rgba(59, 130, 246, 0.15);
+}
+
+.chat-meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  justify-content: space-between;
 }
 
 .chat-title {
+  font-size: 13px;
   font-weight: 600;
-  color: #333;
-  margin-bottom: 8px;
-  font-size: 14px;
-  max-width: 250px;
+  color: #1f2937;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex: 1;
+  min-width: 0;
+}
+
+.chat-title .title-text {
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
@@ -400,97 +766,99 @@ onMounted(() => {
 .chat-info {
   display: flex;
   justify-content: space-between;
-  align-items: center;
-  font-size: 12px;
-  color: #666;
-}
-
-.chat-activity {
   font-size: 11px;
-  color: #888;
-  margin-top: 2px;
-  padding-left: 4px;
+  color: #6b7280;
 }
 
 .message-count {
-  color: #007bff;
+  color: #2563eb;
+  font-weight: 500;
 }
 
 .chat-time {
-  color: #999;
+  color: #9ca3af;
 }
 
 .delete-chat-btn {
-  position: absolute;
-  top: 10px;
-  right: 10px;
-  background: none;
   border: none;
-  font-size: 14px;
+  background: transparent;
+  color: #d97706;
+  font-size: 13px;
   cursor: pointer;
   opacity: 0;
-  transition: opacity 0.2s;
-  width: 25px;
-  height: 25px;
-  border-radius: 4px;
-  display: flex;
-  align-items: center;
-  justify-content: center;
+  transition: opacity 0.2s ease;
 }
 
-.chat-item:hover .delete-chat-btn {
+.chat-item:hover .delete-chat-btn,
+.chat-item.active .delete-chat-btn {
   opacity: 1;
 }
 
-.delete-chat-btn:hover {
-  background: #ffebee;
-}
-
-.loading {
-  text-align: center;
-  padding: 40px;
-  color: #666;
-  font-size: 14px;
-}
-
+.loading,
 .empty-state {
   text-align: center;
-  padding: 40px;
-  color: #999;
-  font-size: 14px;
+  padding: 18px 0;
+  color: #9ca3af;
+  font-size: 12px;
 }
 
-/* 滚动条样式 */
+.search-mode {
+  background: #f8fafc;
+  border-radius: 10px;
+  padding: 6px;
+}
+
+.search-empty {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  color: #9ca3af;
+}
+
+.empty-icon {
+  font-size: 24px;
+}
+
+.empty-title {
+  font-weight: 600;
+  color: #1f2937;
+}
+
+.empty-desc {
+  font-size: 12px;
+}
+
+.danger-badge {
+  color: #f97316;
+  font-size: 12px;
+}
+
 .chat-list::-webkit-scrollbar {
   width: 6px;
 }
 
-.chat-list::-webkit-scrollbar-track {
-  background: #f1f1f1;
-}
-
 .chat-list::-webkit-scrollbar-thumb {
-  background: #c1c1c1;
+  background: rgba(148, 163, 184, 0.4);
   border-radius: 3px;
 }
 
 .chat-list::-webkit-scrollbar-thumb:hover {
-  background: #a8a8a8;
+  background: rgba(100, 116, 139, 0.6);
 }
 
-/* 危险对话样式 */
-.chat-item.dangerous {
-  border-left: 3px solid #ff4757;
-  background: linear-gradient(90deg, #fff5f5 0%, #ffffff 100%);
-}
+@media (max-width: 1024px) {
+  .chat-sidebar.sidebar-inline {
+    top: 64px;
+    width: 100%;
+    height: auto;
+    position: static;
+  }
 
-.chat-item.dangerous:hover {
-  background: linear-gradient(90deg, #ffebee 0%, #f8f9fa 100%);
-}
-
-.danger-badge {
-  color: #ff4757;
-  margin-right: 5px;
-  font-size: 12px;
+  .sidebar-shell {
+    padding: 16px 12px 20px;
+  }
 }
 </style>

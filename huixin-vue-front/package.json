@@ -17,10 +17,13 @@
     "format": "prettier --write src/"
   },
   "dependencies": {
+    "@lottiefiles/dotlottie-vue": "^0.10.5",
+    "@svgdotjs/svg.draggable.js": "^3.0.6",
     "axios": "^1.11.0",
     "element-plus": "^2.10.4",
     "pinia": "^3.0.1",
     "socket.io-client": "^4.8.1",
+    "svg.js": "^2.7.1",
     "vue": "^3.5.13",
     "vue-router": "^4.5.0"
   },

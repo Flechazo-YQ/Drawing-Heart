@@ -1,0 +1,15 @@
+@font-face {
+  font-family: 'AiDianFengYaHei';
+  src: url('./fonts/AiDianFengYaHei（ShangYongMianFei）-2.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'YEFONTColor';
+  src: url('./fonts/YEFONTColorFonts0831-Color1-2.ttf') format('truetype');
+  font-weight: 400;
+  font-style: normal;
+  font-display: swap;
+}

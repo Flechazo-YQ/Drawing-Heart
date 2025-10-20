@@ -1,0 +1,776 @@
+2025-10-15 17:23:33,595 - INFO - [LogConfig.py:38] - ✅ 日志系统初始化成功
+2025-10-15 17:23:33,599 - INFO - [InitHandler.py:28] - ✅ Flask应用实例创建成功
+2025-10-15 17:23:33,601 - INFO - [AppConfig.py:11] - ✅ 全局配置已注册
+2025-10-15 17:23:33,602 - INFO - [ErrorHandler.py:45] - ✅ 错误处理器已注册
+2025-10-15 17:23:33,622 - INFO - [BlueprintConfig.py:51] - ✅ 自动化路由注册完成：成功注册 3 个蓝图和 37 条路由。
+2025-10-15 17:23:33,623 - INFO - [InitHandler.py:53] - ✅ App配置(CORS, Jinja2, config)完成。
+2025-10-15 17:23:33,795 - INFO - [MongoDBConfig.py:37] - ✅ 成功连接到MongoDB数据库: HuixinDB
+2025-10-15 17:23:33,833 - INFO - [MongoDBConfig.py:80] - ✅ 数据库索引创建完成
+2025-10-15 17:23:33,841 - INFO - [MongoDBConfig.py:24] - ✅ MongoDB初始化完成
+2025-10-15 17:23:33,846 - INFO - [InitHandler.py:60] - ✅ MongoDB初始化成功。
+2025-10-15 17:23:34,043 - INFO - [InitHandler.py:73] - ✅ 情感分析模型初始化成功
+2025-10-15 17:23:34,051 - INFO - [InitHandler.py:87] - ✅ 绘画保存目录 uploads/saved_drawings 已创建或已存在。
+2025-10-15 17:23:34,125 - INFO - [base_server.py:112] - Server initialized for gevent.
+2025-10-15 17:23:34,126 - INFO - [InitHandler.py:103] - ✅ Socket.IO后台线程已启动
+2025-10-15 17:23:34,126 - INFO - [InitHandler.py:117] - ✅ 所有服务已成功初始化，应用准备就绪。
+2025-10-15 17:23:34,132 - WARNING - [_internal.py:97] -  * Debugger is active!
+2025-10-15 17:23:34,162 - INFO - [_internal.py:97] -  * Debugger PIN: 551-732-917
+2025-10-15 17:23:38,156 - INFO - [socket.py:78] - QzsJrhRMkIa4BEI0AAAA: Sending packet OPEN data {'sid': 'QzsJrhRMkIa4BEI0AAAA', 'upgrades': [], 'pingTimeout': 20000, 'pingInterval': 25000, 'maxPayload': 1000000}
+2025-10-15 17:23:38,156 - INFO - [socket.py:90] - QzsJrhRMkIa4BEI0AAAA: Received request to upgrade to websocket
+2025-10-15 17:23:38,157 - INFO - [socket.py:219] - QzsJrhRMkIa4BEI0AAAA: Upgrade to websocket successful
+2025-10-15 17:23:38,161 - INFO - [socket.py:39] - QzsJrhRMkIa4BEI0AAAA: Received packet MESSAGE data 0{"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OGFhYWQ0NzcyYTE1MGI3ODNhZDA0YjEiLCJleHAiOjE3NjA0MzMzNDB9.QX1WIb3YpMYNicNOfkbHeARcxwQp7ymP271MORv3VXg"}
+2025-10-15 17:23:38,162 - INFO - [socket.py:78] - QzsJrhRMkIa4BEI0AAAA: Sending packet MESSAGE data 0{"sid":"Y_eIj-HBbp4z_Q49AAAB"}
+2025-10-15 17:24:03,160 - INFO - [socket.py:78] - QzsJrhRMkIa4BEI0AAAA: Sending packet PING data None
+2025-10-15 17:24:03,166 - INFO - [socket.py:39] - QzsJrhRMkIa4BEI0AAAA: Received packet PONG data 
+2025-10-15 17:24:28,182 - INFO - [socket.py:78] - QzsJrhRMkIa4BEI0AAAA: Sending packet PING data None
+2025-10-15 17:24:28,183 - INFO - [socket.py:39] - QzsJrhRMkIa4BEI0AAAA: Received packet PONG data 
+2025-10-15 17:24:53,306 - INFO - [socket.py:78] - QzsJrhRMkIa4BEI0AAAA: Sending packet PING data None
+2025-10-15 17:24:53,309 - INFO - [socket.py:39] - QzsJrhRMkIa4BEI0AAAA: Received packet PONG data 
+2025-10-15 17:25:18,313 - INFO - [socket.py:78] - QzsJrhRMkIa4BEI0AAAA: Sending packet PING data None
+2025-10-15 17:25:18,318 - INFO - [socket.py:39] - QzsJrhRMkIa4BEI0AAAA: Received packet PONG data 
+2025-10-15 17:25:35,967 - WARNING - [UserTokenHelper.py:53] - ⚠️ 令牌已过期
+2025-10-15 17:25:35,975 - WARNING - [UserTokenHelper.py:53] - ⚠️ 令牌已过期
+2025-10-15 17:25:40,238 - WARNING - [ConnectionSocketHandler.py:28] - ⚠️ 未认证的客户端断开连接: Y_eIj-HBbp4z_Q49AAAB
+2025-10-15 17:25:40,315 - WARNING - [UserTokenHelper.py:53] - ⚠️ 令牌已过期
+2025-10-15 17:25:40,317 - WARNING - [UserTokenHelper.py:53] - ⚠️ 令牌已过期
+2025-10-15 17:25:40,616 - INFO - [socket.py:78] - A_zzo6RP4XHx4ThdAAAC: Sending packet OPEN data {'sid': 'A_zzo6RP4XHx4ThdAAAC', 'upgrades': [], 'pingTimeout': 20000, 'pingInterval': 25000, 'maxPayload': 1000000}
+2025-10-15 17:25:40,617 - INFO - [socket.py:90] - A_zzo6RP4XHx4ThdAAAC: Received request to upgrade to websocket
+2025-10-15 17:25:40,618 - INFO - [socket.py:219] - A_zzo6RP4XHx4ThdAAAC: Upgrade to websocket successful
+2025-10-15 17:25:40,624 - INFO - [socket.py:39] - A_zzo6RP4XHx4ThdAAAC: Received packet MESSAGE data 0{"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OGFhYWQ0NzcyYTE1MGI3ODNhZDA0YjEiLCJleHAiOjE3NjA0MzMzNDB9.QX1WIb3YpMYNicNOfkbHeARcxwQp7ymP271MORv3VXg"}
+2025-10-15 17:25:40,625 - INFO - [socket.py:78] - A_zzo6RP4XHx4ThdAAAC: Sending packet MESSAGE data 0{"sid":"NX8W-PxhOY-1qNJWAAAD"}
+2025-10-15 17:25:40,631 - INFO - [socket.py:39] - A_zzo6RP4XHx4ThdAAAC: Received packet MESSAGE data 2["user_auth",{"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OGFhYWQ0NzcyYTE1MGI3ODNhZDA0YjEiLCJleHAiOjE3NjA0MzMzNDB9.QX1WIb3YpMYNicNOfkbHeARcxwQp7ymP271MORv3VXg"}]
+2025-10-15 17:25:40,631 - INFO - [server.py:576] - received event "user_auth" from NX8W-PxhOY-1qNJWAAAD [/]
+2025-10-15 17:25:40,632 - WARNING - [UserTokenHelper.py:53] - ⚠️ 令牌已过期
+2025-10-15 17:25:43,180 - INFO - [socket.py:39] - A_zzo6RP4XHx4ThdAAAC: Received packet MESSAGE data 1
+2025-10-15 17:25:43,182 - WARNING - [ConnectionSocketHandler.py:28] - ⚠️ 未认证的客户端断开连接: NX8W-PxhOY-1qNJWAAAD
+2025-10-15 17:25:45,462 - INFO - [socket.py:78] - l_Ap2YoLDlvEw9vOAAAE: Sending packet OPEN data {'sid': 'l_Ap2YoLDlvEw9vOAAAE', 'upgrades': [], 'pingTimeout': 20000, 'pingInterval': 25000, 'maxPayload': 1000000}
+2025-10-15 17:25:45,464 - INFO - [socket.py:90] - l_Ap2YoLDlvEw9vOAAAE: Received request to upgrade to websocket
+2025-10-15 17:25:45,466 - INFO - [socket.py:219] - l_Ap2YoLDlvEw9vOAAAE: Upgrade to websocket successful
+2025-10-15 17:25:45,471 - INFO - [socket.py:39] - l_Ap2YoLDlvEw9vOAAAE: Received packet MESSAGE data 0{"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OGFhYWQ0NzcyYTE1MGI3ODNhZDA0YjEiLCJleHAiOjE3NjA0MzMzNDB9.QX1WIb3YpMYNicNOfkbHeARcxwQp7ymP271MORv3VXg"}
+2025-10-15 17:25:45,472 - INFO - [socket.py:78] - l_Ap2YoLDlvEw9vOAAAE: Sending packet MESSAGE data 0{"sid":"-9nMFPRO3uHldntqAAAF"}
+2025-10-15 17:25:45,480 - INFO - [socket.py:39] - l_Ap2YoLDlvEw9vOAAAE: Received packet MESSAGE data 2["user_auth",{"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OGFhYWQ0NzcyYTE1MGI3ODNhZDA0YjEiLCJleHAiOjE3NjA2MDY3NDV9.x2sle0vFc3yAs7DwdxmGhiUDOMLD48nfubpE0YchP5I"}]
+2025-10-15 17:25:45,480 - INFO - [server.py:576] - received event "user_auth" from -9nMFPRO3uHldntqAAAF [/]
+2025-10-15 17:25:45,483 - INFO - [server.py:284] - -9nMFPRO3uHldntqAAAF is entering room user_68aaad4772a150b783ad04b1 [/]
+2025-10-15 17:25:45,483 - INFO - [UserSocketHandler.py:30] - 用户68aaad4772a150b783ad04b1(SID: -9nMFPRO3uHldntqAAAF)已认证成功并加入房间user_68aaad4772a150b783ad04b1
+2025-10-15 17:25:50,857 - INFO - [EmotionClassifier.py:45] - ✅ 已重置分类器层权重
+2025-10-15 17:25:51,239 - WARNING - [StreamChatHandler.py:53] - 危险检测结果: 其他, 危险等级: 0.0943
+2025-10-15 17:25:51,468 - ERROR - [StreamChatHandler.py:183] - ❌ 聊天处理错误: 403 Client Error: Forbidden for url: https://api.siliconflow.cn/v1/chat/completions
+2025-10-15 17:26:00,047 - WARNING - [StreamChatHandler.py:53] - 危险检测结果: 其他, 危险等级: 0.0943
+2025-10-15 17:26:00,185 - ERROR - [StreamChatHandler.py:183] - ❌ 聊天处理错误: 403 Client Error: Forbidden for url: https://api.siliconflow.cn/v1/chat/completions
+2025-10-15 17:26:05,514 - WARNING - [StreamChatHandler.py:53] - 危险检测结果: 其他, 危险等级: 0.0671
+2025-10-15 17:26:05,633 - ERROR - [StreamChatHandler.py:183] - ❌ 聊天处理错误: 403 Client Error: Forbidden for url: https://api.siliconflow.cn/v1/chat/completions
+2025-10-15 17:26:10,474 - INFO - [socket.py:78] - l_Ap2YoLDlvEw9vOAAAE: Sending packet PING data None
+2025-10-15 17:26:10,725 - INFO - [socket.py:39] - l_Ap2YoLDlvEw9vOAAAE: Received packet PONG data 
+2025-10-15 17:26:35,730 - INFO - [socket.py:78] - l_Ap2YoLDlvEw9vOAAAE: Sending packet PING data None
+2025-10-15 17:26:35,794 - INFO - [socket.py:39] - l_Ap2YoLDlvEw9vOAAAE: Received packet PONG data 
+2025-10-15 17:27:00,823 - INFO - [socket.py:78] - l_Ap2YoLDlvEw9vOAAAE: Sending packet PING data None
+2025-10-15 17:27:00,863 - INFO - [socket.py:39] - l_Ap2YoLDlvEw9vOAAAE: Received packet PONG data 
+2025-10-15 17:27:25,872 - INFO - [socket.py:78] - l_Ap2YoLDlvEw9vOAAAE: Sending packet PING data None
+2025-10-15 17:27:25,877 - INFO - [socket.py:39] - l_Ap2YoLDlvEw9vOAAAE: Received packet PONG data 
+2025-10-15 17:27:50,891 - INFO - [socket.py:78] - l_Ap2YoLDlvEw9vOAAAE: Sending packet PING data None
+2025-10-15 17:27:50,897 - INFO - [socket.py:39] - l_Ap2YoLDlvEw9vOAAAE: Received packet PONG data 
+2025-10-15 17:28:15,909 - INFO - [socket.py:78] - l_Ap2YoLDlvEw9vOAAAE: Sending packet PING data None
+2025-10-15 17:28:15,914 - INFO - [socket.py:39] - l_Ap2YoLDlvEw9vOAAAE: Received packet PONG data 
+2025-10-15 17:28:40,931 - INFO - [socket.py:78] - l_Ap2YoLDlvEw9vOAAAE: Sending packet PING data None
+2025-10-15 17:28:41,036 - INFO - [socket.py:39] - l_Ap2YoLDlvEw9vOAAAE: Received packet PONG data 
+2025-10-15 17:29:06,135 - INFO - [socket.py:78] - l_Ap2YoLDlvEw9vOAAAE: Sending packet PING data None
+2025-10-15 17:29:06,156 - INFO - [socket.py:39] - l_Ap2YoLDlvEw9vOAAAE: Received packet PONG data 
+2025-10-15 17:29:31,171 - INFO - [socket.py:78] - l_Ap2YoLDlvEw9vOAAAE: Sending packet PING data None
+2025-10-15 17:29:31,178 - INFO - [socket.py:39] - l_Ap2YoLDlvEw9vOAAAE: Received packet PONG data 
+2025-10-15 17:29:56,186 - INFO - [socket.py:78] - l_Ap2YoLDlvEw9vOAAAE: Sending packet PING data None
+2025-10-15 17:29:56,188 - INFO - [socket.py:39] - l_Ap2YoLDlvEw9vOAAAE: Received packet PONG data 
+2025-10-15 17:30:21,200 - INFO - [socket.py:78] - l_Ap2YoLDlvEw9vOAAAE: Sending packet PING data None
+2025-10-15 17:30:21,204 - INFO - [socket.py:39] - l_Ap2YoLDlvEw9vOAAAE: Received packet PONG data 
+2025-10-15 17:30:46,211 - INFO - [socket.py:78] - l_Ap2YoLDlvEw9vOAAAE: Sending packet PING data None
+2025-10-15 17:30:46,708 - INFO - [socket.py:39] - l_Ap2YoLDlvEw9vOAAAE: Received packet PONG data 
+2025-10-15 17:31:11,722 - INFO - [socket.py:78] - l_Ap2YoLDlvEw9vOAAAE: Sending packet PING data None
+2025-10-15 17:31:11,955 - INFO - [socket.py:39] - l_Ap2YoLDlvEw9vOAAAE: Received packet PONG data 
+2025-10-15 17:31:36,957 - INFO - [socket.py:78] - l_Ap2YoLDlvEw9vOAAAE: Sending packet PING data None
+2025-10-15 17:31:37,064 - INFO - [socket.py:39] - l_Ap2YoLDlvEw9vOAAAE: Received packet PONG data 
+2025-10-15 17:32:02,078 - INFO - [socket.py:78] - l_Ap2YoLDlvEw9vOAAAE: Sending packet PING data None
+2025-10-15 17:32:02,082 - INFO - [socket.py:39] - l_Ap2YoLDlvEw9vOAAAE: Received packet PONG data 
+2025-10-15 17:32:27,097 - INFO - [socket.py:78] - l_Ap2YoLDlvEw9vOAAAE: Sending packet PING data None
+2025-10-15 17:32:27,102 - INFO - [socket.py:39] - l_Ap2YoLDlvEw9vOAAAE: Received packet PONG data 
+2025-10-15 17:32:52,106 - INFO - [socket.py:78] - l_Ap2YoLDlvEw9vOAAAE: Sending packet PING data None
+2025-10-15 17:32:52,339 - INFO - [socket.py:39] - l_Ap2YoLDlvEw9vOAAAE: Received packet PONG data 
+2025-10-15 17:33:17,439 - INFO - [socket.py:78] - l_Ap2YoLDlvEw9vOAAAE: Sending packet PING data None
+2025-10-15 17:33:18,304 - INFO - [socket.py:39] - l_Ap2YoLDlvEw9vOAAAE: Received packet PONG data 
+2025-10-15 17:33:43,313 - INFO - [socket.py:78] - l_Ap2YoLDlvEw9vOAAAE: Sending packet PING data None
+2025-10-15 17:33:43,324 - INFO - [socket.py:39] - l_Ap2YoLDlvEw9vOAAAE: Received packet PONG data 
+2025-10-15 17:34:08,331 - INFO - [socket.py:78] - l_Ap2YoLDlvEw9vOAAAE: Sending packet PING data None
+2025-10-15 17:34:08,339 - INFO - [socket.py:39] - l_Ap2YoLDlvEw9vOAAAE: Received packet PONG data 
+2025-10-15 17:34:33,348 - INFO - [socket.py:78] - l_Ap2YoLDlvEw9vOAAAE: Sending packet PING data None
+2025-10-15 17:34:33,355 - INFO - [socket.py:39] - l_Ap2YoLDlvEw9vOAAAE: Received packet PONG data 
+2025-10-15 17:34:58,360 - INFO - [socket.py:78] - l_Ap2YoLDlvEw9vOAAAE: Sending packet PING data None
+2025-10-15 17:34:58,366 - INFO - [socket.py:39] - l_Ap2YoLDlvEw9vOAAAE: Received packet PONG data 
+2025-10-15 17:35:23,375 - INFO - [socket.py:78] - l_Ap2YoLDlvEw9vOAAAE: Sending packet PING data None
+2025-10-15 17:35:23,925 - INFO - [socket.py:39] - l_Ap2YoLDlvEw9vOAAAE: Received packet PONG data 
+2025-10-15 17:35:48,929 - INFO - [socket.py:78] - l_Ap2YoLDlvEw9vOAAAE: Sending packet PING data None
+2025-10-15 17:35:48,933 - INFO - [socket.py:39] - l_Ap2YoLDlvEw9vOAAAE: Received packet PONG data 
+2025-10-15 17:36:13,945 - INFO - [socket.py:78] - l_Ap2YoLDlvEw9vOAAAE: Sending packet PING data None
+2025-10-15 17:36:15,491 - INFO - [socket.py:39] - l_Ap2YoLDlvEw9vOAAAE: Received packet PONG data 
+2025-10-15 17:36:40,521 - INFO - [socket.py:78] - l_Ap2YoLDlvEw9vOAAAE: Sending packet PING data None
+2025-10-15 17:36:41,170 - INFO - [socket.py:39] - l_Ap2YoLDlvEw9vOAAAE: Received packet PONG data 
+2025-10-15 17:37:06,173 - INFO - [socket.py:78] - l_Ap2YoLDlvEw9vOAAAE: Sending packet PING data None
+2025-10-15 17:37:06,191 - INFO - [socket.py:39] - l_Ap2YoLDlvEw9vOAAAE: Received packet PONG data 
+2025-10-15 17:37:31,200 - INFO - [socket.py:78] - l_Ap2YoLDlvEw9vOAAAE: Sending packet PING data None
+2025-10-15 17:37:31,216 - INFO - [socket.py:39] - l_Ap2YoLDlvEw9vOAAAE: Received packet PONG data 
+2025-10-15 17:37:56,231 - INFO - [socket.py:78] - l_Ap2YoLDlvEw9vOAAAE: Sending packet PING data None
+2025-10-15 17:37:56,237 - INFO - [socket.py:39] - l_Ap2YoLDlvEw9vOAAAE: Received packet PONG data 
+2025-10-15 17:38:21,250 - INFO - [socket.py:78] - l_Ap2YoLDlvEw9vOAAAE: Sending packet PING data None
+2025-10-15 17:38:21,307 - INFO - [socket.py:39] - l_Ap2YoLDlvEw9vOAAAE: Received packet PONG data 
+2025-10-15 17:38:46,320 - INFO - [socket.py:78] - l_Ap2YoLDlvEw9vOAAAE: Sending packet PING data None
+2025-10-15 17:38:46,331 - INFO - [socket.py:39] - l_Ap2YoLDlvEw9vOAAAE: Received packet PONG data 
+2025-10-15 17:39:11,340 - INFO - [socket.py:78] - l_Ap2YoLDlvEw9vOAAAE: Sending packet PING data None
+2025-10-15 17:39:11,360 - INFO - [socket.py:39] - l_Ap2YoLDlvEw9vOAAAE: Received packet PONG data 
+2025-10-15 17:39:16,221 - INFO - [ConnectionSocketHandler.py:20] - 用户68aaad4772a150b783ad04b1(SID: -9nMFPRO3uHldntqAAAF)已断开连接
+2025-10-15 17:39:16,681 - INFO - [socket.py:78] - TCU2S6cppXlFaqR8AAAG: Sending packet OPEN data {'sid': 'TCU2S6cppXlFaqR8AAAG', 'upgrades': [], 'pingTimeout': 20000, 'pingInterval': 25000, 'maxPayload': 1000000}
+2025-10-15 17:39:16,682 - INFO - [socket.py:90] - TCU2S6cppXlFaqR8AAAG: Received request to upgrade to websocket
+2025-10-15 17:39:16,684 - INFO - [socket.py:219] - TCU2S6cppXlFaqR8AAAG: Upgrade to websocket successful
+2025-10-15 17:39:16,686 - INFO - [socket.py:39] - TCU2S6cppXlFaqR8AAAG: Received packet MESSAGE data 0{"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OGFhYWQ0NzcyYTE1MGI3ODNhZDA0YjEiLCJleHAiOjE3NjA2MDY3NDV9.x2sle0vFc3yAs7DwdxmGhiUDOMLD48nfubpE0YchP5I"}
+2025-10-15 17:39:16,687 - INFO - [socket.py:78] - TCU2S6cppXlFaqR8AAAG: Sending packet MESSAGE data 0{"sid":"vkYFN_vIsDfyc5z-AAAH"}
+2025-10-15 17:39:16,691 - INFO - [socket.py:39] - TCU2S6cppXlFaqR8AAAG: Received packet MESSAGE data 2["user_auth",{"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OGFhYWQ0NzcyYTE1MGI3ODNhZDA0YjEiLCJleHAiOjE3NjA2MDY3NDV9.x2sle0vFc3yAs7DwdxmGhiUDOMLD48nfubpE0YchP5I"}]
+2025-10-15 17:39:16,691 - INFO - [server.py:576] - received event "user_auth" from vkYFN_vIsDfyc5z-AAAH [/]
+2025-10-15 17:39:16,693 - INFO - [server.py:284] - vkYFN_vIsDfyc5z-AAAH is entering room user_68aaad4772a150b783ad04b1 [/]
+2025-10-15 17:39:16,693 - INFO - [UserSocketHandler.py:30] - 用户68aaad4772a150b783ad04b1(SID: vkYFN_vIsDfyc5z-AAAH)已认证成功并加入房间user_68aaad4772a150b783ad04b1
+2025-10-15 17:39:41,704 - INFO - [socket.py:78] - TCU2S6cppXlFaqR8AAAG: Sending packet PING data None
+2025-10-15 17:39:43,286 - INFO - [socket.py:39] - TCU2S6cppXlFaqR8AAAG: Received packet PONG data 
+2025-10-15 17:40:08,294 - INFO - [socket.py:78] - TCU2S6cppXlFaqR8AAAG: Sending packet PING data None
+2025-10-15 17:40:08,298 - INFO - [socket.py:39] - TCU2S6cppXlFaqR8AAAG: Received packet PONG data 
+2025-10-15 17:40:33,307 - INFO - [socket.py:78] - TCU2S6cppXlFaqR8AAAG: Sending packet PING data None
+2025-10-15 17:40:33,310 - INFO - [socket.py:39] - TCU2S6cppXlFaqR8AAAG: Received packet PONG data 
+2025-10-15 17:40:58,319 - INFO - [socket.py:78] - TCU2S6cppXlFaqR8AAAG: Sending packet PING data None
+2025-10-15 17:40:58,323 - INFO - [socket.py:39] - TCU2S6cppXlFaqR8AAAG: Received packet PONG data 
+2025-10-15 17:41:23,339 - INFO - [socket.py:78] - TCU2S6cppXlFaqR8AAAG: Sending packet PING data None
+2025-10-15 17:41:23,343 - INFO - [socket.py:39] - TCU2S6cppXlFaqR8AAAG: Received packet PONG data 
+2025-10-15 17:41:48,352 - INFO - [socket.py:78] - TCU2S6cppXlFaqR8AAAG: Sending packet PING data None
+2025-10-15 17:41:48,357 - INFO - [socket.py:39] - TCU2S6cppXlFaqR8AAAG: Received packet PONG data 
+2025-10-15 17:42:13,372 - INFO - [socket.py:78] - TCU2S6cppXlFaqR8AAAG: Sending packet PING data None
+2025-10-15 17:42:13,383 - INFO - [socket.py:39] - TCU2S6cppXlFaqR8AAAG: Received packet PONG data 
+2025-10-15 17:42:38,398 - INFO - [socket.py:78] - TCU2S6cppXlFaqR8AAAG: Sending packet PING data None
+2025-10-15 17:42:38,402 - INFO - [socket.py:39] - TCU2S6cppXlFaqR8AAAG: Received packet PONG data 
+2025-10-15 17:43:03,410 - INFO - [socket.py:78] - TCU2S6cppXlFaqR8AAAG: Sending packet PING data None
+2025-10-15 17:43:03,415 - INFO - [socket.py:39] - TCU2S6cppXlFaqR8AAAG: Received packet PONG data 
+2025-10-15 17:43:28,430 - INFO - [socket.py:78] - TCU2S6cppXlFaqR8AAAG: Sending packet PING data None
+2025-10-15 17:43:28,434 - INFO - [socket.py:39] - TCU2S6cppXlFaqR8AAAG: Received packet PONG data 
+2025-10-15 17:43:53,809 - INFO - [socket.py:78] - TCU2S6cppXlFaqR8AAAG: Sending packet PING data None
+2025-10-15 17:43:55,931 - INFO - [socket.py:39] - TCU2S6cppXlFaqR8AAAG: Received packet PONG data 
+2025-10-15 17:44:28,490 - INFO - [socket.py:78] - TCU2S6cppXlFaqR8AAAG: Sending packet PING data None
+2025-10-15 17:44:34,662 - INFO - [socket.py:39] - TCU2S6cppXlFaqR8AAAG: Received packet PONG data 
+2025-10-15 17:45:00,653 - INFO - [socket.py:78] - TCU2S6cppXlFaqR8AAAG: Sending packet PING data None
+2025-10-15 17:45:00,663 - INFO - [socket.py:39] - TCU2S6cppXlFaqR8AAAG: Received packet PONG data 
+2025-10-15 17:45:25,726 - INFO - [socket.py:78] - TCU2S6cppXlFaqR8AAAG: Sending packet PING data None
+2025-10-15 17:45:25,738 - INFO - [socket.py:39] - TCU2S6cppXlFaqR8AAAG: Received packet PONG data 
+2025-10-15 17:45:30,560 - INFO - [ConnectionSocketHandler.py:20] - 用户68aaad4772a150b783ad04b1(SID: vkYFN_vIsDfyc5z-AAAH)已断开连接
+2025-10-15 17:45:31,226 - INFO - [socket.py:78] - rj64PSKd5guuFdWUAAAI: Sending packet OPEN data {'sid': 'rj64PSKd5guuFdWUAAAI', 'upgrades': [], 'pingTimeout': 20000, 'pingInterval': 25000, 'maxPayload': 1000000}
+2025-10-15 17:45:31,250 - INFO - [socket.py:90] - rj64PSKd5guuFdWUAAAI: Received request to upgrade to websocket
+2025-10-15 17:45:31,265 - INFO - [socket.py:219] - rj64PSKd5guuFdWUAAAI: Upgrade to websocket successful
+2025-10-15 17:45:31,268 - INFO - [socket.py:39] - rj64PSKd5guuFdWUAAAI: Received packet MESSAGE data 0{"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OGFhYWQ0NzcyYTE1MGI3ODNhZDA0YjEiLCJleHAiOjE3NjA2MDY3NDV9.x2sle0vFc3yAs7DwdxmGhiUDOMLD48nfubpE0YchP5I"}
+2025-10-15 17:45:31,273 - INFO - [socket.py:78] - rj64PSKd5guuFdWUAAAI: Sending packet MESSAGE data 0{"sid":"pIYFyQgguW8_GlwWAAAJ"}
+2025-10-15 17:45:31,277 - INFO - [socket.py:39] - rj64PSKd5guuFdWUAAAI: Received packet MESSAGE data 2["user_auth",{"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OGFhYWQ0NzcyYTE1MGI3ODNhZDA0YjEiLCJleHAiOjE3NjA2MDY3NDV9.x2sle0vFc3yAs7DwdxmGhiUDOMLD48nfubpE0YchP5I"}]
+2025-10-15 17:45:31,278 - INFO - [server.py:576] - received event "user_auth" from pIYFyQgguW8_GlwWAAAJ [/]
+2025-10-15 17:45:31,282 - INFO - [server.py:284] - pIYFyQgguW8_GlwWAAAJ is entering room user_68aaad4772a150b783ad04b1 [/]
+2025-10-15 17:45:31,282 - INFO - [UserSocketHandler.py:30] - 用户68aaad4772a150b783ad04b1(SID: pIYFyQgguW8_GlwWAAAJ)已认证成功并加入房间user_68aaad4772a150b783ad04b1
+2025-10-15 17:45:56,281 - INFO - [socket.py:78] - rj64PSKd5guuFdWUAAAI: Sending packet PING data None
+2025-10-15 17:45:56,562 - INFO - [socket.py:39] - rj64PSKd5guuFdWUAAAI: Received packet PONG data 
+2025-10-15 17:46:21,567 - INFO - [socket.py:78] - rj64PSKd5guuFdWUAAAI: Sending packet PING data None
+2025-10-15 17:46:21,573 - INFO - [socket.py:39] - rj64PSKd5guuFdWUAAAI: Received packet PONG data 
+2025-10-15 17:46:30,457 - INFO - [ConnectionSocketHandler.py:20] - 用户68aaad4772a150b783ad04b1(SID: pIYFyQgguW8_GlwWAAAJ)已断开连接
+2025-10-15 17:46:30,932 - INFO - [socket.py:78] - E1KtXKQ-bodoenY5AAAK: Sending packet OPEN data {'sid': 'E1KtXKQ-bodoenY5AAAK', 'upgrades': [], 'pingTimeout': 20000, 'pingInterval': 25000, 'maxPayload': 1000000}
+2025-10-15 17:46:30,938 - INFO - [socket.py:90] - E1KtXKQ-bodoenY5AAAK: Received request to upgrade to websocket
+2025-10-15 17:46:30,947 - INFO - [socket.py:219] - E1KtXKQ-bodoenY5AAAK: Upgrade to websocket successful
+2025-10-15 17:46:30,958 - INFO - [socket.py:39] - E1KtXKQ-bodoenY5AAAK: Received packet MESSAGE data 0{"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OGFhYWQ0NzcyYTE1MGI3ODNhZDA0YjEiLCJleHAiOjE3NjA2MDY3NDV9.x2sle0vFc3yAs7DwdxmGhiUDOMLD48nfubpE0YchP5I"}
+2025-10-15 17:46:30,965 - INFO - [socket.py:78] - E1KtXKQ-bodoenY5AAAK: Sending packet MESSAGE data 0{"sid":"rB016TqOgyOnOK5VAAAL"}
+2025-10-15 17:46:30,973 - INFO - [socket.py:39] - E1KtXKQ-bodoenY5AAAK: Received packet MESSAGE data 2["user_auth",{"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OGFhYWQ0NzcyYTE1MGI3ODNhZDA0YjEiLCJleHAiOjE3NjA2MDY3NDV9.x2sle0vFc3yAs7DwdxmGhiUDOMLD48nfubpE0YchP5I"}]
+2025-10-15 17:46:30,974 - INFO - [server.py:576] - received event "user_auth" from rB016TqOgyOnOK5VAAAL [/]
+2025-10-15 17:46:30,976 - INFO - [server.py:284] - rB016TqOgyOnOK5VAAAL is entering room user_68aaad4772a150b783ad04b1 [/]
+2025-10-15 17:46:30,981 - INFO - [UserSocketHandler.py:30] - 用户68aaad4772a150b783ad04b1(SID: rB016TqOgyOnOK5VAAAL)已认证成功并加入房间user_68aaad4772a150b783ad04b1
+2025-10-15 17:46:42,141 - WARNING - [StreamChatHandler.py:53] - 危险检测结果: 其他, 危险等级: 0.0943
+2025-10-15 17:46:42,411 - ERROR - [StreamChatHandler.py:183] - ❌ 聊天处理错误: 403 Client Error: Forbidden for url: https://api.siliconflow.cn/v1/chat/completions
+2025-10-15 17:46:47,200 - WARNING - [StreamChatHandler.py:53] - 危险检测结果: 其他, 危险等级: 0.0943
+2025-10-15 17:46:47,346 - ERROR - [StreamChatHandler.py:183] - ❌ 聊天处理错误: 403 Client Error: Forbidden for url: https://api.siliconflow.cn/v1/chat/completions
+2025-10-15 17:46:51,648 - WARNING - [StreamChatHandler.py:53] - 危险检测结果: 其他, 危险等级: 0.0943
+2025-10-15 17:46:51,761 - ERROR - [StreamChatHandler.py:183] - ❌ 聊天处理错误: 403 Client Error: Forbidden for url: https://api.siliconflow.cn/v1/chat/completions
+2025-10-15 17:46:55,958 - INFO - [socket.py:78] - E1KtXKQ-bodoenY5AAAK: Sending packet PING data None
+2025-10-15 17:46:55,965 - INFO - [socket.py:39] - E1KtXKQ-bodoenY5AAAK: Received packet PONG data 
+2025-10-15 17:47:00,554 - WARNING - [StreamChatHandler.py:53] - 危险检测结果: 其他, 危险等级: 0.0943
+2025-10-15 17:47:00,684 - ERROR - [StreamChatHandler.py:183] - ❌ 聊天处理错误: 403 Client Error: Forbidden for url: https://api.siliconflow.cn/v1/chat/completions
+2025-10-15 17:47:20,975 - INFO - [socket.py:78] - E1KtXKQ-bodoenY5AAAK: Sending packet PING data None
+2025-10-15 17:47:20,984 - INFO - [socket.py:39] - E1KtXKQ-bodoenY5AAAK: Received packet PONG data 
+2025-10-15 17:47:45,999 - INFO - [socket.py:78] - E1KtXKQ-bodoenY5AAAK: Sending packet PING data None
+2025-10-15 17:47:46,021 - INFO - [socket.py:39] - E1KtXKQ-bodoenY5AAAK: Received packet PONG data 
+2025-10-15 17:48:11,038 - INFO - [socket.py:78] - E1KtXKQ-bodoenY5AAAK: Sending packet PING data None
+2025-10-15 17:48:11,047 - INFO - [socket.py:39] - E1KtXKQ-bodoenY5AAAK: Received packet PONG data 
+2025-10-15 17:48:36,062 - INFO - [socket.py:78] - E1KtXKQ-bodoenY5AAAK: Sending packet PING data None
+2025-10-15 17:48:36,064 - INFO - [socket.py:39] - E1KtXKQ-bodoenY5AAAK: Received packet PONG data 
+2025-10-15 17:48:47,884 - INFO - [socket.py:39] - E1KtXKQ-bodoenY5AAAK: Received packet MESSAGE data 1
+2025-10-15 17:48:47,885 - INFO - [ConnectionSocketHandler.py:20] - 用户68aaad4772a150b783ad04b1(SID: rB016TqOgyOnOK5VAAAL)已断开连接
+2025-10-15 17:50:31,093 - INFO - [socket.py:78] - nTS4XW_NuiQGSmdyAAAM: Sending packet OPEN data {'sid': 'nTS4XW_NuiQGSmdyAAAM', 'upgrades': [], 'pingTimeout': 20000, 'pingInterval': 25000, 'maxPayload': 1000000}
+2025-10-15 17:50:31,095 - INFO - [socket.py:90] - nTS4XW_NuiQGSmdyAAAM: Received request to upgrade to websocket
+2025-10-15 17:50:31,096 - INFO - [socket.py:219] - nTS4XW_NuiQGSmdyAAAM: Upgrade to websocket successful
+2025-10-15 17:50:31,102 - INFO - [socket.py:39] - nTS4XW_NuiQGSmdyAAAM: Received packet MESSAGE data 0{"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OGFhYWQ0NzcyYTE1MGI3ODNhZDA0YjEiLCJleHAiOjE3NjA2MDY3NDV9.x2sle0vFc3yAs7DwdxmGhiUDOMLD48nfubpE0YchP5I"}
+2025-10-15 17:50:31,103 - INFO - [socket.py:78] - nTS4XW_NuiQGSmdyAAAM: Sending packet MESSAGE data 0{"sid":"JmhzRh-_X5enZR7kAAAN"}
+2025-10-15 17:50:31,109 - INFO - [socket.py:39] - nTS4XW_NuiQGSmdyAAAM: Received packet MESSAGE data 2["user_auth",{"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OGFhYWQ0NzcyYTE1MGI3ODNhZDA0YjEiLCJleHAiOjE3NjA2MDY3NDV9.x2sle0vFc3yAs7DwdxmGhiUDOMLD48nfubpE0YchP5I"}]
+2025-10-15 17:50:31,109 - INFO - [server.py:576] - received event "user_auth" from JmhzRh-_X5enZR7kAAAN [/]
+2025-10-15 17:50:31,111 - INFO - [server.py:284] - JmhzRh-_X5enZR7kAAAN is entering room user_68aaad4772a150b783ad04b1 [/]
+2025-10-15 17:50:31,112 - INFO - [UserSocketHandler.py:30] - 用户68aaad4772a150b783ad04b1(SID: JmhzRh-_X5enZR7kAAAN)已认证成功并加入房间user_68aaad4772a150b783ad04b1
+2025-10-15 17:50:32,349 - INFO - [ConnectionSocketHandler.py:20] - 用户68aaad4772a150b783ad04b1(SID: JmhzRh-_X5enZR7kAAAN)已断开连接
+2025-10-15 17:50:32,725 - INFO - [socket.py:78] - dWPd6fHzwOsW97MdAAAO: Sending packet OPEN data {'sid': 'dWPd6fHzwOsW97MdAAAO', 'upgrades': [], 'pingTimeout': 20000, 'pingInterval': 25000, 'maxPayload': 1000000}
+2025-10-15 17:50:32,726 - INFO - [socket.py:90] - dWPd6fHzwOsW97MdAAAO: Received request to upgrade to websocket
+2025-10-15 17:50:32,727 - INFO - [socket.py:219] - dWPd6fHzwOsW97MdAAAO: Upgrade to websocket successful
+2025-10-15 17:50:32,733 - INFO - [socket.py:39] - dWPd6fHzwOsW97MdAAAO: Received packet MESSAGE data 0{"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OGFhYWQ0NzcyYTE1MGI3ODNhZDA0YjEiLCJleHAiOjE3NjA2MDY3NDV9.x2sle0vFc3yAs7DwdxmGhiUDOMLD48nfubpE0YchP5I"}
+2025-10-15 17:50:32,734 - INFO - [socket.py:78] - dWPd6fHzwOsW97MdAAAO: Sending packet MESSAGE data 0{"sid":"bfSE6qJFRxHzRXQvAAAP"}
+2025-10-15 17:50:32,735 - INFO - [socket.py:39] - dWPd6fHzwOsW97MdAAAO: Received packet MESSAGE data 2["user_auth",{"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OGFhYWQ0NzcyYTE1MGI3ODNhZDA0YjEiLCJleHAiOjE3NjA2MDY3NDV9.x2sle0vFc3yAs7DwdxmGhiUDOMLD48nfubpE0YchP5I"}]
+2025-10-15 17:50:32,738 - INFO - [server.py:576] - received event "user_auth" from bfSE6qJFRxHzRXQvAAAP [/]
+2025-10-15 17:50:32,741 - INFO - [server.py:284] - bfSE6qJFRxHzRXQvAAAP is entering room user_68aaad4772a150b783ad04b1 [/]
+2025-10-15 17:50:32,741 - INFO - [UserSocketHandler.py:30] - 用户68aaad4772a150b783ad04b1(SID: bfSE6qJFRxHzRXQvAAAP)已认证成功并加入房间user_68aaad4772a150b783ad04b1
+2025-10-15 17:50:57,736 - INFO - [socket.py:78] - dWPd6fHzwOsW97MdAAAO: Sending packet PING data None
+2025-10-15 17:50:57,739 - INFO - [socket.py:39] - dWPd6fHzwOsW97MdAAAO: Received packet PONG data 
+2025-10-15 17:51:22,756 - INFO - [socket.py:78] - dWPd6fHzwOsW97MdAAAO: Sending packet PING data None
+2025-10-15 17:51:22,783 - INFO - [socket.py:39] - dWPd6fHzwOsW97MdAAAO: Received packet PONG data 
+2025-10-15 17:51:47,842 - INFO - [socket.py:78] - dWPd6fHzwOsW97MdAAAO: Sending packet PING data None
+2025-10-15 17:51:48,126 - INFO - [socket.py:39] - dWPd6fHzwOsW97MdAAAO: Received packet PONG data 
+2025-10-15 17:52:13,133 - INFO - [socket.py:78] - dWPd6fHzwOsW97MdAAAO: Sending packet PING data None
+2025-10-15 17:52:13,138 - INFO - [socket.py:39] - dWPd6fHzwOsW97MdAAAO: Received packet PONG data 
+2025-10-15 17:52:38,147 - INFO - [socket.py:78] - dWPd6fHzwOsW97MdAAAO: Sending packet PING data None
+2025-10-15 17:52:38,383 - INFO - [socket.py:39] - dWPd6fHzwOsW97MdAAAO: Received packet PONG data 
+2025-10-15 17:53:03,401 - INFO - [socket.py:78] - dWPd6fHzwOsW97MdAAAO: Sending packet PING data None
+2025-10-15 17:53:03,411 - INFO - [socket.py:39] - dWPd6fHzwOsW97MdAAAO: Received packet PONG data 
+2025-10-15 17:53:28,416 - INFO - [socket.py:78] - dWPd6fHzwOsW97MdAAAO: Sending packet PING data None
+2025-10-15 17:53:28,420 - INFO - [socket.py:39] - dWPd6fHzwOsW97MdAAAO: Received packet PONG data 
+2025-10-15 17:53:53,432 - INFO - [socket.py:78] - dWPd6fHzwOsW97MdAAAO: Sending packet PING data None
+2025-10-15 17:53:53,436 - INFO - [socket.py:39] - dWPd6fHzwOsW97MdAAAO: Received packet PONG data 
+2025-10-15 17:54:18,447 - INFO - [socket.py:78] - dWPd6fHzwOsW97MdAAAO: Sending packet PING data None
+2025-10-15 17:54:18,498 - INFO - [socket.py:39] - dWPd6fHzwOsW97MdAAAO: Received packet PONG data 
+2025-10-15 17:54:27,582 - INFO - [ConnectionSocketHandler.py:20] - 用户68aaad4772a150b783ad04b1(SID: bfSE6qJFRxHzRXQvAAAP)已断开连接
+2025-10-15 17:54:28,336 - INFO - [socket.py:78] - eJMtGCX2QZcz8-M5AAAQ: Sending packet OPEN data {'sid': 'eJMtGCX2QZcz8-M5AAAQ', 'upgrades': [], 'pingTimeout': 20000, 'pingInterval': 25000, 'maxPayload': 1000000}
+2025-10-15 17:54:28,337 - INFO - [socket.py:90] - eJMtGCX2QZcz8-M5AAAQ: Received request to upgrade to websocket
+2025-10-15 17:54:28,339 - INFO - [socket.py:219] - eJMtGCX2QZcz8-M5AAAQ: Upgrade to websocket successful
+2025-10-15 17:54:28,345 - INFO - [socket.py:39] - eJMtGCX2QZcz8-M5AAAQ: Received packet MESSAGE data 0{"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OGFhYWQ0NzcyYTE1MGI3ODNhZDA0YjEiLCJleHAiOjE3NjA2MDY3NDV9.x2sle0vFc3yAs7DwdxmGhiUDOMLD48nfubpE0YchP5I"}
+2025-10-15 17:54:28,346 - INFO - [socket.py:78] - eJMtGCX2QZcz8-M5AAAQ: Sending packet MESSAGE data 0{"sid":"nVQOqThJhcJHlBfvAAAR"}
+2025-10-15 17:54:28,351 - INFO - [socket.py:39] - eJMtGCX2QZcz8-M5AAAQ: Received packet MESSAGE data 2["user_auth",{"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OGFhYWQ0NzcyYTE1MGI3ODNhZDA0YjEiLCJleHAiOjE3NjA2MDY3NDV9.x2sle0vFc3yAs7DwdxmGhiUDOMLD48nfubpE0YchP5I"}]
+2025-10-15 17:54:28,353 - INFO - [server.py:576] - received event "user_auth" from nVQOqThJhcJHlBfvAAAR [/]
+2025-10-15 17:54:28,356 - INFO - [server.py:284] - nVQOqThJhcJHlBfvAAAR is entering room user_68aaad4772a150b783ad04b1 [/]
+2025-10-15 17:54:28,358 - INFO - [UserSocketHandler.py:30] - 用户68aaad4772a150b783ad04b1(SID: nVQOqThJhcJHlBfvAAAR)已认证成功并加入房间user_68aaad4772a150b783ad04b1
+2025-10-15 17:54:31,232 - INFO - [ConnectionSocketHandler.py:20] - 用户68aaad4772a150b783ad04b1(SID: nVQOqThJhcJHlBfvAAAR)已断开连接
+2025-10-15 17:54:31,616 - INFO - [socket.py:78] - _GWLUOpkNmUGtOYBAAAS: Sending packet OPEN data {'sid': '_GWLUOpkNmUGtOYBAAAS', 'upgrades': [], 'pingTimeout': 20000, 'pingInterval': 25000, 'maxPayload': 1000000}
+2025-10-15 17:54:31,618 - INFO - [socket.py:90] - _GWLUOpkNmUGtOYBAAAS: Received request to upgrade to websocket
+2025-10-15 17:54:31,619 - INFO - [socket.py:219] - _GWLUOpkNmUGtOYBAAAS: Upgrade to websocket successful
+2025-10-15 17:54:31,624 - INFO - [socket.py:39] - _GWLUOpkNmUGtOYBAAAS: Received packet MESSAGE data 0{"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OGFhYWQ0NzcyYTE1MGI3ODNhZDA0YjEiLCJleHAiOjE3NjA2MDY3NDV9.x2sle0vFc3yAs7DwdxmGhiUDOMLD48nfubpE0YchP5I"}
+2025-10-15 17:54:31,625 - INFO - [socket.py:78] - _GWLUOpkNmUGtOYBAAAS: Sending packet MESSAGE data 0{"sid":"YMuCAnQEBOSwXyyaAAAT"}
+2025-10-15 17:54:31,628 - INFO - [socket.py:39] - _GWLUOpkNmUGtOYBAAAS: Received packet MESSAGE data 2["user_auth",{"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OGFhYWQ0NzcyYTE1MGI3ODNhZDA0YjEiLCJleHAiOjE3NjA2MDY3NDV9.x2sle0vFc3yAs7DwdxmGhiUDOMLD48nfubpE0YchP5I"}]
+2025-10-15 17:54:31,629 - INFO - [server.py:576] - received event "user_auth" from YMuCAnQEBOSwXyyaAAAT [/]
+2025-10-15 17:54:31,631 - INFO - [server.py:284] - YMuCAnQEBOSwXyyaAAAT is entering room user_68aaad4772a150b783ad04b1 [/]
+2025-10-15 17:54:31,633 - INFO - [UserSocketHandler.py:30] - 用户68aaad4772a150b783ad04b1(SID: YMuCAnQEBOSwXyyaAAAT)已认证成功并加入房间user_68aaad4772a150b783ad04b1
+2025-10-15 17:54:56,629 - INFO - [socket.py:78] - _GWLUOpkNmUGtOYBAAAS: Sending packet PING data None
+2025-10-15 17:54:56,643 - INFO - [socket.py:39] - _GWLUOpkNmUGtOYBAAAS: Received packet PONG data 
+2025-10-15 17:55:21,650 - INFO - [socket.py:78] - _GWLUOpkNmUGtOYBAAAS: Sending packet PING data None
+2025-10-15 17:55:21,663 - INFO - [socket.py:39] - _GWLUOpkNmUGtOYBAAAS: Received packet PONG data 
+2025-10-15 17:55:46,670 - INFO - [socket.py:78] - _GWLUOpkNmUGtOYBAAAS: Sending packet PING data None
+2025-10-15 17:55:46,675 - INFO - [socket.py:39] - _GWLUOpkNmUGtOYBAAAS: Received packet PONG data 
+2025-10-15 17:56:11,685 - INFO - [socket.py:78] - _GWLUOpkNmUGtOYBAAAS: Sending packet PING data None
+2025-10-15 17:56:11,692 - INFO - [socket.py:39] - _GWLUOpkNmUGtOYBAAAS: Received packet PONG data 
+2025-10-15 17:56:36,696 - INFO - [socket.py:78] - _GWLUOpkNmUGtOYBAAAS: Sending packet PING data None
+2025-10-15 17:56:37,128 - INFO - [socket.py:39] - _GWLUOpkNmUGtOYBAAAS: Received packet PONG data 
+2025-10-15 17:57:02,138 - INFO - [socket.py:78] - _GWLUOpkNmUGtOYBAAAS: Sending packet PING data None
+2025-10-15 17:57:02,150 - INFO - [socket.py:39] - _GWLUOpkNmUGtOYBAAAS: Received packet PONG data 
+2025-10-15 17:57:27,345 - INFO - [socket.py:78] - _GWLUOpkNmUGtOYBAAAS: Sending packet PING data None
+2025-10-15 17:57:27,347 - INFO - [socket.py:39] - _GWLUOpkNmUGtOYBAAAS: Received packet PONG data 
+2025-10-15 17:57:52,379 - INFO - [socket.py:78] - _GWLUOpkNmUGtOYBAAAS: Sending packet PING data None
+2025-10-15 17:57:52,382 - INFO - [socket.py:39] - _GWLUOpkNmUGtOYBAAAS: Received packet PONG data 
+2025-10-15 17:58:17,403 - INFO - [socket.py:78] - _GWLUOpkNmUGtOYBAAAS: Sending packet PING data None
+2025-10-15 17:58:17,409 - INFO - [socket.py:39] - _GWLUOpkNmUGtOYBAAAS: Received packet PONG data 
+2025-10-15 17:58:42,425 - INFO - [socket.py:78] - _GWLUOpkNmUGtOYBAAAS: Sending packet PING data None
+2025-10-15 17:58:42,429 - INFO - [socket.py:39] - _GWLUOpkNmUGtOYBAAAS: Received packet PONG data 
+2025-10-15 17:59:07,442 - INFO - [socket.py:78] - _GWLUOpkNmUGtOYBAAAS: Sending packet PING data None
+2025-10-15 17:59:07,447 - INFO - [socket.py:39] - _GWLUOpkNmUGtOYBAAAS: Received packet PONG data 
+2025-10-15 17:59:32,466 - INFO - [socket.py:78] - _GWLUOpkNmUGtOYBAAAS: Sending packet PING data None
+2025-10-15 17:59:32,471 - INFO - [socket.py:39] - _GWLUOpkNmUGtOYBAAAS: Received packet PONG data 
+2025-10-15 17:59:57,479 - INFO - [socket.py:78] - _GWLUOpkNmUGtOYBAAAS: Sending packet PING data None
+2025-10-15 17:59:57,493 - INFO - [socket.py:39] - _GWLUOpkNmUGtOYBAAAS: Received packet PONG data 
+2025-10-15 18:00:16,001 - INFO - [ConnectionSocketHandler.py:20] - 用户68aaad4772a150b783ad04b1(SID: YMuCAnQEBOSwXyyaAAAT)已断开连接
+2025-10-15 18:00:16,727 - INFO - [socket.py:78] - FllFFJFJDcuTf9OsAAAU: Sending packet OPEN data {'sid': 'FllFFJFJDcuTf9OsAAAU', 'upgrades': [], 'pingTimeout': 20000, 'pingInterval': 25000, 'maxPayload': 1000000}
+2025-10-15 18:00:16,728 - INFO - [socket.py:90] - FllFFJFJDcuTf9OsAAAU: Received request to upgrade to websocket
+2025-10-15 18:00:16,730 - INFO - [socket.py:219] - FllFFJFJDcuTf9OsAAAU: Upgrade to websocket successful
+2025-10-15 18:00:16,734 - INFO - [socket.py:39] - FllFFJFJDcuTf9OsAAAU: Received packet MESSAGE data 0{"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OGFhYWQ0NzcyYTE1MGI3ODNhZDA0YjEiLCJleHAiOjE3NjA2MDY3NDV9.x2sle0vFc3yAs7DwdxmGhiUDOMLD48nfubpE0YchP5I"}
+2025-10-15 18:00:16,736 - INFO - [socket.py:78] - FllFFJFJDcuTf9OsAAAU: Sending packet MESSAGE data 0{"sid":"VnSMoN2TB5OTSXmLAAAV"}
+2025-10-15 18:00:16,739 - INFO - [socket.py:39] - FllFFJFJDcuTf9OsAAAU: Received packet MESSAGE data 2["user_auth",{"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OGFhYWQ0NzcyYTE1MGI3ODNhZDA0YjEiLCJleHAiOjE3NjA2MDY3NDV9.x2sle0vFc3yAs7DwdxmGhiUDOMLD48nfubpE0YchP5I"}]
+2025-10-15 18:00:16,739 - INFO - [server.py:576] - received event "user_auth" from VnSMoN2TB5OTSXmLAAAV [/]
+2025-10-15 18:00:16,744 - INFO - [server.py:284] - VnSMoN2TB5OTSXmLAAAV is entering room user_68aaad4772a150b783ad04b1 [/]
+2025-10-15 18:00:16,745 - INFO - [UserSocketHandler.py:30] - 用户68aaad4772a150b783ad04b1(SID: VnSMoN2TB5OTSXmLAAAV)已认证成功并加入房间user_68aaad4772a150b783ad04b1
+2025-10-15 18:00:41,738 - INFO - [socket.py:78] - FllFFJFJDcuTf9OsAAAU: Sending packet PING data None
+2025-10-15 18:00:41,806 - INFO - [socket.py:39] - FllFFJFJDcuTf9OsAAAU: Received packet PONG data 
+2025-10-15 18:01:06,822 - INFO - [socket.py:78] - FllFFJFJDcuTf9OsAAAU: Sending packet PING data None
+2025-10-15 18:01:06,826 - INFO - [socket.py:39] - FllFFJFJDcuTf9OsAAAU: Received packet PONG data 
+2025-10-15 18:01:31,855 - INFO - [socket.py:78] - FllFFJFJDcuTf9OsAAAU: Sending packet PING data None
+2025-10-15 18:01:31,859 - INFO - [socket.py:39] - FllFFJFJDcuTf9OsAAAU: Received packet PONG data 
+2025-10-15 18:01:56,875 - INFO - [socket.py:78] - FllFFJFJDcuTf9OsAAAU: Sending packet PING data None
+2025-10-15 18:01:56,880 - INFO - [socket.py:39] - FllFFJFJDcuTf9OsAAAU: Received packet PONG data 
+2025-10-15 18:02:22,970 - INFO - [socket.py:78] - FllFFJFJDcuTf9OsAAAU: Sending packet PING data None
+2025-10-15 18:02:24,081 - INFO - [socket.py:39] - FllFFJFJDcuTf9OsAAAU: Received packet PONG data 
+2025-10-15 18:02:49,747 - INFO - [socket.py:78] - FllFFJFJDcuTf9OsAAAU: Sending packet PING data None
+2025-10-15 18:02:49,854 - INFO - [socket.py:39] - FllFFJFJDcuTf9OsAAAU: Received packet PONG data 
+2025-10-15 18:03:14,870 - INFO - [socket.py:78] - FllFFJFJDcuTf9OsAAAU: Sending packet PING data None
+2025-10-15 18:03:14,948 - INFO - [socket.py:39] - FllFFJFJDcuTf9OsAAAU: Received packet PONG data 
+2025-10-15 18:03:39,963 - INFO - [socket.py:78] - FllFFJFJDcuTf9OsAAAU: Sending packet PING data None
+2025-10-15 18:03:40,000 - INFO - [socket.py:39] - FllFFJFJDcuTf9OsAAAU: Received packet PONG data 
+2025-10-15 18:04:05,007 - INFO - [socket.py:78] - FllFFJFJDcuTf9OsAAAU: Sending packet PING data None
+2025-10-15 18:04:05,021 - INFO - [socket.py:39] - FllFFJFJDcuTf9OsAAAU: Received packet PONG data 
+2025-10-15 18:04:30,038 - INFO - [socket.py:78] - FllFFJFJDcuTf9OsAAAU: Sending packet PING data None
+2025-10-15 18:04:30,047 - INFO - [socket.py:39] - FllFFJFJDcuTf9OsAAAU: Received packet PONG data 
+2025-10-15 18:04:35,183 - INFO - [socket.py:39] - FllFFJFJDcuTf9OsAAAU: Received packet MESSAGE data 1
+2025-10-15 18:04:35,185 - INFO - [ConnectionSocketHandler.py:20] - 用户68aaad4772a150b783ad04b1(SID: VnSMoN2TB5OTSXmLAAAV)已断开连接
+2025-10-15 18:04:48,302 - INFO - [socket.py:78] - Kcu0pGiancFxu9QnAAAW: Sending packet OPEN data {'sid': 'Kcu0pGiancFxu9QnAAAW', 'upgrades': [], 'pingTimeout': 20000, 'pingInterval': 25000, 'maxPayload': 1000000}
+2025-10-15 18:04:48,305 - INFO - [socket.py:90] - Kcu0pGiancFxu9QnAAAW: Received request to upgrade to websocket
+2025-10-15 18:04:48,306 - INFO - [socket.py:219] - Kcu0pGiancFxu9QnAAAW: Upgrade to websocket successful
+2025-10-15 18:04:48,312 - INFO - [socket.py:39] - Kcu0pGiancFxu9QnAAAW: Received packet MESSAGE data 0{"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OGFhYWQ0NzcyYTE1MGI3ODNhZDA0YjEiLCJleHAiOjE3NjA2MDY3NDV9.x2sle0vFc3yAs7DwdxmGhiUDOMLD48nfubpE0YchP5I"}
+2025-10-15 18:04:48,313 - INFO - [socket.py:78] - Kcu0pGiancFxu9QnAAAW: Sending packet MESSAGE data 0{"sid":"uyVEoKFN8ld9gD7dAAAX"}
+2025-10-15 18:04:48,316 - INFO - [socket.py:39] - Kcu0pGiancFxu9QnAAAW: Received packet MESSAGE data 2["user_auth",{"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OGFhYWQ0NzcyYTE1MGI3ODNhZDA0YjEiLCJleHAiOjE3NjA2MDY3NDV9.x2sle0vFc3yAs7DwdxmGhiUDOMLD48nfubpE0YchP5I"}]
+2025-10-15 18:04:48,321 - INFO - [server.py:576] - received event "user_auth" from uyVEoKFN8ld9gD7dAAAX [/]
+2025-10-15 18:04:48,324 - INFO - [server.py:284] - uyVEoKFN8ld9gD7dAAAX is entering room user_68aaad4772a150b783ad04b1 [/]
+2025-10-15 18:04:48,333 - INFO - [UserSocketHandler.py:30] - 用户68aaad4772a150b783ad04b1(SID: uyVEoKFN8ld9gD7dAAAX)已认证成功并加入房间user_68aaad4772a150b783ad04b1
+2025-10-15 18:05:11,365 - INFO - [socket.py:39] - Kcu0pGiancFxu9QnAAAW: Received packet MESSAGE data 1
+2025-10-15 18:05:11,367 - INFO - [ConnectionSocketHandler.py:20] - 用户68aaad4772a150b783ad04b1(SID: uyVEoKFN8ld9gD7dAAAX)已断开连接
+2025-10-15 18:06:15,592 - INFO - [socket.py:78] - P2G7At3IGH5o9tUIAAAY: Sending packet OPEN data {'sid': 'P2G7At3IGH5o9tUIAAAY', 'upgrades': [], 'pingTimeout': 20000, 'pingInterval': 25000, 'maxPayload': 1000000}
+2025-10-15 18:06:15,598 - INFO - [socket.py:90] - P2G7At3IGH5o9tUIAAAY: Received request to upgrade to websocket
+2025-10-15 18:06:15,599 - INFO - [socket.py:219] - P2G7At3IGH5o9tUIAAAY: Upgrade to websocket successful
+2025-10-15 18:06:15,603 - INFO - [socket.py:39] - P2G7At3IGH5o9tUIAAAY: Received packet MESSAGE data 0{"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OGFhYWQ0NzcyYTE1MGI3ODNhZDA0YjEiLCJleHAiOjE3NjA2MDY3NDV9.x2sle0vFc3yAs7DwdxmGhiUDOMLD48nfubpE0YchP5I"}
+2025-10-15 18:06:15,606 - INFO - [socket.py:78] - P2G7At3IGH5o9tUIAAAY: Sending packet MESSAGE data 0{"sid":"DvxxlCG_iFo2VXk7AAAZ"}
+2025-10-15 18:06:15,609 - INFO - [socket.py:39] - P2G7At3IGH5o9tUIAAAY: Received packet MESSAGE data 2["user_auth",{"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OGFhYWQ0NzcyYTE1MGI3ODNhZDA0YjEiLCJleHAiOjE3NjA2MDY3NDV9.x2sle0vFc3yAs7DwdxmGhiUDOMLD48nfubpE0YchP5I"}]
+2025-10-15 18:06:15,613 - INFO - [server.py:576] - received event "user_auth" from DvxxlCG_iFo2VXk7AAAZ [/]
+2025-10-15 18:06:15,615 - INFO - [server.py:284] - DvxxlCG_iFo2VXk7AAAZ is entering room user_68aaad4772a150b783ad04b1 [/]
+2025-10-15 18:06:15,616 - INFO - [UserSocketHandler.py:30] - 用户68aaad4772a150b783ad04b1(SID: DvxxlCG_iFo2VXk7AAAZ)已认证成功并加入房间user_68aaad4772a150b783ad04b1
+2025-10-15 18:06:18,209 - INFO - [socket.py:39] - P2G7At3IGH5o9tUIAAAY: Received packet MESSAGE data 1
+2025-10-15 18:06:18,212 - INFO - [ConnectionSocketHandler.py:20] - 用户68aaad4772a150b783ad04b1(SID: DvxxlCG_iFo2VXk7AAAZ)已断开连接
+2025-10-15 18:07:13,376 - INFO - [socket.py:78] - fUgRXhkY7cS1K1rmAAAa: Sending packet OPEN data {'sid': 'fUgRXhkY7cS1K1rmAAAa', 'upgrades': [], 'pingTimeout': 20000, 'pingInterval': 25000, 'maxPayload': 1000000}
+2025-10-15 18:07:13,378 - INFO - [socket.py:90] - fUgRXhkY7cS1K1rmAAAa: Received request to upgrade to websocket
+2025-10-15 18:07:13,379 - INFO - [socket.py:219] - fUgRXhkY7cS1K1rmAAAa: Upgrade to websocket successful
+2025-10-15 18:07:13,382 - INFO - [socket.py:39] - fUgRXhkY7cS1K1rmAAAa: Received packet MESSAGE data 0{"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OGFhYWQ0NzcyYTE1MGI3ODNhZDA0YjEiLCJleHAiOjE3NjA2MDY3NDV9.x2sle0vFc3yAs7DwdxmGhiUDOMLD48nfubpE0YchP5I"}
+2025-10-15 18:07:13,383 - INFO - [socket.py:78] - fUgRXhkY7cS1K1rmAAAa: Sending packet MESSAGE data 0{"sid":"lJkLq96vpoUxXk-eAAAb"}
+2025-10-15 18:07:13,385 - INFO - [socket.py:39] - fUgRXhkY7cS1K1rmAAAa: Received packet MESSAGE data 2["user_auth",{"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OGFhYWQ0NzcyYTE1MGI3ODNhZDA0YjEiLCJleHAiOjE3NjA2MDY3NDV9.x2sle0vFc3yAs7DwdxmGhiUDOMLD48nfubpE0YchP5I"}]
+2025-10-15 18:07:13,386 - INFO - [server.py:576] - received event "user_auth" from lJkLq96vpoUxXk-eAAAb [/]
+2025-10-15 18:07:13,390 - INFO - [server.py:284] - lJkLq96vpoUxXk-eAAAb is entering room user_68aaad4772a150b783ad04b1 [/]
+2025-10-15 18:07:13,390 - INFO - [UserSocketHandler.py:30] - 用户68aaad4772a150b783ad04b1(SID: lJkLq96vpoUxXk-eAAAb)已认证成功并加入房间user_68aaad4772a150b783ad04b1
+2025-10-15 18:07:24,797 - WARNING - [StreamChatHandler.py:53] - 危险检测结果: 其他, 危险等级: 0.0384
+2025-10-15 18:07:24,937 - ERROR - [StreamChatHandler.py:183] - ❌ 聊天处理错误: 403 Client Error: Forbidden for url: https://api.siliconflow.cn/v1/chat/completions
+2025-10-15 18:07:31,495 - WARNING - [StreamChatHandler.py:53] - 危险检测结果: 其他, 危险等级: 0.0384
+2025-10-15 18:07:31,671 - ERROR - [StreamChatHandler.py:183] - ❌ 聊天处理错误: 403 Client Error: Forbidden for url: https://api.siliconflow.cn/v1/chat/completions
+2025-10-15 18:07:36,047 - WARNING - [StreamChatHandler.py:53] - 危险检测结果: 其他, 危险等级: 0.0384
+2025-10-15 18:07:36,154 - ERROR - [StreamChatHandler.py:183] - ❌ 聊天处理错误: 403 Client Error: Forbidden for url: https://api.siliconflow.cn/v1/chat/completions
+2025-10-15 18:07:38,390 - INFO - [socket.py:78] - fUgRXhkY7cS1K1rmAAAa: Sending packet PING data None
+2025-10-15 18:07:38,398 - INFO - [socket.py:39] - fUgRXhkY7cS1K1rmAAAa: Received packet PONG data 
+2025-10-15 18:07:56,719 - INFO - [socket.py:39] - fUgRXhkY7cS1K1rmAAAa: Received packet MESSAGE data 1
+2025-10-15 18:07:56,720 - INFO - [ConnectionSocketHandler.py:20] - 用户68aaad4772a150b783ad04b1(SID: lJkLq96vpoUxXk-eAAAb)已断开连接
+2025-10-15 18:10:11,375 - INFO - [socket.py:78] - BUv6a64nsuSAkGM9AAAc: Sending packet OPEN data {'sid': 'BUv6a64nsuSAkGM9AAAc', 'upgrades': [], 'pingTimeout': 20000, 'pingInterval': 25000, 'maxPayload': 1000000}
+2025-10-15 18:10:11,381 - INFO - [socket.py:90] - BUv6a64nsuSAkGM9AAAc: Received request to upgrade to websocket
+2025-10-15 18:10:11,385 - INFO - [socket.py:219] - BUv6a64nsuSAkGM9AAAc: Upgrade to websocket successful
+2025-10-15 18:10:11,391 - INFO - [socket.py:39] - BUv6a64nsuSAkGM9AAAc: Received packet MESSAGE data 0{"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OGFhYWQ0NzcyYTE1MGI3ODNhZDA0YjEiLCJleHAiOjE3NjA2MDY3NDV9.x2sle0vFc3yAs7DwdxmGhiUDOMLD48nfubpE0YchP5I"}
+2025-10-15 18:10:11,392 - INFO - [socket.py:78] - BUv6a64nsuSAkGM9AAAc: Sending packet MESSAGE data 0{"sid":"m4rtaEjaOKJwQ80TAAAd"}
+2025-10-15 18:10:11,395 - INFO - [socket.py:39] - BUv6a64nsuSAkGM9AAAc: Received packet MESSAGE data 2["user_auth",{"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OGFhYWQ0NzcyYTE1MGI3ODNhZDA0YjEiLCJleHAiOjE3NjA2MDY3NDV9.x2sle0vFc3yAs7DwdxmGhiUDOMLD48nfubpE0YchP5I"}]
+2025-10-15 18:10:11,399 - INFO - [server.py:576] - received event "user_auth" from m4rtaEjaOKJwQ80TAAAd [/]
+2025-10-15 18:10:11,401 - INFO - [server.py:284] - m4rtaEjaOKJwQ80TAAAd is entering room user_68aaad4772a150b783ad04b1 [/]
+2025-10-15 18:10:11,401 - INFO - [UserSocketHandler.py:30] - 用户68aaad4772a150b783ad04b1(SID: m4rtaEjaOKJwQ80TAAAd)已认证成功并加入房间user_68aaad4772a150b783ad04b1
+2025-10-15 18:10:13,251 - INFO - [ConnectionSocketHandler.py:20] - 用户68aaad4772a150b783ad04b1(SID: m4rtaEjaOKJwQ80TAAAd)已断开连接
+2025-10-15 18:10:13,582 - INFO - [socket.py:78] - fxp5HijkngyejrpaAAAe: Sending packet OPEN data {'sid': 'fxp5HijkngyejrpaAAAe', 'upgrades': [], 'pingTimeout': 20000, 'pingInterval': 25000, 'maxPayload': 1000000}
+2025-10-15 18:10:13,583 - INFO - [socket.py:90] - fxp5HijkngyejrpaAAAe: Received request to upgrade to websocket
+2025-10-15 18:10:13,584 - INFO - [socket.py:219] - fxp5HijkngyejrpaAAAe: Upgrade to websocket successful
+2025-10-15 18:10:13,591 - INFO - [socket.py:39] - fxp5HijkngyejrpaAAAe: Received packet MESSAGE data 0{"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OGFhYWQ0NzcyYTE1MGI3ODNhZDA0YjEiLCJleHAiOjE3NjA2MDY3NDV9.x2sle0vFc3yAs7DwdxmGhiUDOMLD48nfubpE0YchP5I"}
+2025-10-15 18:10:13,629 - INFO - [socket.py:78] - fxp5HijkngyejrpaAAAe: Sending packet MESSAGE data 0{"sid":"60CfwvPis698_AqwAAAf"}
+2025-10-15 18:10:13,640 - INFO - [socket.py:39] - fxp5HijkngyejrpaAAAe: Received packet MESSAGE data 2["user_auth",{"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OGFhYWQ0NzcyYTE1MGI3ODNhZDA0YjEiLCJleHAiOjE3NjA2MDY3NDV9.x2sle0vFc3yAs7DwdxmGhiUDOMLD48nfubpE0YchP5I"}]
+2025-10-15 18:10:13,685 - INFO - [server.py:576] - received event "user_auth" from 60CfwvPis698_AqwAAAf [/]
+2025-10-15 18:10:13,725 - INFO - [server.py:284] - 60CfwvPis698_AqwAAAf is entering room user_68aaad4772a150b783ad04b1 [/]
+2025-10-15 18:10:13,726 - INFO - [UserSocketHandler.py:30] - 用户68aaad4772a150b783ad04b1(SID: 60CfwvPis698_AqwAAAf)已认证成功并加入房间user_68aaad4772a150b783ad04b1
+2025-10-15 18:10:20,679 - WARNING - [StreamChatHandler.py:53] - 危险检测结果: 其他, 危险等级: 0.0384
+2025-10-15 18:10:20,802 - ERROR - [StreamChatHandler.py:183] - ❌ 聊天处理错误: 403 Client Error: Forbidden for url: https://api.siliconflow.cn/v1/chat/completions
+2025-10-15 18:10:24,547 - WARNING - [StreamChatHandler.py:53] - 危险检测结果: 其他, 危险等级: 0.0384
+2025-10-15 18:10:24,758 - ERROR - [StreamChatHandler.py:183] - ❌ 聊天处理错误: 403 Client Error: Forbidden for url: https://api.siliconflow.cn/v1/chat/completions
+2025-10-15 18:10:29,082 - WARNING - [StreamChatHandler.py:53] - 危险检测结果: 其他, 危险等级: 0.0269
+2025-10-15 18:10:29,193 - ERROR - [StreamChatHandler.py:183] - ❌ 聊天处理错误: 403 Client Error: Forbidden for url: https://api.siliconflow.cn/v1/chat/completions
+2025-10-15 18:10:38,601 - INFO - [socket.py:78] - fxp5HijkngyejrpaAAAe: Sending packet PING data None
+2025-10-15 18:10:38,607 - INFO - [socket.py:39] - fxp5HijkngyejrpaAAAe: Received packet PONG data 
+2025-10-15 18:11:03,618 - INFO - [socket.py:78] - fxp5HijkngyejrpaAAAe: Sending packet PING data None
+2025-10-15 18:11:03,644 - INFO - [socket.py:39] - fxp5HijkngyejrpaAAAe: Received packet PONG data 
+2025-10-15 18:11:09,136 - INFO - [socket.py:39] - fxp5HijkngyejrpaAAAe: Received packet MESSAGE data 1
+2025-10-15 18:11:09,137 - INFO - [ConnectionSocketHandler.py:20] - 用户68aaad4772a150b783ad04b1(SID: 60CfwvPis698_AqwAAAf)已断开连接
+2025-10-15 18:30:54,177 - INFO - [socket.py:78] - JuGMIVCiZhpb2eGbAAAg: Sending packet OPEN data {'sid': 'JuGMIVCiZhpb2eGbAAAg', 'upgrades': [], 'pingTimeout': 20000, 'pingInterval': 25000, 'maxPayload': 1000000}
+2025-10-15 18:30:54,178 - INFO - [socket.py:90] - JuGMIVCiZhpb2eGbAAAg: Received request to upgrade to websocket
+2025-10-15 18:30:54,179 - INFO - [socket.py:219] - JuGMIVCiZhpb2eGbAAAg: Upgrade to websocket successful
+2025-10-15 18:30:54,185 - INFO - [socket.py:39] - JuGMIVCiZhpb2eGbAAAg: Received packet MESSAGE data 0{"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OGFhYWQ0NzcyYTE1MGI3ODNhZDA0YjEiLCJleHAiOjE3NjA2MDY3NDV9.x2sle0vFc3yAs7DwdxmGhiUDOMLD48nfubpE0YchP5I"}
+2025-10-15 18:30:54,187 - INFO - [socket.py:78] - JuGMIVCiZhpb2eGbAAAg: Sending packet MESSAGE data 0{"sid":"0HgCqQHHI5QGiYwaAAAh"}
+2025-10-15 18:30:54,192 - INFO - [socket.py:39] - JuGMIVCiZhpb2eGbAAAg: Received packet MESSAGE data 2["user_auth",{"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OGFhYWQ0NzcyYTE1MGI3ODNhZDA0YjEiLCJleHAiOjE3NjA2MDY3NDV9.x2sle0vFc3yAs7DwdxmGhiUDOMLD48nfubpE0YchP5I"}]
+2025-10-15 18:30:54,192 - INFO - [server.py:576] - received event "user_auth" from 0HgCqQHHI5QGiYwaAAAh [/]
+2025-10-15 18:30:54,195 - INFO - [server.py:284] - 0HgCqQHHI5QGiYwaAAAh is entering room user_68aaad4772a150b783ad04b1 [/]
+2025-10-15 18:30:54,196 - INFO - [UserSocketHandler.py:30] - 用户68aaad4772a150b783ad04b1(SID: 0HgCqQHHI5QGiYwaAAAh)已认证成功并加入房间user_68aaad4772a150b783ad04b1
+2025-10-15 18:31:19,190 - INFO - [socket.py:78] - JuGMIVCiZhpb2eGbAAAg: Sending packet PING data None
+2025-10-15 18:31:19,198 - INFO - [socket.py:39] - JuGMIVCiZhpb2eGbAAAg: Received packet PONG data 
+2025-10-15 18:31:43,835 - INFO - [ConnectionSocketHandler.py:20] - 用户68aaad4772a150b783ad04b1(SID: 0HgCqQHHI5QGiYwaAAAh)已断开连接
+2025-10-15 18:31:44,287 - INFO - [socket.py:78] - _8fr5A6REggjgJXUAAAi: Sending packet OPEN data {'sid': '_8fr5A6REggjgJXUAAAi', 'upgrades': [], 'pingTimeout': 20000, 'pingInterval': 25000, 'maxPayload': 1000000}
+2025-10-15 18:31:44,289 - INFO - [socket.py:90] - _8fr5A6REggjgJXUAAAi: Received request to upgrade to websocket
+2025-10-15 18:31:44,291 - INFO - [socket.py:219] - _8fr5A6REggjgJXUAAAi: Upgrade to websocket successful
+2025-10-15 18:31:44,294 - INFO - [socket.py:39] - _8fr5A6REggjgJXUAAAi: Received packet MESSAGE data 0{"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OGFhYWQ0NzcyYTE1MGI3ODNhZDA0YjEiLCJleHAiOjE3NjA2MDY3NDV9.x2sle0vFc3yAs7DwdxmGhiUDOMLD48nfubpE0YchP5I"}
+2025-10-15 18:31:44,296 - INFO - [socket.py:78] - _8fr5A6REggjgJXUAAAi: Sending packet MESSAGE data 0{"sid":"HmeRoypKceZsZJvRAAAj"}
+2025-10-15 18:31:44,304 - INFO - [socket.py:39] - _8fr5A6REggjgJXUAAAi: Received packet MESSAGE data 2["user_auth",{"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OGFhYWQ0NzcyYTE1MGI3ODNhZDA0YjEiLCJleHAiOjE3NjA2MDY3NDV9.x2sle0vFc3yAs7DwdxmGhiUDOMLD48nfubpE0YchP5I"}]
+2025-10-15 18:31:44,307 - INFO - [server.py:576] - received event "user_auth" from HmeRoypKceZsZJvRAAAj [/]
+2025-10-15 18:31:44,311 - INFO - [server.py:284] - HmeRoypKceZsZJvRAAAj is entering room user_68aaad4772a150b783ad04b1 [/]
+2025-10-15 18:31:44,312 - INFO - [UserSocketHandler.py:30] - 用户68aaad4772a150b783ad04b1(SID: HmeRoypKceZsZJvRAAAj)已认证成功并加入房间user_68aaad4772a150b783ad04b1
+2025-10-15 18:31:48,002 - INFO - [ConnectionSocketHandler.py:20] - 用户68aaad4772a150b783ad04b1(SID: HmeRoypKceZsZJvRAAAj)已断开连接
+2025-10-15 18:31:48,471 - INFO - [socket.py:78] - UfKlidqQu_8wxHxkAAAk: Sending packet OPEN data {'sid': 'UfKlidqQu_8wxHxkAAAk', 'upgrades': [], 'pingTimeout': 20000, 'pingInterval': 25000, 'maxPayload': 1000000}
+2025-10-15 18:31:48,472 - INFO - [socket.py:90] - UfKlidqQu_8wxHxkAAAk: Received request to upgrade to websocket
+2025-10-15 18:31:48,475 - INFO - [socket.py:219] - UfKlidqQu_8wxHxkAAAk: Upgrade to websocket successful
+2025-10-15 18:31:48,478 - INFO - [socket.py:39] - UfKlidqQu_8wxHxkAAAk: Received packet MESSAGE data 0{"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OGFhYWQ0NzcyYTE1MGI3ODNhZDA0YjEiLCJleHAiOjE3NjA2MDY3NDV9.x2sle0vFc3yAs7DwdxmGhiUDOMLD48nfubpE0YchP5I"}
+2025-10-15 18:31:48,479 - INFO - [socket.py:78] - UfKlidqQu_8wxHxkAAAk: Sending packet MESSAGE data 0{"sid":"tt6IAYxTxueyX8u9AAAl"}
+2025-10-15 18:31:48,482 - INFO - [socket.py:39] - UfKlidqQu_8wxHxkAAAk: Received packet MESSAGE data 2["user_auth",{"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OGFhYWQ0NzcyYTE1MGI3ODNhZDA0YjEiLCJleHAiOjE3NjA2MDY3NDV9.x2sle0vFc3yAs7DwdxmGhiUDOMLD48nfubpE0YchP5I"}]
+2025-10-15 18:31:48,483 - INFO - [server.py:576] - received event "user_auth" from tt6IAYxTxueyX8u9AAAl [/]
+2025-10-15 18:31:48,485 - INFO - [server.py:284] - tt6IAYxTxueyX8u9AAAl is entering room user_68aaad4772a150b783ad04b1 [/]
+2025-10-15 18:31:48,486 - INFO - [UserSocketHandler.py:30] - 用户68aaad4772a150b783ad04b1(SID: tt6IAYxTxueyX8u9AAAl)已认证成功并加入房间user_68aaad4772a150b783ad04b1
+2025-10-15 18:32:13,485 - INFO - [socket.py:78] - UfKlidqQu_8wxHxkAAAk: Sending packet PING data None
+2025-10-15 18:32:13,492 - INFO - [socket.py:39] - UfKlidqQu_8wxHxkAAAk: Received packet PONG data 
+2025-10-15 18:32:22,186 - INFO - [ConnectionSocketHandler.py:20] - 用户68aaad4772a150b783ad04b1(SID: tt6IAYxTxueyX8u9AAAl)已断开连接
+2025-10-15 18:32:23,139 - INFO - [socket.py:78] - e3RVuIda1ByM5rU8AAAm: Sending packet OPEN data {'sid': 'e3RVuIda1ByM5rU8AAAm', 'upgrades': [], 'pingTimeout': 20000, 'pingInterval': 25000, 'maxPayload': 1000000}
+2025-10-15 18:32:23,143 - INFO - [socket.py:90] - e3RVuIda1ByM5rU8AAAm: Received request to upgrade to websocket
+2025-10-15 18:32:23,145 - INFO - [socket.py:219] - e3RVuIda1ByM5rU8AAAm: Upgrade to websocket successful
+2025-10-15 18:32:23,152 - INFO - [socket.py:39] - e3RVuIda1ByM5rU8AAAm: Received packet MESSAGE data 0{"token":null}
+2025-10-15 18:32:23,154 - INFO - [socket.py:78] - e3RVuIda1ByM5rU8AAAm: Sending packet MESSAGE data 0{"sid":"OZcYXtjpG5k7xtAxAAAn"}
+2025-10-15 18:32:38,474 - INFO - [socket.py:39] - e3RVuIda1ByM5rU8AAAm: Received packet MESSAGE data 2["user_auth",{"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OGFhYWQ0NzcyYTE1MGI3ODNhZDA0YjEiLCJleHAiOjE3NjA2MTA3NTh9.SJrmi_fwc9jqNzyLI3w7mBYTigQln81lP901vM7JlGI"}]
+2025-10-15 18:32:38,475 - INFO - [server.py:576] - received event "user_auth" from OZcYXtjpG5k7xtAxAAAn [/]
+2025-10-15 18:32:38,480 - INFO - [server.py:284] - OZcYXtjpG5k7xtAxAAAn is entering room user_68aaad4772a150b783ad04b1 [/]
+2025-10-15 18:32:38,481 - INFO - [UserSocketHandler.py:30] - 用户68aaad4772a150b783ad04b1(SID: OZcYXtjpG5k7xtAxAAAn)已认证成功并加入房间user_68aaad4772a150b783ad04b1
+2025-10-15 18:32:48,179 - INFO - [socket.py:78] - e3RVuIda1ByM5rU8AAAm: Sending packet PING data None
+2025-10-15 18:32:48,186 - INFO - [socket.py:39] - e3RVuIda1ByM5rU8AAAm: Received packet PONG data 
+2025-10-15 18:32:50,922 - WARNING - [StreamChatHandler.py:53] - 危险检测结果: 其他, 危险等级: 0.0384
+2025-10-15 18:32:51,145 - ERROR - [StreamChatHandler.py:183] - ❌ 聊天处理错误: 403 Client Error: Forbidden for url: https://api.siliconflow.cn/v1/chat/completions
+2025-10-15 18:32:53,447 - WARNING - [StreamChatHandler.py:53] - 危险检测结果: 其他, 危险等级: 0.0384
+2025-10-15 18:32:53,632 - ERROR - [StreamChatHandler.py:183] - ❌ 聊天处理错误: 403 Client Error: Forbidden for url: https://api.siliconflow.cn/v1/chat/completions
+2025-10-15 18:32:57,746 - WARNING - [StreamChatHandler.py:53] - 危险检测结果: 其他, 危险等级: 0.0384
+2025-10-15 18:32:58,076 - ERROR - [StreamChatHandler.py:183] - ❌ 聊天处理错误: 403 Client Error: Forbidden for url: https://api.siliconflow.cn/v1/chat/completions
+2025-10-15 18:33:13,203 - INFO - [socket.py:78] - e3RVuIda1ByM5rU8AAAm: Sending packet PING data None
+2025-10-15 18:33:13,214 - INFO - [socket.py:39] - e3RVuIda1ByM5rU8AAAm: Received packet PONG data 
+2025-10-15 18:33:38,230 - INFO - [socket.py:78] - e3RVuIda1ByM5rU8AAAm: Sending packet PING data None
+2025-10-15 18:33:38,233 - INFO - [socket.py:39] - e3RVuIda1ByM5rU8AAAm: Received packet PONG data 
+2025-10-15 18:34:03,237 - INFO - [socket.py:78] - e3RVuIda1ByM5rU8AAAm: Sending packet PING data None
+2025-10-15 18:34:03,242 - INFO - [socket.py:39] - e3RVuIda1ByM5rU8AAAm: Received packet PONG data 
+2025-10-15 18:34:28,253 - INFO - [socket.py:78] - e3RVuIda1ByM5rU8AAAm: Sending packet PING data None
+2025-10-15 18:34:28,259 - INFO - [socket.py:39] - e3RVuIda1ByM5rU8AAAm: Received packet PONG data 
+2025-10-15 18:34:53,267 - INFO - [socket.py:78] - e3RVuIda1ByM5rU8AAAm: Sending packet PING data None
+2025-10-15 18:34:53,272 - INFO - [socket.py:39] - e3RVuIda1ByM5rU8AAAm: Received packet PONG data 
+2025-10-15 18:35:18,288 - INFO - [socket.py:78] - e3RVuIda1ByM5rU8AAAm: Sending packet PING data None
+2025-10-15 18:35:18,294 - INFO - [socket.py:39] - e3RVuIda1ByM5rU8AAAm: Received packet PONG data 
+2025-10-15 18:35:43,304 - INFO - [socket.py:78] - e3RVuIda1ByM5rU8AAAm: Sending packet PING data None
+2025-10-15 18:35:43,309 - INFO - [socket.py:39] - e3RVuIda1ByM5rU8AAAm: Received packet PONG data 
+2025-10-15 18:36:08,312 - INFO - [socket.py:78] - e3RVuIda1ByM5rU8AAAm: Sending packet PING data None
+2025-10-15 18:36:08,319 - INFO - [socket.py:39] - e3RVuIda1ByM5rU8AAAm: Received packet PONG data 
+2025-10-15 18:36:08,941 - INFO - [ConnectionSocketHandler.py:20] - 用户68aaad4772a150b783ad04b1(SID: OZcYXtjpG5k7xtAxAAAn)已断开连接
+2025-10-15 18:36:09,455 - INFO - [socket.py:78] - jdvYeVQsPgub9ygXAAAo: Sending packet OPEN data {'sid': 'jdvYeVQsPgub9ygXAAAo', 'upgrades': [], 'pingTimeout': 20000, 'pingInterval': 25000, 'maxPayload': 1000000}
+2025-10-15 18:36:09,456 - INFO - [socket.py:90] - jdvYeVQsPgub9ygXAAAo: Received request to upgrade to websocket
+2025-10-15 18:36:09,457 - INFO - [socket.py:219] - jdvYeVQsPgub9ygXAAAo: Upgrade to websocket successful
+2025-10-15 18:36:09,463 - INFO - [socket.py:39] - jdvYeVQsPgub9ygXAAAo: Received packet MESSAGE data 0{"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OGFhYWQ0NzcyYTE1MGI3ODNhZDA0YjEiLCJleHAiOjE3NjA2MTA3NTh9.SJrmi_fwc9jqNzyLI3w7mBYTigQln81lP901vM7JlGI"}
+2025-10-15 18:36:09,465 - INFO - [socket.py:78] - jdvYeVQsPgub9ygXAAAo: Sending packet MESSAGE data 0{"sid":"rtO-vdbSnKgUntxjAAAp"}
+2025-10-15 18:36:09,472 - INFO - [socket.py:39] - jdvYeVQsPgub9ygXAAAo: Received packet MESSAGE data 2["user_auth",{"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OGFhYWQ0NzcyYTE1MGI3ODNhZDA0YjEiLCJleHAiOjE3NjA2MTA3NTh9.SJrmi_fwc9jqNzyLI3w7mBYTigQln81lP901vM7JlGI"}]
+2025-10-15 18:36:09,472 - INFO - [server.py:576] - received event "user_auth" from rtO-vdbSnKgUntxjAAAp [/]
+2025-10-15 18:36:09,475 - INFO - [server.py:284] - rtO-vdbSnKgUntxjAAAp is entering room user_68aaad4772a150b783ad04b1 [/]
+2025-10-15 18:36:09,476 - INFO - [UserSocketHandler.py:30] - 用户68aaad4772a150b783ad04b1(SID: rtO-vdbSnKgUntxjAAAp)已认证成功并加入房间user_68aaad4772a150b783ad04b1
+2025-10-15 18:36:13,938 - WARNING - [StreamChatHandler.py:53] - 危险检测结果: 其他, 危险等级: 0.0384
+2025-10-15 18:36:14,391 - ERROR - [StreamChatHandler.py:183] - ❌ 聊天处理错误: 403 Client Error: Forbidden for url: https://api.siliconflow.cn/v1/chat/completions
+2025-10-15 18:36:34,469 - INFO - [socket.py:78] - jdvYeVQsPgub9ygXAAAo: Sending packet PING data None
+2025-10-15 18:36:34,473 - INFO - [socket.py:39] - jdvYeVQsPgub9ygXAAAo: Received packet PONG data 
+2025-10-15 18:36:59,484 - INFO - [socket.py:78] - jdvYeVQsPgub9ygXAAAo: Sending packet PING data None
+2025-10-15 18:36:59,589 - INFO - [socket.py:39] - jdvYeVQsPgub9ygXAAAo: Received packet PONG data 
+2025-10-15 18:37:24,597 - INFO - [socket.py:78] - jdvYeVQsPgub9ygXAAAo: Sending packet PING data None
+2025-10-15 18:37:24,921 - INFO - [socket.py:39] - jdvYeVQsPgub9ygXAAAo: Received packet PONG data 
+2025-10-15 18:37:49,926 - INFO - [socket.py:78] - jdvYeVQsPgub9ygXAAAo: Sending packet PING data None
+2025-10-15 18:37:49,931 - INFO - [socket.py:39] - jdvYeVQsPgub9ygXAAAo: Received packet PONG data 
+2025-10-15 18:38:14,943 - INFO - [socket.py:78] - jdvYeVQsPgub9ygXAAAo: Sending packet PING data None
+2025-10-15 18:38:14,947 - INFO - [socket.py:39] - jdvYeVQsPgub9ygXAAAo: Received packet PONG data 
+2025-10-15 18:38:39,961 - INFO - [socket.py:78] - jdvYeVQsPgub9ygXAAAo: Sending packet PING data None
+2025-10-15 18:38:39,965 - INFO - [socket.py:39] - jdvYeVQsPgub9ygXAAAo: Received packet PONG data 
+2025-10-15 18:39:04,982 - INFO - [socket.py:78] - jdvYeVQsPgub9ygXAAAo: Sending packet PING data None
+2025-10-15 18:39:05,086 - INFO - [socket.py:39] - jdvYeVQsPgub9ygXAAAo: Received packet PONG data 
+2025-10-15 18:39:30,101 - INFO - [socket.py:78] - jdvYeVQsPgub9ygXAAAo: Sending packet PING data None
+2025-10-15 18:39:30,106 - INFO - [socket.py:39] - jdvYeVQsPgub9ygXAAAo: Received packet PONG data 
+2025-10-15 18:39:55,117 - INFO - [socket.py:78] - jdvYeVQsPgub9ygXAAAo: Sending packet PING data None
+2025-10-15 18:39:55,122 - INFO - [socket.py:39] - jdvYeVQsPgub9ygXAAAo: Received packet PONG data 
+2025-10-15 18:40:20,132 - INFO - [socket.py:78] - jdvYeVQsPgub9ygXAAAo: Sending packet PING data None
+2025-10-15 18:40:20,137 - INFO - [socket.py:39] - jdvYeVQsPgub9ygXAAAo: Received packet PONG data 
+2025-10-15 18:40:45,150 - INFO - [socket.py:78] - jdvYeVQsPgub9ygXAAAo: Sending packet PING data None
+2025-10-15 18:40:45,154 - INFO - [socket.py:39] - jdvYeVQsPgub9ygXAAAo: Received packet PONG data 
+2025-10-15 18:41:10,162 - INFO - [socket.py:78] - jdvYeVQsPgub9ygXAAAo: Sending packet PING data None
+2025-10-15 18:41:10,166 - INFO - [socket.py:39] - jdvYeVQsPgub9ygXAAAo: Received packet PONG data 
+2025-10-15 18:41:35,170 - INFO - [socket.py:78] - jdvYeVQsPgub9ygXAAAo: Sending packet PING data None
+2025-10-15 18:41:35,174 - INFO - [socket.py:39] - jdvYeVQsPgub9ygXAAAo: Received packet PONG data 
+2025-10-15 18:42:00,190 - INFO - [socket.py:78] - jdvYeVQsPgub9ygXAAAo: Sending packet PING data None
+2025-10-15 18:42:00,197 - INFO - [socket.py:39] - jdvYeVQsPgub9ygXAAAo: Received packet PONG data 
+2025-10-15 18:42:25,230 - INFO - [socket.py:78] - jdvYeVQsPgub9ygXAAAo: Sending packet PING data None
+2025-10-15 18:42:25,235 - INFO - [socket.py:39] - jdvYeVQsPgub9ygXAAAo: Received packet PONG data 
+2025-10-15 18:42:44,975 - INFO - [socket.py:39] - jdvYeVQsPgub9ygXAAAo: Received packet MESSAGE data 1
+2025-10-15 18:42:44,977 - INFO - [ConnectionSocketHandler.py:20] - 用户68aaad4772a150b783ad04b1(SID: rtO-vdbSnKgUntxjAAAp)已断开连接
+2025-10-15 18:46:46,004 - INFO - [socket.py:78] - Q8LSfmi-KGJwukZ-AAAq: Sending packet OPEN data {'sid': 'Q8LSfmi-KGJwukZ-AAAq', 'upgrades': [], 'pingTimeout': 20000, 'pingInterval': 25000, 'maxPayload': 1000000}
+2025-10-15 18:46:46,006 - INFO - [socket.py:90] - Q8LSfmi-KGJwukZ-AAAq: Received request to upgrade to websocket
+2025-10-15 18:46:46,010 - INFO - [socket.py:219] - Q8LSfmi-KGJwukZ-AAAq: Upgrade to websocket successful
+2025-10-15 18:46:46,020 - INFO - [socket.py:39] - Q8LSfmi-KGJwukZ-AAAq: Received packet MESSAGE data 0{"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OGFhYWQ0NzcyYTE1MGI3ODNhZDA0YjEiLCJleHAiOjE3NjA2MTA3NTh9.SJrmi_fwc9jqNzyLI3w7mBYTigQln81lP901vM7JlGI"}
+2025-10-15 18:46:46,023 - INFO - [socket.py:78] - Q8LSfmi-KGJwukZ-AAAq: Sending packet MESSAGE data 0{"sid":"k5ekEtl9nN8CS_2HAAAr"}
+2025-10-15 18:46:46,027 - INFO - [socket.py:39] - Q8LSfmi-KGJwukZ-AAAq: Received packet MESSAGE data 2["user_auth",{"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OGFhYWQ0NzcyYTE1MGI3ODNhZDA0YjEiLCJleHAiOjE3NjA2MTA3NTh9.SJrmi_fwc9jqNzyLI3w7mBYTigQln81lP901vM7JlGI"}]
+2025-10-15 18:46:46,030 - INFO - [server.py:576] - received event "user_auth" from k5ekEtl9nN8CS_2HAAAr [/]
+2025-10-15 18:46:46,034 - INFO - [server.py:284] - k5ekEtl9nN8CS_2HAAAr is entering room user_68aaad4772a150b783ad04b1 [/]
+2025-10-15 18:46:46,037 - INFO - [UserSocketHandler.py:30] - 用户68aaad4772a150b783ad04b1(SID: k5ekEtl9nN8CS_2HAAAr)已认证成功并加入房间user_68aaad4772a150b783ad04b1
+2025-10-15 18:46:53,190 - WARNING - [StreamChatHandler.py:53] - 危险检测结果: 其他, 危险等级: 0.0384
+2025-10-15 18:46:53,482 - ERROR - [StreamChatHandler.py:183] - ❌ 聊天处理错误: 403 Client Error: Forbidden for url: https://api.siliconflow.cn/v1/chat/completions
+2025-10-15 18:46:56,123 - WARNING - [StreamChatHandler.py:53] - 危险检测结果: 负面, 危险等级: 0.0411
+2025-10-15 18:46:56,296 - ERROR - [StreamChatHandler.py:183] - ❌ 聊天处理错误: 403 Client Error: Forbidden for url: https://api.siliconflow.cn/v1/chat/completions
+2025-10-15 18:46:59,696 - WARNING - [StreamChatHandler.py:53] - 危险检测结果: 负面, 危险等级: 0.0411
+2025-10-15 18:47:00,104 - ERROR - [StreamChatHandler.py:183] - ❌ 聊天处理错误: 403 Client Error: Forbidden for url: https://api.siliconflow.cn/v1/chat/completions
+2025-10-15 18:47:03,061 - WARNING - [StreamChatHandler.py:53] - 危险检测结果: 负面, 危险等级: 0.0411
+2025-10-15 18:47:03,279 - ERROR - [StreamChatHandler.py:183] - ❌ 聊天处理错误: 403 Client Error: Forbidden for url: https://api.siliconflow.cn/v1/chat/completions
+2025-10-15 18:47:06,871 - WARNING - [StreamChatHandler.py:53] - 危险检测结果: 其他, 危险等级: 0.0384
+2025-10-15 18:47:07,090 - ERROR - [StreamChatHandler.py:183] - ❌ 聊天处理错误: 403 Client Error: Forbidden for url: https://api.siliconflow.cn/v1/chat/completions
+2025-10-15 18:47:09,793 - INFO - [ConnectionSocketHandler.py:20] - 用户68aaad4772a150b783ad04b1(SID: k5ekEtl9nN8CS_2HAAAr)已断开连接
+2025-10-15 18:47:10,215 - INFO - [socket.py:78] - NSKS0LYHDvK5W8u1AAAs: Sending packet OPEN data {'sid': 'NSKS0LYHDvK5W8u1AAAs', 'upgrades': [], 'pingTimeout': 20000, 'pingInterval': 25000, 'maxPayload': 1000000}
+2025-10-15 18:47:10,218 - INFO - [socket.py:90] - NSKS0LYHDvK5W8u1AAAs: Received request to upgrade to websocket
+2025-10-15 18:47:10,221 - INFO - [socket.py:219] - NSKS0LYHDvK5W8u1AAAs: Upgrade to websocket successful
+2025-10-15 18:47:10,226 - INFO - [socket.py:39] - NSKS0LYHDvK5W8u1AAAs: Received packet MESSAGE data 0{"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OGFhYWQ0NzcyYTE1MGI3ODNhZDA0YjEiLCJleHAiOjE3NjA2MTA3NTh9.SJrmi_fwc9jqNzyLI3w7mBYTigQln81lP901vM7JlGI"}
+2025-10-15 18:47:10,227 - INFO - [socket.py:78] - NSKS0LYHDvK5W8u1AAAs: Sending packet MESSAGE data 0{"sid":"V2FuUzdZoR-G-CLGAAAt"}
+2025-10-15 18:47:10,232 - INFO - [socket.py:39] - NSKS0LYHDvK5W8u1AAAs: Received packet MESSAGE data 2["user_auth",{"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OGFhYWQ0NzcyYTE1MGI3ODNhZDA0YjEiLCJleHAiOjE3NjA2MTA3NTh9.SJrmi_fwc9jqNzyLI3w7mBYTigQln81lP901vM7JlGI"}]
+2025-10-15 18:47:10,233 - INFO - [server.py:576] - received event "user_auth" from V2FuUzdZoR-G-CLGAAAt [/]
+2025-10-15 18:47:10,235 - INFO - [server.py:284] - V2FuUzdZoR-G-CLGAAAt is entering room user_68aaad4772a150b783ad04b1 [/]
+2025-10-15 18:47:10,237 - INFO - [UserSocketHandler.py:30] - 用户68aaad4772a150b783ad04b1(SID: V2FuUzdZoR-G-CLGAAAt)已认证成功并加入房间user_68aaad4772a150b783ad04b1
+2025-10-15 18:47:35,239 - INFO - [socket.py:78] - NSKS0LYHDvK5W8u1AAAs: Sending packet PING data None
+2025-10-15 18:47:35,246 - INFO - [socket.py:39] - NSKS0LYHDvK5W8u1AAAs: Received packet PONG data 
+2025-10-15 18:47:36,221 - INFO - [ConnectionSocketHandler.py:20] - 用户68aaad4772a150b783ad04b1(SID: V2FuUzdZoR-G-CLGAAAt)已断开连接
+2025-10-15 18:47:36,660 - INFO - [socket.py:78] - RlCzCIueWxyiCWE6AAAu: Sending packet OPEN data {'sid': 'RlCzCIueWxyiCWE6AAAu', 'upgrades': [], 'pingTimeout': 20000, 'pingInterval': 25000, 'maxPayload': 1000000}
+2025-10-15 18:47:36,663 - INFO - [socket.py:90] - RlCzCIueWxyiCWE6AAAu: Received request to upgrade to websocket
+2025-10-15 18:47:36,665 - INFO - [socket.py:219] - RlCzCIueWxyiCWE6AAAu: Upgrade to websocket successful
+2025-10-15 18:47:36,668 - INFO - [socket.py:39] - RlCzCIueWxyiCWE6AAAu: Received packet MESSAGE data 0{"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OGFhYWQ0NzcyYTE1MGI3ODNhZDA0YjEiLCJleHAiOjE3NjA2MTA3NTh9.SJrmi_fwc9jqNzyLI3w7mBYTigQln81lP901vM7JlGI"}
+2025-10-15 18:47:36,669 - INFO - [socket.py:78] - RlCzCIueWxyiCWE6AAAu: Sending packet MESSAGE data 0{"sid":"WG08LdcmrRyHwLvjAAAv"}
+2025-10-15 18:47:36,673 - INFO - [socket.py:39] - RlCzCIueWxyiCWE6AAAu: Received packet MESSAGE data 2["user_auth",{"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OGFhYWQ0NzcyYTE1MGI3ODNhZDA0YjEiLCJleHAiOjE3NjA2MTA3NTh9.SJrmi_fwc9jqNzyLI3w7mBYTigQln81lP901vM7JlGI"}]
+2025-10-15 18:47:36,673 - INFO - [server.py:576] - received event "user_auth" from WG08LdcmrRyHwLvjAAAv [/]
+2025-10-15 18:47:36,677 - INFO - [server.py:284] - WG08LdcmrRyHwLvjAAAv is entering room user_68aaad4772a150b783ad04b1 [/]
+2025-10-15 18:47:36,680 - INFO - [UserSocketHandler.py:30] - 用户68aaad4772a150b783ad04b1(SID: WG08LdcmrRyHwLvjAAAv)已认证成功并加入房间user_68aaad4772a150b783ad04b1
+2025-10-15 18:48:01,673 - INFO - [socket.py:78] - RlCzCIueWxyiCWE6AAAu: Sending packet PING data None
+2025-10-15 18:48:01,680 - INFO - [socket.py:39] - RlCzCIueWxyiCWE6AAAu: Received packet PONG data 
+2025-10-15 18:48:26,684 - INFO - [socket.py:78] - RlCzCIueWxyiCWE6AAAu: Sending packet PING data None
+2025-10-15 18:48:26,689 - INFO - [socket.py:39] - RlCzCIueWxyiCWE6AAAu: Received packet PONG data 
+2025-10-15 18:48:51,698 - INFO - [socket.py:78] - RlCzCIueWxyiCWE6AAAu: Sending packet PING data None
+2025-10-15 18:48:51,702 - INFO - [socket.py:39] - RlCzCIueWxyiCWE6AAAu: Received packet PONG data 
+2025-10-15 18:49:12,408 - WARNING - [StreamChatHandler.py:53] - 危险检测结果: 危险, 危险等级: 0.7657
+2025-10-15 18:49:12,409 - WARNING - [StreamChatHandler.py:71] - ⚠️ 触发危险检测: dangerous = 0.7657 > 0.3
+2025-10-15 18:49:12,423 - INFO - [StreamChatHandler.py:89] - ✅ 已发送危险对话通知到管理员房间 (ChatID: 68ef7859685dd259ecfbb4a0)
+2025-10-15 18:49:12,425 - INFO - [server.py:164] - emitting event "dangerous_chats_list" to admin_room [/]
+2025-10-15 18:49:16,706 - INFO - [socket.py:78] - RlCzCIueWxyiCWE6AAAu: Sending packet PING data None
+2025-10-15 18:49:16,711 - INFO - [socket.py:39] - RlCzCIueWxyiCWE6AAAu: Received packet PONG data 
+2025-10-15 18:49:19,715 - WARNING - [StreamChatHandler.py:53] - 危险检测结果: 其他, 危险等级: 0.0384
+2025-10-15 18:49:19,835 - ERROR - [StreamChatHandler.py:183] - ❌ 聊天处理错误: 403 Client Error: Forbidden for url: https://api.siliconflow.cn/v1/chat/completions
+2025-10-15 18:49:22,552 - WARNING - [StreamChatHandler.py:53] - 危险检测结果: 其他, 危险等级: 0.0384
+2025-10-15 18:49:22,849 - ERROR - [StreamChatHandler.py:183] - ❌ 聊天处理错误: 403 Client Error: Forbidden for url: https://api.siliconflow.cn/v1/chat/completions
+2025-10-15 18:49:27,526 - WARNING - [StreamChatHandler.py:53] - 危险检测结果: 其他, 危险等级: 0.0508
+2025-10-15 18:49:27,642 - ERROR - [StreamChatHandler.py:183] - ❌ 聊天处理错误: 403 Client Error: Forbidden for url: https://api.siliconflow.cn/v1/chat/completions
+2025-10-15 18:49:29,517 - WARNING - [StreamChatHandler.py:53] - 危险检测结果: 其他, 危险等级: 0.0508
+2025-10-15 18:49:29,660 - ERROR - [StreamChatHandler.py:183] - ❌ 聊天处理错误: 403 Client Error: Forbidden for url: https://api.siliconflow.cn/v1/chat/completions
+2025-10-15 18:49:41,726 - INFO - [socket.py:78] - RlCzCIueWxyiCWE6AAAu: Sending packet PING data None
+2025-10-15 18:49:41,730 - INFO - [socket.py:39] - RlCzCIueWxyiCWE6AAAu: Received packet PONG data 
+2025-10-15 18:50:06,738 - INFO - [socket.py:78] - RlCzCIueWxyiCWE6AAAu: Sending packet PING data None
+2025-10-15 18:50:06,743 - INFO - [socket.py:39] - RlCzCIueWxyiCWE6AAAu: Received packet PONG data 
+2025-10-15 18:50:31,752 - INFO - [socket.py:78] - RlCzCIueWxyiCWE6AAAu: Sending packet PING data None
+2025-10-15 18:50:31,854 - INFO - [socket.py:39] - RlCzCIueWxyiCWE6AAAu: Received packet PONG data 
+2025-10-15 18:50:56,856 - INFO - [socket.py:78] - RlCzCIueWxyiCWE6AAAu: Sending packet PING data None
+2025-10-15 18:50:56,861 - INFO - [socket.py:39] - RlCzCIueWxyiCWE6AAAu: Received packet PONG data 
+2025-10-15 18:51:21,869 - INFO - [socket.py:78] - RlCzCIueWxyiCWE6AAAu: Sending packet PING data None
+2025-10-15 18:51:21,875 - INFO - [socket.py:39] - RlCzCIueWxyiCWE6AAAu: Received packet PONG data 
+2025-10-15 18:51:46,877 - INFO - [socket.py:78] - RlCzCIueWxyiCWE6AAAu: Sending packet PING data None
+2025-10-15 18:51:46,883 - INFO - [socket.py:39] - RlCzCIueWxyiCWE6AAAu: Received packet PONG data 
+2025-10-15 18:52:11,944 - INFO - [socket.py:78] - RlCzCIueWxyiCWE6AAAu: Sending packet PING data None
+2025-10-15 18:52:11,948 - INFO - [socket.py:39] - RlCzCIueWxyiCWE6AAAu: Received packet PONG data 
+2025-10-15 18:52:36,957 - INFO - [socket.py:78] - RlCzCIueWxyiCWE6AAAu: Sending packet PING data None
+2025-10-15 18:52:36,961 - INFO - [socket.py:39] - RlCzCIueWxyiCWE6AAAu: Received packet PONG data 
+2025-10-15 18:53:01,967 - INFO - [socket.py:78] - RlCzCIueWxyiCWE6AAAu: Sending packet PING data None
+2025-10-15 18:53:01,976 - INFO - [socket.py:39] - RlCzCIueWxyiCWE6AAAu: Received packet PONG data 
+2025-10-15 18:53:26,984 - INFO - [socket.py:78] - RlCzCIueWxyiCWE6AAAu: Sending packet PING data None
+2025-10-15 18:53:26,989 - INFO - [socket.py:39] - RlCzCIueWxyiCWE6AAAu: Received packet PONG data 
+2025-10-15 18:53:51,999 - INFO - [socket.py:78] - RlCzCIueWxyiCWE6AAAu: Sending packet PING data None
+2025-10-15 18:53:52,008 - INFO - [socket.py:39] - RlCzCIueWxyiCWE6AAAu: Received packet PONG data 
+2025-10-15 18:54:17,018 - INFO - [socket.py:78] - RlCzCIueWxyiCWE6AAAu: Sending packet PING data None
+2025-10-15 18:54:17,024 - INFO - [socket.py:39] - RlCzCIueWxyiCWE6AAAu: Received packet PONG data 
+2025-10-15 18:54:18,380 - WARNING - [StreamChatHandler.py:53] - 危险检测结果: 其他, 危险等级: 0.0384
+2025-10-15 18:54:18,600 - ERROR - [StreamChatHandler.py:183] - ❌ 聊天处理错误: 403 Client Error: Forbidden for url: https://api.siliconflow.cn/v1/chat/completions
+2025-10-15 18:54:27,272 - WARNING - [StreamChatHandler.py:53] - 危险检测结果: 其他, 危险等级: 0.0384
+2025-10-15 18:54:27,457 - ERROR - [StreamChatHandler.py:183] - ❌ 聊天处理错误: 403 Client Error: Forbidden for url: https://api.siliconflow.cn/v1/chat/completions
+2025-10-15 18:54:33,262 - WARNING - [StreamChatHandler.py:53] - 危险检测结果: 其他, 危险等级: 0.0384
+2025-10-15 18:54:33,549 - ERROR - [StreamChatHandler.py:183] - ❌ 聊天处理错误: 403 Client Error: Forbidden for url: https://api.siliconflow.cn/v1/chat/completions
+2025-10-15 18:54:42,034 - INFO - [socket.py:78] - RlCzCIueWxyiCWE6AAAu: Sending packet PING data None
+2025-10-15 18:54:42,040 - INFO - [socket.py:39] - RlCzCIueWxyiCWE6AAAu: Received packet PONG data 
+2025-10-15 18:54:42,655 - WARNING - [StreamChatHandler.py:53] - 危险检测结果: 其他, 危险等级: 0.0384
+2025-10-15 18:54:42,843 - ERROR - [StreamChatHandler.py:183] - ❌ 聊天处理错误: 403 Client Error: Forbidden for url: https://api.siliconflow.cn/v1/chat/completions
+2025-10-15 18:55:07,053 - INFO - [socket.py:78] - RlCzCIueWxyiCWE6AAAu: Sending packet PING data None
+2025-10-15 18:55:07,059 - INFO - [socket.py:39] - RlCzCIueWxyiCWE6AAAu: Received packet PONG data 
+2025-10-15 18:55:32,069 - INFO - [socket.py:78] - RlCzCIueWxyiCWE6AAAu: Sending packet PING data None
+2025-10-15 18:55:32,075 - INFO - [socket.py:39] - RlCzCIueWxyiCWE6AAAu: Received packet PONG data 
+2025-10-15 18:55:57,092 - INFO - [socket.py:78] - RlCzCIueWxyiCWE6AAAu: Sending packet PING data None
+2025-10-15 18:55:57,096 - INFO - [socket.py:39] - RlCzCIueWxyiCWE6AAAu: Received packet PONG data 
+2025-10-15 18:56:22,101 - INFO - [socket.py:78] - RlCzCIueWxyiCWE6AAAu: Sending packet PING data None
+2025-10-15 18:56:22,107 - INFO - [socket.py:39] - RlCzCIueWxyiCWE6AAAu: Received packet PONG data 
+2025-10-15 18:56:47,110 - INFO - [socket.py:78] - RlCzCIueWxyiCWE6AAAu: Sending packet PING data None
+2025-10-15 18:56:47,116 - INFO - [socket.py:39] - RlCzCIueWxyiCWE6AAAu: Received packet PONG data 
+2025-10-15 18:57:12,124 - INFO - [socket.py:78] - RlCzCIueWxyiCWE6AAAu: Sending packet PING data None
+2025-10-15 18:57:12,130 - INFO - [socket.py:39] - RlCzCIueWxyiCWE6AAAu: Received packet PONG data 
+2025-10-15 18:57:37,142 - INFO - [socket.py:78] - RlCzCIueWxyiCWE6AAAu: Sending packet PING data None
+2025-10-15 18:57:37,149 - INFO - [socket.py:39] - RlCzCIueWxyiCWE6AAAu: Received packet PONG data 
+2025-10-15 18:58:02,151 - INFO - [socket.py:78] - RlCzCIueWxyiCWE6AAAu: Sending packet PING data None
+2025-10-15 18:58:02,158 - INFO - [socket.py:39] - RlCzCIueWxyiCWE6AAAu: Received packet PONG data 
+2025-10-15 18:58:27,169 - INFO - [socket.py:78] - RlCzCIueWxyiCWE6AAAu: Sending packet PING data None
+2025-10-15 18:58:27,179 - INFO - [socket.py:39] - RlCzCIueWxyiCWE6AAAu: Received packet PONG data 
+2025-10-15 18:58:52,188 - INFO - [socket.py:78] - RlCzCIueWxyiCWE6AAAu: Sending packet PING data None
+2025-10-15 18:58:52,192 - INFO - [socket.py:39] - RlCzCIueWxyiCWE6AAAu: Received packet PONG data 
+2025-10-15 18:59:17,195 - INFO - [socket.py:78] - RlCzCIueWxyiCWE6AAAu: Sending packet PING data None
+2025-10-15 18:59:17,200 - INFO - [socket.py:39] - RlCzCIueWxyiCWE6AAAu: Received packet PONG data 
+2025-10-15 18:59:42,208 - INFO - [socket.py:78] - RlCzCIueWxyiCWE6AAAu: Sending packet PING data None
+2025-10-15 18:59:42,212 - INFO - [socket.py:39] - RlCzCIueWxyiCWE6AAAu: Received packet PONG data 
+2025-10-15 19:00:07,221 - INFO - [socket.py:78] - RlCzCIueWxyiCWE6AAAu: Sending packet PING data None
+2025-10-15 19:00:07,231 - INFO - [socket.py:39] - RlCzCIueWxyiCWE6AAAu: Received packet PONG data 
+2025-10-15 19:00:32,244 - INFO - [socket.py:78] - RlCzCIueWxyiCWE6AAAu: Sending packet PING data None
+2025-10-15 19:00:32,249 - INFO - [socket.py:39] - RlCzCIueWxyiCWE6AAAu: Received packet PONG data 
+2025-10-15 19:00:57,261 - INFO - [socket.py:78] - RlCzCIueWxyiCWE6AAAu: Sending packet PING data None
+2025-10-15 19:00:57,267 - INFO - [socket.py:39] - RlCzCIueWxyiCWE6AAAu: Received packet PONG data 
+2025-10-15 19:01:22,277 - INFO - [socket.py:78] - RlCzCIueWxyiCWE6AAAu: Sending packet PING data None
+2025-10-15 19:01:22,282 - INFO - [socket.py:39] - RlCzCIueWxyiCWE6AAAu: Received packet PONG data 
+2025-10-15 19:01:47,288 - INFO - [socket.py:78] - RlCzCIueWxyiCWE6AAAu: Sending packet PING data None
+2025-10-15 19:01:47,294 - INFO - [socket.py:39] - RlCzCIueWxyiCWE6AAAu: Received packet PONG data 
+2025-10-15 19:02:12,306 - INFO - [socket.py:78] - RlCzCIueWxyiCWE6AAAu: Sending packet PING data None
+2025-10-15 19:02:12,312 - INFO - [socket.py:39] - RlCzCIueWxyiCWE6AAAu: Received packet PONG data 
+2025-10-15 19:02:37,322 - INFO - [socket.py:78] - RlCzCIueWxyiCWE6AAAu: Sending packet PING data None
+2025-10-15 19:02:37,327 - INFO - [socket.py:39] - RlCzCIueWxyiCWE6AAAu: Received packet PONG data 
+2025-10-15 19:03:02,336 - INFO - [socket.py:78] - RlCzCIueWxyiCWE6AAAu: Sending packet PING data None
+2025-10-15 19:03:02,341 - INFO - [socket.py:39] - RlCzCIueWxyiCWE6AAAu: Received packet PONG data 
+2025-10-15 19:03:27,359 - INFO - [socket.py:78] - RlCzCIueWxyiCWE6AAAu: Sending packet PING data None
+2025-10-15 19:03:27,363 - INFO - [socket.py:39] - RlCzCIueWxyiCWE6AAAu: Received packet PONG data 
+2025-10-15 19:03:52,379 - INFO - [socket.py:78] - RlCzCIueWxyiCWE6AAAu: Sending packet PING data None
+2025-10-15 19:03:52,384 - INFO - [socket.py:39] - RlCzCIueWxyiCWE6AAAu: Received packet PONG data 
+2025-10-15 19:04:17,463 - INFO - [socket.py:78] - RlCzCIueWxyiCWE6AAAu: Sending packet PING data None
+2025-10-15 19:04:17,467 - INFO - [socket.py:39] - RlCzCIueWxyiCWE6AAAu: Received packet PONG data 
+2025-10-15 19:04:42,471 - INFO - [socket.py:78] - RlCzCIueWxyiCWE6AAAu: Sending packet PING data None
+2025-10-15 19:04:42,479 - INFO - [socket.py:39] - RlCzCIueWxyiCWE6AAAu: Received packet PONG data 
+2025-10-15 19:05:07,484 - INFO - [socket.py:78] - RlCzCIueWxyiCWE6AAAu: Sending packet PING data None
+2025-10-15 19:05:07,489 - INFO - [socket.py:39] - RlCzCIueWxyiCWE6AAAu: Received packet PONG data 
+2025-10-15 19:05:32,505 - INFO - [socket.py:78] - RlCzCIueWxyiCWE6AAAu: Sending packet PING data None
+2025-10-15 19:05:32,512 - INFO - [socket.py:39] - RlCzCIueWxyiCWE6AAAu: Received packet PONG data 
+2025-10-15 19:05:57,516 - INFO - [socket.py:78] - RlCzCIueWxyiCWE6AAAu: Sending packet PING data None
+2025-10-15 19:05:57,521 - INFO - [socket.py:39] - RlCzCIueWxyiCWE6AAAu: Received packet PONG data 
+2025-10-15 19:06:22,537 - INFO - [socket.py:78] - RlCzCIueWxyiCWE6AAAu: Sending packet PING data None
+2025-10-15 19:06:22,542 - INFO - [socket.py:39] - RlCzCIueWxyiCWE6AAAu: Received packet PONG data 
+2025-10-15 19:06:47,550 - INFO - [socket.py:78] - RlCzCIueWxyiCWE6AAAu: Sending packet PING data None
+2025-10-15 19:06:47,556 - INFO - [socket.py:39] - RlCzCIueWxyiCWE6AAAu: Received packet PONG data 
+2025-10-15 19:07:12,569 - INFO - [socket.py:78] - RlCzCIueWxyiCWE6AAAu: Sending packet PING data None
+2025-10-15 19:07:12,574 - INFO - [socket.py:39] - RlCzCIueWxyiCWE6AAAu: Received packet PONG data 
+2025-10-15 19:07:37,588 - INFO - [socket.py:78] - RlCzCIueWxyiCWE6AAAu: Sending packet PING data None
+2025-10-15 19:07:37,600 - INFO - [socket.py:39] - RlCzCIueWxyiCWE6AAAu: Received packet PONG data 
+2025-10-15 19:08:02,612 - INFO - [socket.py:78] - RlCzCIueWxyiCWE6AAAu: Sending packet PING data None
+2025-10-15 19:08:02,616 - INFO - [socket.py:39] - RlCzCIueWxyiCWE6AAAu: Received packet PONG data 
+2025-10-15 19:08:27,658 - INFO - [socket.py:78] - RlCzCIueWxyiCWE6AAAu: Sending packet PING data None
+2025-10-15 19:08:27,662 - INFO - [socket.py:39] - RlCzCIueWxyiCWE6AAAu: Received packet PONG data 
+2025-10-15 19:08:52,671 - INFO - [socket.py:78] - RlCzCIueWxyiCWE6AAAu: Sending packet PING data None
+2025-10-15 19:08:52,676 - INFO - [socket.py:39] - RlCzCIueWxyiCWE6AAAu: Received packet PONG data 
+2025-10-15 19:09:17,688 - INFO - [socket.py:78] - RlCzCIueWxyiCWE6AAAu: Sending packet PING data None
+2025-10-15 19:09:17,699 - INFO - [socket.py:39] - RlCzCIueWxyiCWE6AAAu: Received packet PONG data 
+2025-10-15 19:09:42,710 - INFO - [socket.py:78] - RlCzCIueWxyiCWE6AAAu: Sending packet PING data None
+2025-10-15 19:09:42,715 - INFO - [socket.py:39] - RlCzCIueWxyiCWE6AAAu: Received packet PONG data 
+2025-10-15 19:10:07,805 - INFO - [socket.py:78] - RlCzCIueWxyiCWE6AAAu: Sending packet PING data None
+2025-10-15 19:10:07,809 - INFO - [socket.py:39] - RlCzCIueWxyiCWE6AAAu: Received packet PONG data 
+2025-10-15 19:10:32,818 - INFO - [socket.py:78] - RlCzCIueWxyiCWE6AAAu: Sending packet PING data None
+2025-10-15 19:10:32,825 - INFO - [socket.py:39] - RlCzCIueWxyiCWE6AAAu: Received packet PONG data 
+2025-10-15 19:10:57,839 - INFO - [socket.py:78] - RlCzCIueWxyiCWE6AAAu: Sending packet PING data None
+2025-10-15 19:10:57,844 - INFO - [socket.py:39] - RlCzCIueWxyiCWE6AAAu: Received packet PONG data 
+2025-10-15 19:11:22,849 - INFO - [socket.py:78] - RlCzCIueWxyiCWE6AAAu: Sending packet PING data None
+2025-10-15 19:11:22,857 - INFO - [socket.py:39] - RlCzCIueWxyiCWE6AAAu: Received packet PONG data 
+2025-10-15 19:11:47,860 - INFO - [socket.py:78] - RlCzCIueWxyiCWE6AAAu: Sending packet PING data None
+2025-10-15 19:11:47,865 - INFO - [socket.py:39] - RlCzCIueWxyiCWE6AAAu: Received packet PONG data 
+2025-10-15 19:12:12,880 - INFO - [socket.py:78] - RlCzCIueWxyiCWE6AAAu: Sending packet PING data None
+2025-10-15 19:12:12,884 - INFO - [socket.py:39] - RlCzCIueWxyiCWE6AAAu: Received packet PONG data 
+2025-10-15 19:12:37,888 - INFO - [socket.py:78] - RlCzCIueWxyiCWE6AAAu: Sending packet PING data None
+2025-10-15 19:12:37,893 - INFO - [socket.py:39] - RlCzCIueWxyiCWE6AAAu: Received packet PONG data 
+2025-10-15 19:13:02,900 - INFO - [socket.py:78] - RlCzCIueWxyiCWE6AAAu: Sending packet PING data None
+2025-10-15 19:13:02,907 - INFO - [socket.py:39] - RlCzCIueWxyiCWE6AAAu: Received packet PONG data 
+2025-10-15 19:13:27,915 - INFO - [socket.py:78] - RlCzCIueWxyiCWE6AAAu: Sending packet PING data None
+2025-10-15 19:13:27,920 - INFO - [socket.py:39] - RlCzCIueWxyiCWE6AAAu: Received packet PONG data 
+2025-10-15 19:13:52,935 - INFO - [socket.py:78] - RlCzCIueWxyiCWE6AAAu: Sending packet PING data None
+2025-10-15 19:13:52,942 - INFO - [socket.py:39] - RlCzCIueWxyiCWE6AAAu: Received packet PONG data 
+2025-10-15 19:14:17,958 - INFO - [socket.py:78] - RlCzCIueWxyiCWE6AAAu: Sending packet PING data None
+2025-10-15 19:14:17,964 - INFO - [socket.py:39] - RlCzCIueWxyiCWE6AAAu: Received packet PONG data 
+2025-10-15 19:14:42,971 - INFO - [socket.py:78] - RlCzCIueWxyiCWE6AAAu: Sending packet PING data None
+2025-10-15 19:14:42,976 - INFO - [socket.py:39] - RlCzCIueWxyiCWE6AAAu: Received packet PONG data 
+2025-10-15 19:15:07,984 - INFO - [socket.py:78] - RlCzCIueWxyiCWE6AAAu: Sending packet PING data None
+2025-10-15 19:15:07,992 - INFO - [socket.py:39] - RlCzCIueWxyiCWE6AAAu: Received packet PONG data 
+2025-10-15 19:15:33,006 - INFO - [socket.py:78] - RlCzCIueWxyiCWE6AAAu: Sending packet PING data None
+2025-10-15 19:15:33,014 - INFO - [socket.py:39] - RlCzCIueWxyiCWE6AAAu: Received packet PONG data 
+2025-10-15 19:15:58,125 - INFO - [socket.py:78] - RlCzCIueWxyiCWE6AAAu: Sending packet PING data None
+2025-10-15 19:15:58,129 - INFO - [socket.py:39] - RlCzCIueWxyiCWE6AAAu: Received packet PONG data 
+2025-10-15 19:16:23,143 - INFO - [socket.py:78] - RlCzCIueWxyiCWE6AAAu: Sending packet PING data None
+2025-10-15 19:16:23,154 - INFO - [socket.py:39] - RlCzCIueWxyiCWE6AAAu: Received packet PONG data 
+2025-10-15 19:16:48,166 - INFO - [socket.py:78] - RlCzCIueWxyiCWE6AAAu: Sending packet PING data None
+2025-10-15 19:16:48,170 - INFO - [socket.py:39] - RlCzCIueWxyiCWE6AAAu: Received packet PONG data 
+2025-10-15 19:17:13,188 - INFO - [socket.py:78] - RlCzCIueWxyiCWE6AAAu: Sending packet PING data None
+2025-10-15 19:17:13,194 - INFO - [socket.py:39] - RlCzCIueWxyiCWE6AAAu: Received packet PONG data 
+2025-10-15 19:17:38,210 - INFO - [socket.py:78] - RlCzCIueWxyiCWE6AAAu: Sending packet PING data None
+2025-10-15 19:17:38,222 - INFO - [socket.py:39] - RlCzCIueWxyiCWE6AAAu: Received packet PONG data 
+2025-10-15 19:18:03,242 - INFO - [socket.py:78] - RlCzCIueWxyiCWE6AAAu: Sending packet PING data None
+2025-10-15 19:18:03,248 - INFO - [socket.py:39] - RlCzCIueWxyiCWE6AAAu: Received packet PONG data 
+2025-10-15 19:18:28,266 - INFO - [socket.py:78] - RlCzCIueWxyiCWE6AAAu: Sending packet PING data None
+2025-10-15 19:18:28,275 - INFO - [socket.py:39] - RlCzCIueWxyiCWE6AAAu: Received packet PONG data 
+2025-10-15 19:18:53,283 - INFO - [socket.py:78] - RlCzCIueWxyiCWE6AAAu: Sending packet PING data None
+2025-10-15 19:18:53,301 - INFO - [socket.py:39] - RlCzCIueWxyiCWE6AAAu: Received packet PONG data 
+2025-10-15 19:19:18,314 - INFO - [socket.py:78] - RlCzCIueWxyiCWE6AAAu: Sending packet PING data None
+2025-10-15 19:19:18,321 - INFO - [socket.py:39] - RlCzCIueWxyiCWE6AAAu: Received packet PONG data 
+2025-10-15 19:19:43,390 - INFO - [socket.py:78] - RlCzCIueWxyiCWE6AAAu: Sending packet PING data None
+2025-10-15 19:19:43,393 - INFO - [socket.py:39] - RlCzCIueWxyiCWE6AAAu: Received packet PONG data 
+2025-10-15 19:20:08,398 - INFO - [socket.py:78] - RlCzCIueWxyiCWE6AAAu: Sending packet PING data None
+2025-10-15 19:20:08,403 - INFO - [socket.py:39] - RlCzCIueWxyiCWE6AAAu: Received packet PONG data 
+2025-10-15 19:20:33,418 - INFO - [socket.py:78] - RlCzCIueWxyiCWE6AAAu: Sending packet PING data None
+2025-10-15 19:20:33,428 - INFO - [socket.py:39] - RlCzCIueWxyiCWE6AAAu: Received packet PONG data 
+2025-10-15 19:20:58,432 - INFO - [socket.py:78] - RlCzCIueWxyiCWE6AAAu: Sending packet PING data None
+2025-10-15 19:20:58,437 - INFO - [socket.py:39] - RlCzCIueWxyiCWE6AAAu: Received packet PONG data 
+2025-10-15 19:21:23,444 - INFO - [socket.py:78] - RlCzCIueWxyiCWE6AAAu: Sending packet PING data None
+2025-10-15 19:21:23,448 - INFO - [socket.py:39] - RlCzCIueWxyiCWE6AAAu: Received packet PONG data 
+2025-10-15 19:21:48,464 - INFO - [socket.py:78] - RlCzCIueWxyiCWE6AAAu: Sending packet PING data None
+2025-10-15 19:21:49,229 - INFO - [socket.py:39] - RlCzCIueWxyiCWE6AAAu: Received packet PONG data 
+2025-10-15 19:22:14,239 - INFO - [socket.py:78] - RlCzCIueWxyiCWE6AAAu: Sending packet PING data None
+2025-10-15 19:22:14,244 - INFO - [socket.py:39] - RlCzCIueWxyiCWE6AAAu: Received packet PONG data 
+2025-10-15 19:22:39,335 - INFO - [socket.py:78] - RlCzCIueWxyiCWE6AAAu: Sending packet PING data None
+2025-10-15 19:22:39,339 - INFO - [socket.py:39] - RlCzCIueWxyiCWE6AAAu: Received packet PONG data 
+2025-10-15 19:23:04,350 - INFO - [socket.py:78] - RlCzCIueWxyiCWE6AAAu: Sending packet PING data None
+2025-10-15 19:23:04,354 - INFO - [socket.py:39] - RlCzCIueWxyiCWE6AAAu: Received packet PONG data 
+2025-10-15 19:23:29,367 - INFO - [socket.py:78] - RlCzCIueWxyiCWE6AAAu: Sending packet PING data None
+2025-10-15 19:23:29,373 - INFO - [socket.py:39] - RlCzCIueWxyiCWE6AAAu: Received packet PONG data 
+2025-10-15 19:23:54,382 - INFO - [socket.py:78] - RlCzCIueWxyiCWE6AAAu: Sending packet PING data None
+2025-10-15 19:23:54,387 - INFO - [socket.py:39] - RlCzCIueWxyiCWE6AAAu: Received packet PONG data 
+2025-10-15 19:24:19,401 - INFO - [socket.py:78] - RlCzCIueWxyiCWE6AAAu: Sending packet PING data None
+2025-10-15 19:24:19,406 - INFO - [socket.py:39] - RlCzCIueWxyiCWE6AAAu: Received packet PONG data 
+2025-10-15 19:24:44,423 - INFO - [socket.py:78] - RlCzCIueWxyiCWE6AAAu: Sending packet PING data None
+2025-10-15 19:24:44,429 - INFO - [socket.py:39] - RlCzCIueWxyiCWE6AAAu: Received packet PONG data 
+2025-10-15 19:25:09,443 - INFO - [socket.py:78] - RlCzCIueWxyiCWE6AAAu: Sending packet PING data None
+2025-10-15 19:25:09,449 - INFO - [socket.py:39] - RlCzCIueWxyiCWE6AAAu: Received packet PONG data 
+2025-10-15 19:25:34,458 - INFO - [socket.py:78] - RlCzCIueWxyiCWE6AAAu: Sending packet PING data None
+2025-10-15 19:25:34,464 - INFO - [socket.py:39] - RlCzCIueWxyiCWE6AAAu: Received packet PONG data 
+2025-10-15 19:25:59,467 - INFO - [socket.py:78] - RlCzCIueWxyiCWE6AAAu: Sending packet PING data None
+2025-10-15 19:25:59,472 - INFO - [socket.py:39] - RlCzCIueWxyiCWE6AAAu: Received packet PONG data 
+2025-10-15 19:26:24,480 - INFO - [socket.py:78] - RlCzCIueWxyiCWE6AAAu: Sending packet PING data None
+2025-10-15 19:26:24,486 - INFO - [socket.py:39] - RlCzCIueWxyiCWE6AAAu: Received packet PONG data 
+2025-10-15 19:26:49,496 - INFO - [socket.py:78] - RlCzCIueWxyiCWE6AAAu: Sending packet PING data None
+2025-10-15 19:26:49,499 - INFO - [socket.py:39] - RlCzCIueWxyiCWE6AAAu: Received packet PONG data 
+2025-10-15 19:27:14,512 - INFO - [socket.py:78] - RlCzCIueWxyiCWE6AAAu: Sending packet PING data None
+2025-10-15 19:27:14,519 - INFO - [socket.py:39] - RlCzCIueWxyiCWE6AAAu: Received packet PONG data 
+2025-10-15 19:27:18,676 - INFO - [ConnectionSocketHandler.py:20] - 用户68aaad4772a150b783ad04b1(SID: WG08LdcmrRyHwLvjAAAv)已断开连接
+2025-10-15 19:27:19,361 - INFO - [socket.py:78] - ANY6N0aaLlOPRvEIAAAw: Sending packet OPEN data {'sid': 'ANY6N0aaLlOPRvEIAAAw', 'upgrades': [], 'pingTimeout': 20000, 'pingInterval': 25000, 'maxPayload': 1000000}
+2025-10-15 19:27:19,362 - INFO - [socket.py:90] - ANY6N0aaLlOPRvEIAAAw: Received request to upgrade to websocket
+2025-10-15 19:27:19,365 - INFO - [socket.py:219] - ANY6N0aaLlOPRvEIAAAw: Upgrade to websocket successful
+2025-10-15 19:27:19,372 - INFO - [socket.py:39] - ANY6N0aaLlOPRvEIAAAw: Received packet MESSAGE data 0{"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OGFhYWQ0NzcyYTE1MGI3ODNhZDA0YjEiLCJleHAiOjE3NjA2MTA3NTh9.SJrmi_fwc9jqNzyLI3w7mBYTigQln81lP901vM7JlGI"}
+2025-10-15 19:27:19,374 - INFO - [socket.py:78] - ANY6N0aaLlOPRvEIAAAw: Sending packet MESSAGE data 0{"sid":"IF1ouUSrVvMKAE_gAAAx"}
+2025-10-15 19:27:19,382 - INFO - [socket.py:39] - ANY6N0aaLlOPRvEIAAAw: Received packet MESSAGE data 2["user_auth",{"token":"eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJ1c2VySWQiOiI2OGFhYWQ0NzcyYTE1MGI3ODNhZDA0YjEiLCJleHAiOjE3NjA2MTA3NTh9.SJrmi_fwc9jqNzyLI3w7mBYTigQln81lP901vM7JlGI"}]
+2025-10-15 19:27:19,383 - INFO - [server.py:576] - received event "user_auth" from IF1ouUSrVvMKAE_gAAAx [/]
+2025-10-15 19:27:19,387 - INFO - [server.py:284] - IF1ouUSrVvMKAE_gAAAx is entering room user_68aaad4772a150b783ad04b1 [/]
+2025-10-15 19:27:19,388 - INFO - [UserSocketHandler.py:30] - 用户68aaad4772a150b783ad04b1(SID: IF1ouUSrVvMKAE_gAAAx)已认证成功并加入房间user_68aaad4772a150b783ad04b1
+2025-10-15 19:27:44,380 - INFO - [socket.py:78] - ANY6N0aaLlOPRvEIAAAw: Sending packet PING data None
+2025-10-15 19:27:44,385 - INFO - [socket.py:39] - ANY6N0aaLlOPRvEIAAAw: Received packet PONG data 
+2025-10-15 19:27:48,267 - INFO - [socket.py:39] - ANY6N0aaLlOPRvEIAAAw: Received packet MESSAGE data 1
+2025-10-15 19:27:48,270 - INFO - [ConnectionSocketHandler.py:20] - 用户68aaad4772a150b783ad04b1(SID: IF1ouUSrVvMKAE_gAAAx)已断开连接
+2025-10-15 19:39:59,636 - WARNING - [StreamChatHandler.py:53] - 危险检测结果: 负面, 危险等级: 0.0411
+2025-10-15 19:40:00,077 - ERROR - [StreamChatHandler.py:183] - ❌ 聊天处理错误: 403 Client Error: Forbidden for url: https://api.siliconflow.cn/v1/chat/completions
+2025-10-15 19:40:03,217 - WARNING - [StreamChatHandler.py:53] - 危险检测结果: 其他, 危险等级: 0.0384
+2025-10-15 19:40:03,750 - ERROR - [StreamChatHandler.py:183] - ❌ 聊天处理错误: 403 Client Error: Forbidden for url: https://api.siliconflow.cn/v1/chat/completions
+2025-10-15 19:40:07,792 - WARNING - [StreamChatHandler.py:53] - 危险检测结果: 其他, 危险等级: 0.0409
+2025-10-15 19:40:08,043 - ERROR - [StreamChatHandler.py:183] - ❌ 聊天处理错误: 403 Client Error: Forbidden for url: https://api.siliconflow.cn/v1/chat/completions
