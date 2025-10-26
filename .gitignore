@@ -4,6 +4,7 @@ frpc.toml
 readme.txt
 start.bat
 
+Edition/
 huixin-vue-front/node_modules/
 saved_drawings/
 __pycache__/
