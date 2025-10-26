@@ -467,8 +467,16 @@ const createChatSession = async (): Promise<string | null> => {
   return chatCreationPromise
 }
 
+// 确保有一个活跃的对话会话
+// 关键修改：只在没有 currentChatId 且没有任何消息时才创建新会话
+// 这样可以保证多轮对话在同一个会话中进行
 const ensureActiveChat = async (): Promise<string | null> => {
+  // 如果已经有 currentChatId，直接返回
   if (currentChatId.value) return currentChatId.value
+
+  // 如果没有 currentChatId，创建新会话
+  // 注意：这个函数只在发送第一条消息时会创建新会话
+  // 后续消息会复用这个 chatId，从而实现多轮对话在同一个历史记录中
   const chatId = await createChatSession()
   return chatId
 }
@@ -699,6 +707,8 @@ const handleChatLoaded = async (chatId: string, messagesList?: any[], chatInfo?:
 }
 
 // 处理新建聊天
+// 处理创建新对话事件（从侧边栏触发）
+// 这个函数会清空当前对话的所有消息，开始一个全新的对话会话
 const handleNewChat = (chatId: string) => {
   currentChatId.value = chatId
   currentChatTitle.value = ''
@@ -713,6 +723,8 @@ const handleNewChat = (chatId: string) => {
     },
     timeNode: {}
   } : null
+
+  // 清空当前消息列表，这样用户在这个新会话中的所有问答都会保存在一起
   messages.value = []
   sidebarOpen.value = false
 
@@ -720,7 +732,7 @@ const handleNewChat = (chatId: string) => {
     clearStoredChatTitle(chatId)
   }
 
-  // 清除管理员模式
+  // 清除管理员模式和已处理消息的ID集合
   isAdminMode.value = false
   processedMessageIds.value.clear()
 }

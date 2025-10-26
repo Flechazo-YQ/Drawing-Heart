@@ -309,6 +309,7 @@ let svgDraw = null;
 
 // 绘画内容备份 - 用于在拼贴模式下保持绘画内容
 const drawingCanvasBackup = ref(null);
+const previousBodyOverflow = ref('');
 
 onMounted(() => {
   if (svgCanvasRef.value && !svgDraw) {
@@ -2196,6 +2197,9 @@ const handleResize = () => {
 
 // 组件挂载时初始化
 onMounted(() => {
+  previousBodyOverflow.value = document.body.style.overflow || ''
+  document.body.style.overflow = 'hidden'
+
   initCanvas()
   window.addEventListener('resize', handleResize)
 
@@ -2211,6 +2215,8 @@ onMounted(() => {
 
 // 组件卸载时清理
 onUnmounted(() => {
+  document.body.style.overflow = previousBodyOverflow.value || ''
+
   window.removeEventListener('resize', handleResize)
 
   // 移除全屏状态监听
@@ -3001,23 +3007,24 @@ body {
   background-color: var(--color-background);
   display: flex;
   flex-direction: column;
+  overflow: hidden;
 }
 
 .draw-content {
   flex: 1;
   max-width: 1920px;
   margin: 0 auto;
-  padding: 84px 2rem 2rem;
+  padding: 2rem;
   display: grid;
   grid-template-columns: 3fr 2fr;
   /* 调整比例：绘图区域3份，分析面板2份 */
   gap: 2rem;
-  align-items: center;
-  /* 垂直居中对齐 */
+  align-content: center;
+  /* 垂直居中内容 */
   justify-content: center;
-  /* 水平居中对齐 */
-  min-height: calc(100vh - 64px);
-  /* 减去导航栏高度 */
+  /* 水平居中内容 */
+  height: 100%;
+  overflow: hidden;
 }
 
 .drawing-area {
@@ -3293,8 +3300,8 @@ body {
   /* 改为适应内容高度 */
   max-height: calc(100vh - 120px);
   /* 限制最大高度，留出空间 */
-  overflow-y: auto;
-  /* 允许垂直滚动 */
+  overflow: hidden;
+  /* 移除滚动条 */
   align-self: center;
   /* 与画板居中对齐 */
 }
